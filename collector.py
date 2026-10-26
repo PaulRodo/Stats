@@ -1,6 +1,8 @@
 """Собирает статистику YouTube, Telegram, Instagram и TikTok и пишет data.json.
 Ключи берутся из переменных окружения (в GitHub — из Secrets). Если ключей нет, платформа пропускается."""
+import base64
 import datetime as dt
+import hashlib
 import html
 import json
 import os
@@ -23,11 +25,12 @@ def call(method, url, **kw):
         d = r.json()
     except ValueError:
         d = {}
-    err = d.get("error") if isinstance(d, dict) else None
-    if not r.ok or err or (isinstance(d, dict) and d.get("ok") is False):
-        msg = (err.get("message") if isinstance(err, dict) else err) or d.get("description") or ""
-        if isinstance(err, dict) and err.get("code") not in (None, "ok"):
-            msg = msg or str(err.get("code"))
+    if not isinstance(d, dict):
+        d = {}
+    err = d.get("error")
+    failed = (err.get("code") not in (None, "", "ok")) if isinstance(err, dict) else bool(err)
+    if not r.ok or failed or d.get("ok") is False:
+        msg = (err.get("message") or err.get("code") if isinstance(err, dict) else err) or d.get("error_description") or d.get("description") or ""
         raise RuntimeError(f"{r.status_code}: {str(msg)[:150]}")
     return d
 
@@ -132,51 +135,126 @@ def telegram():
 
 
 def instagram():
+    """Работает с токеном «Instagram API with Instagram Login» (ID не нужен)
+    и со старым вариантом через Facebook (тогда нужен ещё IG_USER_ID)."""
     tok, uid = env("IG_TOKEN"), env("IG_USER_ID")
-    if not (tok and uid):
+    if not tok:
         return None
-    B = "https://graph.facebook.com/v21.0/"
-    u = call("GET", B + uid, params={"fields": "username,followers_count,follows_count,media_count", "access_token": tok})
+    if uid:
+        B, node = "https://graph.facebook.com/v25.0/", uid
+    else:
+        B, node = "https://graph.instagram.com/v25.0/", "me"
+    u = call("GET", B + node, params={"fields": "username,followers_count,follows_count,media_count", "access_token": tok})
     rows = []
     try:
-        m = call("GET", B + uid + "/media", params={"fields": "caption,like_count,comments_count,timestamp", "limit": 8, "access_token": tok})
+        m = call("GET", B + node + "/media", params={"fields": "caption,like_count,comments_count,timestamp", "limit": 8, "access_token": tok})
         rows = [[cut(x.get("caption")), day(x.get("timestamp")), x.get("like_count", 0), x.get("comments_count", 0)] for x in m["data"]]
-    except RuntimeError:
+    except (RuntimeError, KeyError):
         pass
     return {
         "title": "@" + u["username"], "followers": u["followers_count"],
-        "metrics": [["Подписчики", u["followers_count"]], ["Подписки", u["follows_count"]], ["Публикации", u["media_count"]]],
+        "metrics": [["Подписчики", u["followers_count"]], ["Подписки", u.get("follows_count", 0)], ["Публикации", u.get("media_count", 0)]],
         "cols": ["Публикация", "Дата", "Лайки", "Комм."], "rows": rows,
     }
 
 
-def tiktok():
-    ck, cs, rt = env("TT_CLIENT_KEY"), env("TT_CLIENT_SECRET"), env("TT_REFRESH_TOKEN")
-    token = env("TT_ACCESS_TOKEN")
-    if not token:
-        if not (ck and cs and rt):
-            return None
-        d = call("POST", "https://open.tiktokapis.com/v2/oauth/token/", data={
-            "client_key": ck, "client_secret": cs, "grant_type": "refresh_token", "refresh_token": rt})
-        token = d.get("access_token")
-        if not token:
-            raise RuntimeError("не удалось обновить токен, получите новый refresh token")
-    H = {"Authorization": "Bearer " + token}
-    u = call("GET", "https://open.tiktokapis.com/v2/user/info/", headers=H,
-             params={"fields": "display_name,follower_count,likes_count,video_count"})["data"]["user"]
-    rows = []
+def tiktok_manual():
+    """Запасной вариант без API: цифры вносятся вручную в файл tiktok.json."""
+    if not os.path.exists("tiktok.json"):
+        return None
     try:
-        v = call("POST", "https://open.tiktokapis.com/v2/video/list/", headers=H, json={"max_count": 8},
-                 params={"fields": "title,create_time,view_count,like_count,comment_count"})["data"]["videos"]
-        rows = [[cut(x.get("title")), dt.datetime.fromtimestamp(x["create_time"], dt.timezone.utc).strftime("%Y-%m-%d"),
-                 x.get("view_count", 0), x.get("like_count", 0), x.get("comment_count", 0)] for x in v]
+        with open("tiktok.json", encoding="utf-8") as f:
+            d = json.load(f)
+        followers = int(d.get("followers") or 0)
+        if not followers:
+            return None  # шаблон ещё не заполнен
+        metrics = [["Подписчики", followers]]
+        for key, label in (("likes", "Лайки"), ("views", "Просмотры"), ("videos", "Видео")):
+            if d.get(key):
+                metrics.append([label, int(d[key])])
+        rows = [[cut(x.get("title")), str(x.get("date", "")), int(x.get("views") or 0), int(x.get("likes") or 0),
+                 int(x.get("comments") or 0)] for x in d.get("recent", [])]
+    except (ValueError, TypeError, AttributeError):
+        raise RuntimeError("в tiktok.json ошибка: проверьте запятые, кавычки и что в числах нет пробелов")
+    note = "Цифры введены вручную" + (f" (обновлено {d['updated']})." if d.get("updated") else ".")
+    res = {"title": d.get("username", ""), "followers": followers, "metrics": metrics, "note": note}
+    if rows:
+        res["cols"] = ["Видео", "Дата", "Просмотры", "Лайки", "Комм."]
+        res["rows"] = rows
+    return res
+
+
+TT_TOKEN_URL = "https://open.tiktokapis.com/v2/oauth/token/"
+STATE_FILE = "tiktok_state.enc"
+
+
+def _fernet(pw):
+    from cryptography.fernet import Fernet
+    return Fernet(base64.urlsafe_b64encode(hashlib.sha256(pw.encode("utf-8")).digest()))
+
+
+def state_load(pw):
+    if not os.path.exists(STATE_FILE):
+        return None
+    try:
+        with open(STATE_FILE, "rb") as f:
+            return json.loads(_fernet(pw).decrypt(f.read()))
+    except Exception:
+        raise RuntimeError("не удалось расшифровать tiktok_state.enc: проверьте секрет TT_STATE_KEY")
+
+
+def state_save(pw, state):
+    with open(STATE_FILE, "wb") as f:
+        f.write(_fernet(pw).encrypt(json.dumps(state).encode("utf-8")))
+
+
+def tt_token():
+    """Обновляет доступ к TikTok по сохранённому refresh token. None, если TikTok не подключён."""
+    ck, cs, pw = env("TT_CLIENT_KEY"), env("TT_CLIENT_SECRET"), env("TT_STATE_KEY")
+    if not (ck and cs and pw):
+        return None
+    st = state_load(pw)
+    if not st:
+        return None
+    d = call("POST", TT_TOKEN_URL, data={"client_key": ck, "client_secret": cs,
+                                         "grant_type": "refresh_token", "refresh_token": st["refresh_token"]})
+    if not d.get("access_token"):
+        raise RuntimeError("не удалось обновить токен TikTok, подключите его заново")
+    state_save(pw, {"refresh_token": d.get("refresh_token") or st["refresh_token"]})
+    return d["access_token"]
+
+
+def tiktok():
+    token = tt_token()
+    if not token:
+        return tiktok_manual()
+    H = {"Authorization": "Bearer " + token}
+    U = "https://open.tiktokapis.com/v2/user/info/"
+    note = None
+    try:
+        u = call("GET", U, headers=H, params={"fields": "display_name,follower_count,likes_count,video_count"})["data"]["user"]
+    except RuntimeError:
+        # нет права user.info.stats: хотя бы имя
+        u = call("GET", U, headers=H, params={"fields": "display_name"})["data"]["user"]
+        note = "Нет доступа к статистике аккаунта: в приложении TikTok нужно право user.info.stats."
+    vids = []
+    try:
+        vids = call("POST", "https://open.tiktokapis.com/v2/video/list/", headers=H, json={"max_count": 20},
+                    params={"fields": "title,create_time,view_count,like_count,comment_count"})["data"].get("videos", [])
     except RuntimeError:
         pass
-    return {
-        "title": u["display_name"], "followers": u["follower_count"],
-        "metrics": [["Подписчики", u["follower_count"]], ["Лайки", u["likes_count"]], ["Видео", u["video_count"]]],
-        "cols": ["Видео", "Дата", "Просмотры", "Лайки", "Комм."], "rows": rows,
-    }
+    rows = [[cut(x.get("title")), dt.datetime.fromtimestamp(x["create_time"], dt.timezone.utc).strftime("%Y-%m-%d"),
+             x.get("view_count", 0), x.get("like_count", 0), x.get("comment_count", 0)] for x in vids[:8]]
+    metrics = []
+    if "follower_count" in u:
+        metrics += [["Подписчики", u["follower_count"]], ["Лайки", u.get("likes_count", 0)], ["Видео", u.get("video_count", 0)]]
+    if vids:
+        metrics.append([f"Просмотры (последние {len(vids)} видео)", sum(x.get("view_count", 0) for x in vids)])
+    res = {"title": u.get("display_name", ""), "followers": u.get("follower_count"), "metrics": metrics or [["Аккаунт", "подключён"]],
+           "cols": ["Видео", "Дата", "Просмотры", "Лайки", "Комм."], "rows": rows}
+    if note:
+        res["note"] = note
+    return res
 
 
 def main():
