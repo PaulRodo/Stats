@@ -55,10 +55,15 @@ def youtube():
         raise RuntimeError("канал не найден")
     it = items[0]
     s = it["statistics"]
-    pl = it["contentDetails"]["relatedPlaylists"]["uploads"]
-    vids = call("GET", B + "playlistItems", params={"part": "contentDetails", "maxResults": 8, "playlistId": pl, "key": key})
-    ids = ",".join(x["contentDetails"]["videoId"] for x in vids.get("items", []))
-    vd = call("GET", B + "videos", params={"part": "snippet,statistics", "id": ids, "key": key}).get("items", []) if ids else []
+        vd = []
+    try:
+        pl = it["contentDetails"]["relatedPlaylists"]["uploads"]
+        vids = call("GET", B + "playlistItems", params={"part": "contentDetails", "maxResults": 8, "playlistId": pl, "key": key})
+        ids = ",".join(x["contentDetails"]["videoId"] for x in vids.get("items", []))
+        if ids:
+            vd = call("GET", B + "videos", params={"part": "snippet,statistics", "id": ids, "key": key}).get("items", [])
+    except RuntimeError:
+        pass
     hidden = s.get("hiddenSubscriberCount")
     subs = None if hidden else int(s["subscriberCount"])
     return {
