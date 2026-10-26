@@ -1,6 +1,7 @@
 """Собирает статистику YouTube, Telegram, Instagram и TikTok и пишет data.json.
 Ключи берутся из переменных окружения (в GitHub — из Secrets). Если ключей нет, платформа пропускается."""
 import datetime as dt
+import html
 import json
 import os
 import re
@@ -75,6 +76,38 @@ def youtube():
     }
 
 
+def parse_views(s):
+    s = s.strip().replace(",", ".").replace(" ", "")
+    mult = {"K": 1000, "M": 1000000}.get(s[-1:].upper(), 1)
+    if mult != 1:
+        s = s[:-1]
+    try:
+        return int(float(s) * mult)
+    except ValueError:
+        return 0
+
+
+def tg_posts(name):
+    """Просмотры последних постов из публичной веб-версии канала (t.me/s/имя). Числа там округлены (1.2K)."""
+    try:
+        r = requests.get(f"https://t.me/s/{name}", timeout=30, headers={"User-Agent": "Mozilla/5.0"})
+    except requests.RequestException:
+        return []
+    if not r.ok:
+        return []
+    posts = []
+    for chunk in r.text.split('data-post="')[1:]:
+        pid = re.match(r'[^/"]+/(\d+)"', chunk)
+        v = re.search(r'tgme_widget_message_views">([^<]+)<', chunk)
+        if not (pid and v):
+            continue
+        t = re.search(r'<time[^>]*datetime="([^"]+)"', chunk)
+        tx = re.search(r'js-message_text"[^>]*>(.*?)</div>', chunk, re.S)
+        text = html.unescape(re.sub(r"<[^>]+>", " ", tx.group(1))) if tx else ""
+        posts.append([cut(text), day(t.group(1)) if t else "", parse_views(v.group(1))])
+    return posts[-10:][::-1]
+
+
 def telegram():
     tok, chat = env("TG_BOT_TOKEN"), env("TG_CHAT")
     if not (tok and chat):
@@ -86,8 +119,16 @@ def telegram():
         title = call("GET", B + "getChat", params={"chat_id": chat})["result"].get("title", chat)
     except RuntimeError:
         pass
-    return {"title": title, "followers": n, "metrics": [["Подписчики", n]],
-            "note": "Bot API отдаёт только число подписчиков. Просмотры постов можно добавить через Telethon."}
+    res = {"title": title, "followers": n, "metrics": [["Подписчики", n]]}
+    posts = tg_posts(chat.lstrip("@")) if chat.startswith("@") else []
+    if posts:
+        res["metrics"].append(["Просмотров на пост (в среднем)", sum(p[2] for p in posts) // len(posts)])
+        res["cols"] = ["Пост", "Дата", "Просмотры"]
+        res["rows"] = posts
+        res["note"] = "Просмотры постов взяты с публичной страницы канала, у больших чисел они округлены."
+    else:
+        res["note"] = "Просмотры постов получить не удалось: канал должен быть публичным (с @именем)."
+    return res
 
 
 def instagram():
