@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Статистика каналов</title>
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<style>
+:root{--bg:var(--tg-theme-bg-color,#fff);--ink:var(--tg-theme-text-color,#14172b);--mute:var(--tg-theme-hint-color,#6d7189);
+--sec:var(--tg-theme-secondary-bg-color,#eff0f6);--line:rgba(127,127,127,.28)}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+padding:16px 16px calc(32px + env(safe-area-inset-bottom,0px))}
+.total{font-size:46px;font-weight:800;letter-spacing:-.04em;line-height:1}
+.lbl{color:var(--mute);margin:4px 0 14px}
+.up{color:#1f9d55;font-weight:600}.down{color:#d64545;font-weight:600}
+.bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--sec)}
+.bar i{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:4px 16px;margin:10px 0 0;font-size:13px;color:var(--mute)}
+.legend b{color:var(--ink)}
+.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
+section{border-top:3px solid var(--c);margin-top:22px;padding-top:10px}
+h2{margin:0;font-size:18px;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
+h2 small{font-weight:400;color:var(--mute);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.metrics{display:flex;flex-wrap:wrap;gap:6px 26px;margin:10px 0}
+.m b{display:block;font-size:22px;letter-spacing:-.02em}
+.m span{color:var(--mute);font-size:12px}
+.note{color:var(--mute);font-size:13px;margin:8px 0}
+.err{color:#d64545;font-size:13px}
+.tw{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{text-align:left;padding:7px 8px 7px 0;border-bottom:1px solid var(--line);vertical-align:top}
+th{color:var(--mute);font-weight:500}
+.n{text-align:right;white-space:nowrap;padding-right:0;padding-left:8px}
+.foot{color:var(--mute);font-size:12px;margin-top:24px}
+</style>
+</head>
+<body>
+<div id="app"><p class="note">Загружаю…</p></div>
+<script>
+const tg = window.Telegram && Telegram.WebApp;
+if (tg) { tg.ready(); tg.expand(); }
+const P = { yt: ['YouTube', '#e5322d'], tg: ['Telegram', '#2a8fd6'], ig: ['Instagram', '#c23a8b'], tt: ['TikTok', '#14a89a'] };
+const fmt = n => new Intl.NumberFormat('ru-RU').format(n);
+const cell = x => typeof x === 'number' ? fmt(x) : x;
+const dm = s => /^\d{4}-\d\d-\d\d$/.test(s) ? new Date(s).toLocaleDateString('ru-RU') : s;
+
+function h(tag, attrs, ...kids) {
+  const el = document.createElement(tag);
+  for (const k in (attrs || {})) el.setAttribute(k, attrs[k]);
+  kids.flat().forEach(k => { if (k !== null && k !== undefined) el.append(k instanceof Node ? k : document.createTextNode(k)); });
+  return el;
+}
+
+// Прирост подписчиков: сравниваем с записью недельной давности (или самой старой, если истории мало)
+function growth(hist, id, now) {
+  const days = Object.keys(hist).sort().filter(d => hist[d][id] !== undefined);
+  if (days.length < 2) return null;
+  const lim = Date.now() - 7 * 864e5;
+  const old = days.filter(d => new Date(d).getTime() <= lim);
+  const base = old.length ? old[old.length - 1] : days[0];
+  const span = Math.round((Date.now() - new Date(base).getTime()) / 864e5);
+  if (span < 1) return null;
+  return { delta: now - hist[base][id], span };
+}
+const gEl = g => g ? h('span', { class: g.delta >= 0 ? 'up' : 'down' }, (g.delta >= 0 ? '+' : '−') + fmt(Math.abs(g.delta)) + (g.span ? ' за ' + g.span + ' дн.' : '')) : null;
+
+function render(d) {
+  const app = document.getElementById('app');
+  app.replaceChildren();
+  const ids = Object.keys(d.platforms);
+  const hist = d.history || {};
+  let total = 0, totalDelta = 0, hasDelta = false;
+  const segs = [];
+  const secs = ids.map(id => {
+    const r = d.platforms[id], [name, color] = P[id];
+    const s = h('section', { style: '--c:' + color }, h('h2', {}, name, h('small', {}, r.title || '')));
+    if (r.error) { s.append(h('p', { class: 'err' }, 'Ошибка: ' + r.error)); return s; }
+    let g = null;
+    if (typeof r.followers === 'number') {
+      total += r.followers; segs.push([name, color, r.followers]);
+      g = growth(hist, id, r.followers);
+      if (g) { totalDelta += g.delta; hasDelta = true; }
+    }
+    s.append(h('div', { class: 'metrics' }, r.metrics.map((m, i) => h('div', { class: 'm' }, h('b', {}, cell(m[1])), h('span', {}, m[0]), i === 0 && g ? [' ', gEl(g)] : null))));
+    if (r.note) s.append(h('p', { class: 'note' }, r.note));
+    if (r.rows && r.rows.length) {
+      const head = h('tr', {}, r.cols.map((c, i) => h('th', { class: i > 1 ? 'n' : '' }, c)));
+      const body = r.rows.map(row => h('tr', {}, row.map((c, i) => h('td', { class: i > 1 ? 'n' : '' }, i === 1 ? dm(c) : cell(c)))));
+      s.append(h('div', { class: 'tw' }, h('table', {}, h('thead', {}, head), h('tbody', {}, body))));
+    }
+    return s;
+  });
+  app.append(h('div', { class: 'total' }, total ? fmt(total) : '—'));
+  app.append(h('div', { class: 'lbl' }, 'подписчиков во всех соцсетях ', hasDelta ? gEl({ delta: totalDelta, span: '' }) : null));
+  if (total) {
+    app.append(h('div', { class: 'bar', 'aria-hidden': 'true' }, segs.map(x => h('i', { style: `width:${x[2] / total * 100}%;background:${x[1]}` }))));
+    app.append(h('div', { class: 'legend' }, segs.map(x => h('span', {}, h('span', { class: 'dot', style: 'background:' + x[1] }), x[0] + ' ', h('b', {}, fmt(x[2]))))));
+  }
+  secs.forEach(s => app.append(s));
+  app.append(h('p', { class: 'foot' }, 'Обновлено ' + new Date(d.updated).toLocaleString('ru-RU')));
+}
+
+fetch('data.json?t=' + Date.now())
+  .then(r => { if (!r.ok) throw 0; return r.json(); })
+  .then(render)
+  .catch(() => {
+    document.getElementById('app').replaceChildren(h('p', { class: 'note' }, 'Данных пока нет. Запустите обновление в GitHub: вкладка Actions, «update-stats», «Run workflow».'));
+  });
+</script>
+</body>
+</html>
