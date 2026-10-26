@@ -3,110 +3,291 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="color-scheme" content="light dark">
 <title>Статистика каналов</title>
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:var(--tg-theme-bg-color,#fff);--ink:var(--tg-theme-text-color,#14172b);--mute:var(--tg-theme-hint-color,#6d7189);
---sec:var(--tg-theme-secondary-bg-color,#eff0f6);--line:rgba(127,127,127,.28)}
+:root{--bg:#eef0f6;--card:#fff;--ink:#14172b;--mute:#7a7f99;--line:#e7e9f2;--chip:#f1f3f9;--up:#14a05a;--down:#e5484d;
+--sh:0 1px 2px rgba(20,23,43,.04),0 8px 24px rgba(20,23,43,.06);color-scheme:light}
+:root[data-theme=dark]{--bg:#0f1126;--card:#1a1d37;--ink:#eef0fb;--mute:#9a9fbb;--line:#2a2e4d;--chip:#242848;--up:#3ddc84;--down:#ff6b70;--sh:none;color-scheme:dark}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
-padding:16px 16px calc(32px + env(safe-area-inset-bottom,0px))}
-.total{font-size:46px;font-weight:800;letter-spacing:-.04em;line-height:1}
-.lbl{color:var(--mute);margin:4px 0 14px}
-.up{color:#1f9d55;font-weight:600}.down{color:#d64545;font-weight:600}
-.bar{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--sec)}
-.bar i{display:block;height:100%}
-.legend{display:flex;flex-wrap:wrap;gap:4px 16px;margin:10px 0 0;font-size:13px;color:var(--mute)}
-.legend b{color:var(--ink)}
-.dot{display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:5px}
-section{border-top:3px solid var(--c);margin-top:22px;padding-top:10px}
-h2{margin:0;font-size:18px;display:flex;justify-content:space-between;gap:8px;align-items:baseline}
-h2 small{font-weight:400;color:var(--mute);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.metrics{display:flex;flex-wrap:wrap;gap:6px 26px;margin:10px 0}
-.m b{display:block;font-size:22px;letter-spacing:-.02em}
-.m span{color:var(--mute);font-size:12px}
-.note{color:var(--mute);font-size:13px;margin:8px 0}
-.err{color:#d64545;font-size:13px}
-.tw{overflow-x:auto}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{text-align:left;padding:7px 8px 7px 0;border-bottom:1px solid var(--line);vertical-align:top}
-th{color:var(--mute);font-weight:500}
-.n{text-align:right;white-space:nowrap;padding-right:0;padding-left:8px}
-.foot{color:var(--mute);font-size:12px;margin-top:24px}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.4 Onest,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+-webkit-font-smoothing:antialiased;padding:max(16px,env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom))}
+main{max-width:980px;margin:0 auto}
+button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
+button:focus-visible{outline:2px solid #2aa5ee;outline-offset:2px}
+header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:4px 2px 16px}
+h1{font-size:22px;font-weight:700;letter-spacing:-.02em;margin:0}
+.sub{color:var(--mute);font-size:13px;margin:2px 0 0}
+.round{width:40px;height:40px;border-radius:50%;background:var(--card);box-shadow:var(--sh);font-size:18px;flex:none}
+.round.spin{animation:spin .8s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.card{background:var(--card);border-radius:24px;padding:18px;box-shadow:var(--sh);min-width:0}
+.hero,.posts,.plats{grid-column:1/-1}
+.lbl{color:var(--mute);font-size:13px;font-weight:500}
+.row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.big{font-size:44px;font-weight:800;letter-spacing:-.04em;line-height:1.05;margin:4px 0 6px}
+.chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--chip);color:var(--mute);white-space:nowrap}
+.chip.up{background:color-mix(in srgb,var(--up) 15%,transparent);color:var(--up)}
+.chip.down{background:color-mix(in srgb,var(--down) 15%,transparent);color:var(--down)}
+.seg{display:flex;background:var(--chip);border-radius:99px;padding:3px;flex:none}
+.seg button{padding:5px 11px;border-radius:99px;font-size:13px;font-weight:600;color:var(--mute)}
+.seg button[aria-pressed=true]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.readout{height:20px;margin-top:10px;font-size:13px;color:var(--mute)}
+.readout b{color:var(--ink)}
+.chart{height:150px;touch-action:pan-y}
+.chart svg{display:block;overflow:visible}
+.axis{display:flex;justify-content:space-between;font-size:12px;color:var(--mute);margin-top:6px}
+.stat{color:#fff;display:flex;flex-direction:column;justify-content:space-between;min-height:132px}
+.stat .lbl{color:rgba(255,255,255,.92)}
+.stat .val{font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1.1}
+.stat .note{font-size:12px;color:rgba(255,255,255,.92)}
+.grow{background:linear-gradient(135deg,#e63e7a,#f26b3a)}
+.er{background:linear-gradient(150deg,#1faa59,#0c8a45)}
+.plats{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
+.plats .plat:last-child:nth-child(odd){grid-column:1/-1}
+.plat{padding:14px 16px}
+.pname{display:flex;align-items:center;gap:7px;font-weight:600;font-size:14px}
+.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.pnum{font-size:26px;font-weight:700;letter-spacing:-.03em;margin:8px 0 2px}
+.pmeta{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:var(--mute)}
+.pmeta b{color:var(--ink);font-weight:600}
+.plat .spark{height:38px;margin-top:8px}
+.perr{font-size:12px;color:var(--down);margin-top:8px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.ptitle{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.ptitle h2{margin:0;font-size:17px;font-weight:700}
+.chips{display:flex;gap:6px;flex-wrap:wrap}
+.chips button{padding:5px 11px;border-radius:99px;font-size:13px;font-weight:500;background:var(--chip);color:var(--mute)}
+.chips button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.post{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
+.post:first-of-type{border-top:0}
+.post .t{font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
+.post .m{font-size:12px;color:var(--mute);margin-top:1px}
+.post .v{text-align:right;font-weight:700;font-size:16px;white-space:nowrap}
+.post .v small{display:block;font-weight:400;font-size:11px;color:var(--mute)}
+.empty{color:var(--mute);font-size:14px;padding:8px 0}
+footer{color:var(--mute);font-size:12px;text-align:center;margin:18px 0 0}
+@media(min-width:760px){
+.grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.hero{grid-column:span 2}
+.plats{grid-template-columns:repeat(auto-fit,minmax(200px,1fr))}
+.plats .plat:last-child:nth-child(odd){grid-column:auto}
+.stat{min-height:0}
+}
+@media(prefers-reduced-motion:reduce){.round.spin{animation:none}}
 </style>
 </head>
 <body>
-<div id="app"><p class="note">Загружаю…</p></div>
+<main>
+<header>
+  <div><h1 id="hello">Статистика</h1><p class="sub">Ваши каналы в одном месте</p></div>
+  <button class="round" id="refresh" aria-label="Обновить">↻</button>
+</header>
+<div class="grid" id="app"><p class="empty">Загружаю…</p></div>
+<footer id="foot"></footer>
+</main>
 <script>
+(() => {
 const tg = window.Telegram && Telegram.WebApp;
-if (tg) { tg.ready(); tg.expand(); }
-const P = { yt: ['YouTube', '#e5322d'], tg: ['Telegram', '#2a8fd6'], ig: ['Instagram', '#c23a8b'], tt: ['TikTok', '#14a89a'] };
-const fmt = n => new Intl.NumberFormat('ru-RU').format(n);
-const cell = x => typeof x === 'number' ? fmt(x) : x;
-const dm = s => /^\d{4}-\d\d-\d\d$/.test(s) ? new Date(s).toLocaleDateString('ru-RU') : s;
+try { if (tg) { tg.ready(); tg.expand(); } } catch (e) {}
+document.documentElement.dataset.theme = (tg && tg.colorScheme) || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+try { if (tg) { const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(); tg.setHeaderColor(bg); tg.setBackgroundColor(bg); } } catch (e) {}
+const tap = () => { try { tg.HapticFeedback.selectionChanged(); } catch (e) {} };
+
+const P = { yt: ['YouTube', '#ff3b30'], tg: ['Telegram', '#2aa5ee'], ig: ['Instagram', '#d62976'], tt: ['TikTok', '#12b3a8'] };
+const nf = new Intl.NumberFormat('ru-RU');
+const dec = (x, d) => x.toFixed(d).replace('.', ',');
+const short = n => { const a = Math.abs(n); return a >= 1e6 ? dec(n / 1e6, 2) + 'M' : a >= 1e4 ? dec(n / 1e3, 1) + 'K' : nf.format(n); };
+const sgn = n => (n > 0 ? '+' : n < 0 ? '−' : '') + short(Math.abs(n));
+const day = s => new Date(s + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+const cut = (s, n) => s.length > n ? s.slice(0, n - 1) + '…' : s;
+const NS = 'http://www.w3.org/2000/svg';
+let uid = 0;
 
 function h(tag, attrs, ...kids) {
-  const el = document.createElement(tag);
-  for (const k in (attrs || {})) el.setAttribute(k, attrs[k]);
-  kids.flat().forEach(k => { if (k !== null && k !== undefined) el.append(k instanceof Node ? k : document.createTextNode(k)); });
-  return el;
+  const e = document.createElement(tag);
+  for (const k in (attrs || {})) e.setAttribute(k, attrs[k]);
+  kids.flat().forEach(c => { if (c !== null && c !== undefined && c !== false) e.append(c instanceof Node ? c : document.createTextNode(c)); });
+  return e;
+}
+function sv(tag, attrs) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+
+const S = { data: null, period: 7, filter: 'all' };
+
+// ---------- данные ----------
+function series(hist, ids) {
+  const dates = Object.keys(hist).sort(), per = {};
+  ids.forEach(id => {
+    const raw = dates.map(d => hist[d][id]);
+    let last = raw.find(v => v !== undefined);
+    if (last === undefined) return;
+    per[id] = raw.map(v => { if (v !== undefined) last = v; return last; });  // до подключения платформы держим первое значение
+  });
+  const keys = Object.keys(per);
+  return { dates, per, total: dates.map((_, i) => keys.reduce((a, k) => a + per[k][i], 0)) };
+}
+function startIdx(dates, n) {
+  if (!n || dates.length < 2) return 0;
+  const lim = new Date(dates[dates.length - 1]).getTime() - n * 864e5;
+  let i = 0;
+  dates.forEach((d, k) => { if (new Date(d).getTime() <= lim) i = k; });
+  return i;
+}
+function collectPosts(d) {
+  const out = [];
+  Object.keys(d.platforms).forEach(id => {
+    const r = d.platforms[id];
+    if (!r.rows || !r.cols) return;
+    const ix = n => r.cols.indexOf(n), iv = ix('Просмотры'), il = ix('Лайки'), ic = ix('Комм.');
+    r.rows.forEach(row => out.push({ id, title: row[0], date: row[1], views: iv >= 0 ? row[iv] : null, likes: il >= 0 ? row[il] : null, comm: ic >= 0 ? row[ic] : null }));
+  });
+  return out;
 }
 
-// Прирост подписчиков: сравниваем с записью недельной давности (или самой старой, если истории мало)
-function growth(hist, id, now) {
-  const days = Object.keys(hist).sort().filter(d => hist[d][id] !== undefined);
-  if (days.length < 2) return null;
-  const lim = Date.now() - 7 * 864e5;
-  const old = days.filter(d => new Date(d).getTime() <= lim);
-  const base = old.length ? old[old.length - 1] : days[0];
-  const span = Math.round((Date.now() - new Date(base).getTime()) / 864e5);
-  if (span < 1) return null;
-  return { delta: now - hist[base][id], span };
+// ---------- графики ----------
+function curve(p) {
+  let d = `M${p[0][0]},${p[0][1]}`;
+  for (let i = 0; i < p.length - 1; i++) {
+    const a = p[i - 1] || p[i], b = p[i], c = p[i + 1], e = p[i + 2] || c;
+    d += ` C${(b[0] + (c[0] - a[0]) / 6).toFixed(1)},${(b[1] + (c[1] - a[1]) / 6).toFixed(1)} ${(c[0] - (e[0] - b[0]) / 6).toFixed(1)},${(c[1] - (e[1] - b[1]) / 6).toFixed(1)} ${c[0].toFixed(1)},${c[1].toFixed(1)}`;
+  }
+  return d;
 }
-const gEl = g => g ? h('span', { class: g.delta >= 0 ? 'up' : 'down' }, (g.delta >= 0 ? '+' : '−') + fmt(Math.abs(g.delta)) + (g.span ? ' за ' + g.span + ' дн.' : '')) : null;
+function chart(vals, w, hh, color, pad) {
+  const svg = sv('svg', { width: w, height: hh, viewBox: `0 0 ${w} ${hh}`, 'aria-hidden': 'true' });
+  const min = Math.min(...vals), max = Math.max(...vals), rng = (max - min) || 1;
+  const pts = vals.map((v, i) => [pad + (vals.length === 1 ? (w - 2 * pad) / 2 : i * (w - 2 * pad) / (vals.length - 1)),
+    max === min ? hh / 2 : hh - pad - (v - min) / rng * (hh - 2 * pad)]);
+  if (pts.length > 1) {
+    const g = 'g' + (++uid);
+    const defs = sv('defs', {}), lg = sv('linearGradient', { id: g, x1: 0, y1: 0, x2: 0, y2: 1 });
+    lg.append(sv('stop', { offset: '0', 'stop-color': color, 'stop-opacity': '.28' }), sv('stop', { offset: '1', 'stop-color': color, 'stop-opacity': '0' }));
+    defs.append(lg); svg.append(defs);
+    const l = curve(pts);
+    svg.append(sv('path', { d: `${l} L${pts[pts.length - 1][0]},${hh} L${pts[0][0]},${hh} Z`, fill: `url(#${g})` }),
+      sv('path', { d: l, fill: 'none', stroke: color, 'stroke-width': 2.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+  } else {
+    svg.append(sv('line', { x1: pad, x2: w - pad, y1: hh / 2, y2: hh / 2, stroke: color, 'stroke-opacity': '.35', 'stroke-dasharray': '4 5', 'stroke-width': 2 }));
+  }
+  const last = pts[pts.length - 1];
+  svg.append(sv('circle', { cx: last[0], cy: last[1], r: 4, fill: color }));
+  return { svg, pts };
+}
 
-function render(d) {
-  const app = document.getElementById('app');
+// ---------- отрисовка ----------
+function render() {
+  const d = S.data, app = document.getElementById('app');
   app.replaceChildren();
   const ids = Object.keys(d.platforms);
-  const hist = d.history || {};
-  let total = 0, totalDelta = 0, hasDelta = false;
-  const segs = [];
-  const secs = ids.map(id => {
-    const r = d.platforms[id], [name, color] = P[id];
-    const s = h('section', { style: '--c:' + color }, h('h2', {}, name, h('small', {}, r.title || '')));
-    if (r.error) { s.append(h('p', { class: 'err' }, 'Ошибка: ' + r.error)); return s; }
-    let g = null;
-    if (typeof r.followers === 'number') {
-      total += r.followers; segs.push([name, color, r.followers]);
-      g = growth(hist, id, r.followers);
-      if (g) { totalDelta += g.delta; hasDelta = true; }
-    }
-    s.append(h('div', { class: 'metrics' }, r.metrics.map((m, i) => h('div', { class: 'm' }, h('b', {}, cell(m[1])), h('span', {}, m[0]), i === 0 && g ? [' ', gEl(g)] : null))));
-    if (r.note) s.append(h('p', { class: 'note' }, r.note));
-    if (r.rows && r.rows.length) {
-      const head = h('tr', {}, r.cols.map((c, i) => h('th', { class: i > 1 ? 'n' : '' }, c)));
-      const body = r.rows.map(row => h('tr', {}, row.map((c, i) => h('td', { class: i > 1 ? 'n' : '' }, i === 1 ? dm(c) : cell(c)))));
-      s.append(h('div', { class: 'tw' }, h('table', {}, h('thead', {}, head), h('tbody', {}, body))));
-    }
-    return s;
+  if (!ids.length) { app.append(h('p', { class: 'empty' }, 'Пока ни одна соцсеть не подключена.')); return; }
+  const good = ids.filter(id => !d.platforms[id].error && typeof d.platforms[id].followers === 'number');
+  const total = good.reduce((a, id) => a + d.platforms[id].followers, 0);
+  const sr = series(d.history || {}, good);
+  const i0 = startIdx(sr.dates, S.period), n = sr.dates.length;
+  const span = n > 1 ? Math.round((new Date(sr.dates[n - 1]) - new Date(sr.dates[i0])) / 864e5) : 0;
+  const delta = n > 1 && span > 0 ? sr.total[n - 1] - sr.total[i0] : null;
+  const pLabel = S.period === 7 ? 'за 7 дней' : S.period === 30 ? 'за 30 дней' : 'за всё время';
+  const cls = v => v > 0 ? 'up' : v < 0 ? 'down' : '';
+
+  // карточка с общим числом и графиком
+  const seg = h('div', { class: 'seg', role: 'group', 'aria-label': 'Период' }, [[7, '7 дн'], [30, '30 дн'], [0, 'Всё']].map(([v, t]) =>
+    h('button', { type: 'button', 'aria-pressed': String(S.period === v), 'data-p': v }, t)));
+  seg.onclick = e => { const b = e.target.closest('button'); if (b) { S.period = +b.dataset.p; tap(); render(); } };
+  const box = h('div', { class: 'chart' }), readout = h('div', { class: 'readout' });
+  app.append(h('div', { class: 'card hero' },
+    h('div', { class: 'row' }, h('div', {}, h('div', { class: 'lbl' }, 'Подписчики'), h('div', { class: 'big' }, nf.format(total)),
+      delta === null ? h('span', { class: 'chip' }, 'история копится') : h('span', { class: 'chip ' + cls(delta) }, sgn(delta) + ' ' + pLabel)), seg),
+    readout, box,
+    h('div', { class: 'axis' }, h('span', {}, n > 1 ? day(sr.dates[i0]) : ''), h('span', {}, n ? day(sr.dates[n - 1]) : ''))));
+
+  // цветные блоки
+  const rated = collectPosts(d).filter(p => typeof p.views === 'number' && p.views > 0 && typeof p.likes === 'number');
+  const vSum = rated.reduce((a, p) => a + p.views, 0), eSum = rated.reduce((a, p) => a + p.likes + (p.comm || 0), 0);
+  app.append(
+    h('div', { class: 'card stat grow' }, h('div', { class: 'lbl' }, 'Прирост'), h('div', { class: 'val' }, delta === null ? '—' : sgn(delta)), h('div', { class: 'note' }, delta === null ? 'нужно хотя бы 2 дня данных' : pLabel)),
+    h('div', { class: 'card stat er' }, h('div', { class: 'lbl' }, 'Вовлечённость'), h('div', { class: 'val' }, vSum ? dec(eSum / vSum * 100, 1) + '%' : '—'), h('div', { class: 'note' }, 'лайки и комментарии к просмотрам')));
+
+  // карточки платформ
+  const plats = h('div', { class: 'plats' });
+  ids.forEach(id => {
+    const r = d.platforms[id], [name, col] = P[id] || [id, '#888'];
+    const c = h('div', { class: 'card plat' }, h('div', { class: 'pname' }, h('span', { class: 'dot', style: 'background:' + col }), name));
+    if (r.error) { c.append(h('div', { class: 'perr', title: r.error }, 'Ошибка: ' + r.error)); plats.append(c); return; }
+    const f = r.followers, arr = sr.per[id], m2 = r.metrics && r.metrics[1];
+    const pd = arr && n > 1 && span > 0 ? arr[n - 1] - arr[i0] : null;
+    c.append(h('div', { class: 'pnum' }, typeof f === 'number' ? short(f) : '—'),
+      h('div', { class: 'pmeta' }, pd === null ? h('span', {}, 'подписчики') : h('span', { class: 'chip ' + cls(pd) }, sgn(pd)),
+        m2 ? h('span', { title: m2[0] }, cut(String(m2[0]), 16).toLowerCase() + ' ', h('b', {}, typeof m2[1] === 'number' ? short(m2[1]) : m2[1])) : null));
+    if (arr && n > 1) c.append(h('div', { class: 'spark', 'data-id': id }));
+    plats.append(c);
   });
-  app.append(h('div', { class: 'total' }, total ? fmt(total) : '—'));
-  app.append(h('div', { class: 'lbl' }, 'подписчиков во всех соцсетях ', hasDelta ? gEl({ delta: totalDelta, span: '' }) : null));
-  if (total) {
-    app.append(h('div', { class: 'bar', 'aria-hidden': 'true' }, segs.map(x => h('i', { style: `width:${x[2] / total * 100}%;background:${x[1]}` }))));
-    app.append(h('div', { class: 'legend' }, segs.map(x => h('span', {}, h('span', { class: 'dot', style: 'background:' + x[1] }), x[0] + ' ', h('b', {}, fmt(x[2]))))));
-  }
-  secs.forEach(s => app.append(s));
-  app.append(h('p', { class: 'foot' }, 'Обновлено ' + new Date(d.updated).toLocaleString('ru-RU')));
+  app.append(plats);
+
+  // лучшие публикации
+  const posts = collectPosts(d).map(p => ({ ...p, val: typeof p.views === 'number' ? p.views : p.likes, unit: typeof p.views === 'number' ? 'просмотров' : 'лайков' }))
+    .filter(p => typeof p.val === 'number');
+  const pids = [...new Set(posts.map(p => p.id))];
+  if (S.filter !== 'all' && !pids.includes(S.filter)) S.filter = 'all';
+  const chips = h('div', { class: 'chips' }, ['all', ...pids].map(k =>
+    h('button', { type: 'button', 'aria-pressed': String(S.filter === k), 'data-f': k }, k === 'all' ? 'Все' : P[k][0])));
+  chips.onclick = e => { const b = e.target.closest('button'); if (b) { S.filter = b.dataset.f; tap(); render(); } };
+  const top = posts.filter(p => S.filter === 'all' || p.id === S.filter).sort((a, b) => b.val - a.val).slice(0, 6);
+  const pc = h('div', { class: 'card posts' }, h('div', { class: 'ptitle' }, h('h2', {}, 'Лучшие публикации'), pids.length > 1 ? chips : null));
+  if (!top.length) pc.append(h('div', { class: 'empty' }, 'Публикации появятся после первого обновления данных.'));
+  top.forEach(p => pc.append(h('div', { class: 'post' },
+    h('span', { class: 'dot', style: 'background:' + P[p.id][1] }),
+    h('div', {}, h('div', { class: 't' }, p.title), h('div', { class: 'm' }, P[p.id][0] + (p.date ? ' · ' + day(p.date) : ''))),
+    h('div', { class: 'v' }, short(p.val), h('small', {}, p.unit)))));
+  app.append(pc);
+
+  document.getElementById('foot').textContent = 'Обновлено ' + new Date(d.updated).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' · данные собираются раз в 6 часов';
+
+  // графики рисуем, когда у блоков уже есть размеры
+  requestAnimationFrame(() => {
+    if (n) {
+      const vals = sr.total.slice(i0), dts = sr.dates.slice(i0), w = Math.max(box.clientWidth, 120);
+      const { svg, pts } = chart(vals, w, 150, '#6c5ce7', 8);
+      box.append(svg);
+      if (pts.length > 1) {
+        const dot = sv('circle', { r: 5, fill: '#6c5ce7', stroke: '#fff', 'stroke-width': 2, visibility: 'hidden' });
+        svg.append(dot);
+        const move = e => {
+          const x = e.clientX - svg.getBoundingClientRect().left;
+          let k = 0; pts.forEach((p, j) => { if (Math.abs(p[0] - x) < Math.abs(pts[k][0] - x)) k = j; });
+          dot.setAttribute('cx', pts[k][0]); dot.setAttribute('cy', pts[k][1]); dot.setAttribute('visibility', 'visible');
+          readout.replaceChildren(day(dts[k]) + ' · ', h('b', {}, nf.format(vals[k])));
+        };
+        svg.addEventListener('pointermove', move); svg.addEventListener('pointerdown', move);
+        svg.addEventListener('pointerleave', () => { dot.setAttribute('visibility', 'hidden'); readout.replaceChildren(); });
+      } else readout.textContent = 'График появится, когда накопится история за несколько дней.';
+    }
+    plats.querySelectorAll('.spark').forEach(el => {
+      const id = el.dataset.id, v = sr.per[id].slice(i0);
+      el.append(chart(v, Math.max(el.clientWidth, 60), 38, P[id][1], 3).svg);
+    });
+  });
 }
 
-fetch('data.json?t=' + Date.now())
-  .then(r => { if (!r.ok) throw 0; return r.json(); })
-  .then(render)
-  .catch(() => {
-    document.getElementById('app').replaceChildren(h('p', { class: 'note' }, 'Данных пока нет. Запустите обновление в GitHub: вкладка Actions, «update-stats», «Run workflow».'));
-  });
+// ---------- загрузка ----------
+function greet() {
+  const hr = new Date().getHours(), t = hr < 5 ? 'Доброй ночи' : hr < 12 ? 'Доброе утро' : hr < 18 ? 'Добрый день' : 'Добрый вечер';
+  const u = tg && tg.initDataUnsafe && tg.initDataUnsafe.user;
+  document.getElementById('hello').textContent = t + (u && u.first_name ? ', ' + u.first_name : '') + ' 👋';
+}
+const btn = document.getElementById('refresh');
+function load() {
+  btn.classList.add('spin');
+  return fetch('data.json?t=' + Date.now()).then(r => { if (!r.ok) throw 0; return r.json(); })
+    .then(d => { S.data = d; render(); })
+    .catch(() => document.getElementById('app').replaceChildren(h('p', { class: 'empty' }, 'Данных пока нет. Запустите обновление на GitHub: вкладка Actions, «update-stats», «Run workflow».')))
+    .finally(() => btn.classList.remove('spin'));
+}
+btn.onclick = () => { tap(); load(); };
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => S.data && render(), 200); });
+greet(); load();
+})();
 </script>
 </body>
 </html>
