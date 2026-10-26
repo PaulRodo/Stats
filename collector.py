@@ -54,8 +54,8 @@ def youtube():
     if not items:
         raise RuntimeError("канал не найден")
     it = items[0]
-    s = it["statistics"]
-        vd = []
+        s = it["statistics"]
+    vd = []
     try:
         pl = it["contentDetails"]["relatedPlaylists"]["uploads"]
         vids = call("GET", B + "playlistItems", params={"part": "contentDetails", "maxResults": 8, "playlistId": pl, "key": key})
