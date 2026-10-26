@@ -1,10 +1,36 @@
 {
- "updated": "2026-10-26T06:50:25+00:00",
+ "updated": "2026-10-26T07:11:49+00:00",
  "platforms": {
   "yt": {
-   "title": "",
-   "error": "404: The playlist identified with the request's <code>playlistId</code> parameter cannot be found."
+   "title": "Павел Анфимов",
+   "followers": 1,
+   "metrics": [
+    [
+     "Подписчики",
+     1
+    ],
+    [
+     "Просмотры",
+     0
+    ],
+    [
+     "Видео",
+     0
+    ]
+   ],
+   "cols": [
+    "Видео",
+    "Дата",
+    "Просмотры",
+    "Лайки",
+    "Комм."
+   ],
+   "rows": []
   }
  },
- "history": {}
+ "history": {
+  "2026-10-26": {
+   "yt": 1
+  }
+ }
 }
