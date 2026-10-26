@@ -54,7 +54,7 @@ def youtube():
     if not items:
         raise RuntimeError("канал не найден")
     it = items[0]
-        s = it["statistics"]
+    s = it["statistics"]
     vd = []
     try:
         pl = it["contentDetails"]["relatedPlaylists"]["uploads"]
@@ -62,8 +62,8 @@ def youtube():
         ids = ",".join(x["contentDetails"]["videoId"] for x in vids.get("items", []))
         if ids:
             vd = call("GET", B + "videos", params={"part": "snippet,statistics", "id": ids, "key": key}).get("items", [])
-    except RuntimeError:
-        pass
+    except (RuntimeError, KeyError):
+        pass  # у канала может не быть видео, это не ошибка
     hidden = s.get("hiddenSubscriberCount")
     subs = None if hidden else int(s["subscriberCount"])
     return {
