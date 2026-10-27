@@ -52,17 +52,17 @@ jobs:
           YT_CHANNEL: ${{ secrets.YT_CHANNEL }}
           TG_BOT_TOKEN: ${{ secrets.TG_BOT_TOKEN }}
           TG_CHAT: ${{ secrets.TG_CHAT }}
+          TG_ALERT_CHAT: ${{ secrets.TG_ALERT_CHAT }}
           IG_TOKEN: ${{ secrets.IG_TOKEN }}
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           TT_CLIENT_KEY: ${{ secrets.TT_CLIENT_KEY }}
           TT_CLIENT_SECRET: ${{ secrets.TT_CLIENT_SECRET }}
           TT_STATE_KEY: ${{ secrets.TT_STATE_KEY }}
+          DATA_PASSWORD: ${{ secrets.DATA_PASSWORD }}
       - name: Save results
         run: |
           git config user.name "stats-bot"
           git config user.email "stats-bot@users.noreply.github.com"
-          git add data.json
-          if [ -f tiktok_state.enc ]; then git add tiktok_state.enc; fi
-          if [ -f instagram_state.enc ]; then git add instagram_state.enc; fi
+          git add -A
           git commit -m "Update stats" || exit 0
           git push
