@@ -9,6 +9,10 @@ on:
         description: "Код авторизации TikTok (только при первом подключении)"
         required: false
         default: ""
+      instagram_code:
+        description: "Код авторизации Instagram (только при первом подключении)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -31,6 +35,16 @@ jobs:
           TT_CLIENT_SECRET: ${{ secrets.TT_CLIENT_SECRET }}
           TT_STATE_KEY: ${{ secrets.TT_STATE_KEY }}
           TT_REDIRECT_URI: https://paulrodo.github.io/Stats/tiktok.html
+      - name: Instagram first-time authorization
+        if: ${{ inputs.instagram_code != '' }}
+        run: python ig_auth.py
+        env:
+          IG_CODE: ${{ inputs.instagram_code }}
+          IG_APP_ID: ${{ secrets.IG_APP_ID }}
+          IG_APP_SECRET: ${{ secrets.IG_APP_SECRET }}
+          IG_TOKEN: ${{ secrets.IG_TOKEN }}
+          TT_STATE_KEY: ${{ secrets.TT_STATE_KEY }}
+          IG_REDIRECT_URI: https://paulrodo.github.io/Stats/
       - name: Collect stats
         run: python collector.py
         env:
@@ -43,7 +57,7 @@ jobs:
           TT_CLIENT_KEY: ${{ secrets.TT_CLIENT_KEY }}
           TT_CLIENT_SECRET: ${{ secrets.TT_CLIENT_SECRET }}
           TT_STATE_KEY: ${{ secrets.TT_STATE_KEY }}
-            - name: Save results
+      - name: Save results
         run: |
           git config user.name "stats-bot"
           git config user.email "stats-bot@users.noreply.github.com"
