@@ -75,6 +75,7 @@ def youtube():
         "title": it["snippet"]["title"], "followers": subs,
         "metrics": [["Подписчики", "скрыты" if hidden else subs], ["Просмотры", int(s["viewCount"])], ["Видео", int(s["videoCount"])]],
         "posts": [{"id": v["id"], "title": cut(v["snippet"]["title"]), "ts": v["snippet"]["publishedAt"],
+                   "url": "https://www.youtube.com/watch?v=" + v["id"],
                    "views": int(v["statistics"].get("viewCount", 0)), "likes": int(v["statistics"].get("likeCount", 0)),
                    "comments": int(v["statistics"].get("commentCount", 0))} for v in vd],
     }
@@ -108,7 +109,8 @@ def tg_posts(name):
         t = re.search(r'<time[^>]*datetime="([^"]+)"', chunk)
         tx = re.search(r'js-message_text"[^>]*>(.*?)</div>', chunk, re.S)
         text = html.unescape(re.sub(r"<[^>]+>", " ", tx.group(1))) if tx else ""
-        posts.append({"id": pid.group(1), "title": cut(text), "ts": t.group(1) if t else "", "views": parse_views(v.group(1))})
+        posts.append({"id": pid.group(1), "title": cut(text), "ts": t.group(1) if t else "",
+                      "url": f"https://t.me/{name}/{pid.group(1)}", "views": parse_views(v.group(1))})
     return posts[::-1]
 
 
@@ -189,8 +191,8 @@ def instagram():
     u = call("GET", B + node, params={"fields": "username,followers_count,follows_count,media_count", "access_token": tok})
     rows = []
     try:
-        m = call("GET", B + node + "/media", params={"fields": "id,caption,like_count,comments_count,timestamp", "limit": 20, "access_token": tok})
-        rows = [{"id": x["id"], "title": cut(x.get("caption")), "ts": iso(x.get("timestamp", "")),
+        m = call("GET", B + node + "/media", params={"fields": "id,caption,like_count,comments_count,timestamp,permalink", "limit": 20, "access_token": tok})
+        rows = [{"id": x["id"], "title": cut(x.get("caption")), "ts": iso(x.get("timestamp", "")), "url": x.get("permalink"),
                  "likes": x.get("like_count", 0), "comments": x.get("comments_count", 0)} for x in m["data"]]
     except (RuntimeError, KeyError):
         pass
@@ -280,12 +282,16 @@ def tiktok():
         u = call("GET", U, headers=H, params={"fields": "display_name"})["data"]["user"]
         note = "Нет доступа к статистике аккаунта: в приложении TikTok нужно право user.info.stats."
     vids = []
-    try:
-        vids = call("POST", "https://open.tiktokapis.com/v2/video/list/", headers=H, json={"max_count": 20},
-                    params={"fields": "id,title,create_time,view_count,like_count,comment_count,share_count"})["data"].get("videos", [])
-    except RuntimeError:
-        pass
+    F = "id,title,create_time,view_count,like_count,comment_count,share_count"
+    for fields in (F + ",share_url", F):  # со ссылкой на видео; если не разрешено, то без неё
+        try:
+            vids = call("POST", "https://open.tiktokapis.com/v2/video/list/", headers=H, json={"max_count": 20},
+                        params={"fields": fields})["data"].get("videos", [])
+            break
+        except RuntimeError:
+            continue
     rows = [{"id": x.get("id"), "title": cut(x.get("title")), "ts": dt.datetime.fromtimestamp(x["create_time"], dt.timezone.utc).isoformat(),
+             "url": x.get("share_url"),
              "views": x.get("view_count", 0), "likes": x.get("like_count", 0), "comments": x.get("comment_count", 0),
              "shares": x.get("share_count", 0)} for x in vids]
     metrics = []
@@ -351,7 +357,10 @@ def load_old(pw):
 
 
 def notify(text):
-    tok, chat = env("TG_BOT_TOKEN"), env("TG_ALERT_CHAT")
+    """Сообщение в Telegram. Если заданы NOTIFY_BOT_TOKEN и NOTIFY_CHAT_ID, шлёт через отдельного бота,
+    иначе через прежнего (TG_BOT_TOKEN и TG_ALERT_CHAT)."""
+    tok = env("NOTIFY_BOT_TOKEN") or env("TG_BOT_TOKEN")
+    chat = env("NOTIFY_CHAT_ID") or env("TG_ALERT_CHAT")
     if not (tok and chat):
         return False
     try:
@@ -359,6 +368,35 @@ def notify(text):
         return True
     except RuntimeError:
         return False
+
+
+def digest(out, now):
+    """Недельная сводка: в понедельник, один раз (при первом запуске за день)."""
+    alerts, hist = out["alerts"], out["history"]
+    today = now.strftime("%Y-%m-%d")
+    if now.weekday() != 0 or alerts.get("digest") == today or not hist:
+        return
+    ref = (now.date() - dt.timedelta(days=7)).isoformat()
+    past = [d for d in hist if d <= ref]
+    base = hist[max(past)] if past else hist[min(hist)]
+    num = lambda n: f"{n:,}".replace(",", " ")
+    lines, total, diff_total = ["📊 Итоги недели"], 0, 0
+    for pid, r in out["platforms"].items():
+        f = r.get("followers")
+        if isinstance(f, (int, float)):
+            d = f - base.get(pid, f)
+            total += f
+            diff_total += d
+            lines.append(f"{NAMES.get(pid, pid)}: {num(int(f))} ({int(d):+,})".replace(",", " "))
+    lines.append(f"Всего: {num(int(total))} ({int(diff_total):+,})".replace(",", " "))
+    week = [p for p in out["archive"] if p.get("ts", "")[:10] >= ref and isinstance(p.get("views"), int)]
+    if week:
+        b = max(week, key=lambda p: p["views"])
+        lines.append(f"🔥 Лучшая публикация: {b['title']} ({NAMES.get(b['pid'], b['pid'])}), {num(b['views'])} просмотров")
+        if b.get("url"):
+            lines.append(b["url"])
+    if notify("\n".join(lines)):
+        alerts["digest"] = today
 
 
 def main():
@@ -377,7 +415,11 @@ def main():
         if res is None:
             continue
         for p in res.pop("posts", []):  # свежие публикации попадают в архив и обновляют свои цифры
-            arch[(pid, p.get("id") or p["title"])] = {**p, "pid": pid}
+            key = (pid, p.get("id") or p["title"])
+            new = {k: v for k, v in p.items() if v is not None}
+            if not new.get("url") and arch.get(key, {}).get("url"):
+                new["url"] = arch[key]["url"]  # не теряем ссылку, если сейчас её получить не удалось
+            arch[key] = {**new, "pid": pid}
         out["platforms"][pid] = res
         if res.get("followers") is not None:
             hist.setdefault(today, {})[pid] = res["followers"]
@@ -386,9 +428,21 @@ def main():
                 alerts[pid] = today  # не чаще раза в сутки
         else:
             alerts.pop(pid, None)
+    tgc = env("TG_CHAT")
+    for p in arch.values():  # ссылки для старых публикаций, у которых их ещё нет
+        if p.get("url") or not p.get("id"):
+            continue
+        if p["pid"] == "yt":
+            p["url"] = "https://www.youtube.com/watch?v=" + str(p["id"])
+        elif p["pid"] == "tg" and tgc.startswith("@"):
+            p["url"] = f"https://t.me/{tgc[1:]}/{p['id']}"
     out["history"] = {d: hist[d] for d in sorted(hist)[-400:]}
     out["alerts"] = alerts
     out["archive"] = sorted(arch.values(), key=lambda p: p.get("ts", ""), reverse=True)[:1000]
+    try:
+        digest(out, now)
+    except Exception as e:  # сводка не должна ломать сбор данных
+        print("Сводку отправить не удалось:", e)
     if pw:
         with open(ENC_FILE, "w", encoding="utf-8") as f:
             json.dump(encrypt_data(out, pw), f)

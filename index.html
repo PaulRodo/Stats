@@ -10,7 +10,7 @@
 <style>
 :root{--bg:#eef0f6;--card:#fff;--ink:#14172b;--mute:#7a7f99;--line:#e7e9f2;--chip:#f1f3f9;--up:#14a05a;--down:#e5484d;
 --sh:0 1px 2px rgba(20,23,43,.04),0 8px 24px rgba(20,23,43,.06);color-scheme:light}
-:root[data-theme=dark]{--bg:#0f1126;--card:#1a1d37;--ink:#eef0fb;--mute:#9a9fbb;--line:#2a2e4d;--chip:#242848;--up:#3ddc84;--down:#ff6b70;--sh:none;color-scheme:dark}
+:root[data-theme=dark]{--card:color-mix(in srgb,var(--bg) 86%,#fff);--chip:color-mix(in srgb,var(--bg) 76%,#fff);--line:color-mix(in srgb,var(--bg) 70%,#fff);--ink:#eef0fb;--mute:#9a9fbb;--up:#3ddc84;--down:#ff6b70;--sh:none;color-scheme:dark}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.4 Onest,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
 -webkit-font-smoothing:antialiased;padding:max(16px,env(safe-area-inset-top)) 16px calc(28px + env(safe-area-inset-bottom))}
@@ -20,16 +20,17 @@ button:focus-visible{outline:2px solid #2aa5ee;outline-offset:2px}
 header{display:flex;justify-content:space-between;align-items:center;gap:12px;margin:4px 2px 16px}
 h1{font-size:22px;font-weight:700;letter-spacing:-.02em;margin:0}
 .sub{color:var(--mute);font-size:13px;margin:2px 0 0}
+.acts{display:flex;gap:8px}
 .round{width:40px;height:40px;border-radius:50%;background:var(--card);box-shadow:var(--sh);font-size:18px;flex:none}
 .round.spin{animation:spin .8s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .grid{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
 .card{background:var(--card);border-radius:24px;padding:18px;box-shadow:var(--sh);min-width:0}
-.hero,.posts,.plats{grid-column:1/-1}
+.hero,.posts,.plats,.wide{grid-column:1/-1}
 .lbl{color:var(--mute);font-size:13px;font-weight:500}
 .row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
 .big{font-size:44px;font-weight:800;letter-spacing:-.04em;line-height:1.05;margin:4px 0 6px}
-.chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--chip);color:var(--mute);white-space:nowrap}
+.chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--chip);color:var(--mute);white-space:nowrap;margin-right:4px}
 .chip.up{background:color-mix(in srgb,var(--up) 15%,transparent);color:var(--up)}
 .chip.down{background:color-mix(in srgb,var(--down) 15%,transparent);color:var(--down)}
 .seg{display:flex;background:var(--chip);border-radius:99px;padding:3px;flex:none}
@@ -48,21 +49,22 @@ h1{font-size:22px;font-weight:700;letter-spacing:-.02em;margin:0}
 .er{background:linear-gradient(150deg,#1faa59,#0c8a45)}
 .plats{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
 .plats .plat:last-child:nth-child(odd){grid-column:1/-1}
-.plat{padding:14px 16px}
+.plat{padding:14px 16px;cursor:pointer}
 .pname{display:flex;align-items:center;gap:7px;font-weight:600;font-size:14px}
-.dot{width:9px;height:9px;border-radius:50%;flex:none}
+.dot{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block}
 .pnum{font-size:26px;font-weight:700;letter-spacing:-.03em;margin:8px 0 2px}
 .pmeta{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:var(--mute)}
 .pmeta b{color:var(--ink);font-weight:600}
 .plat .spark{height:38px;margin-top:8px}
 .perr{font-size:12px;color:var(--down);margin-top:8px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
 .ptitle{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
-.ptitle h2{margin:0;font-size:17px;font-weight:700}
-.chips{display:flex;gap:6px;flex-wrap:wrap}
+.ptitle h2,.card h2{margin:0;font-size:17px;font-weight:700}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin:6px 0}
 .chips button{padding:5px 11px;border-radius:99px;font-size:13px;font-weight:500;background:var(--chip);color:var(--mute)}
 .chips button[aria-pressed=true]{background:var(--ink);color:var(--bg)}
 .post{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:11px 0;border-top:1px solid var(--line)}
 .post:first-of-type{border-top:0}
+.post.lnk{cursor:pointer}
 .post .t{font-weight:500;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical}
 .post .m{font-size:12px;color:var(--mute);margin-top:1px}
 .post .v{text-align:right;font-weight:700;font-size:16px;white-space:nowrap}
@@ -76,49 +78,72 @@ footer{color:var(--mute);font-size:12px;text-align:center;margin:18px 0 0}
 .plats .plat:last-child:nth-child(odd){grid-column:auto}
 .stat{min-height:0}
 }
-@media(prefers-reduced-motion:reduce){.round.spin{animation:none}}
+@media(prefers-reduced-motion:reduce){.round.spin,.sk{animation:none}}
 .lock{grid-column:1/-1;max-width:340px;width:100%;margin:10vh auto 0;text-align:center}
 .lock input[type=password]{width:100%;padding:13px 14px;font:inherit;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);margin:14px 0 8px}
 .lock label{display:flex;gap:8px;align-items:center;justify-content:center;font-size:13px;color:var(--mute);margin:6px 0 10px}
 .lock .go{width:100%;padding:13px;border-radius:14px;background:var(--ink);color:var(--bg);font-weight:700}
 .lock .bad{color:var(--down);font-size:13px;min-height:18px}
 .back{grid-column:1/-1;justify-self:start;font-size:14px;color:var(--mute)}
-.wide{grid-column:1/-1}
-.plat{cursor:pointer}
 .tiles{display:grid;gap:10px;grid-template-columns:repeat(2,minmax(0,1fr));margin-top:14px}
 .tile{background:var(--chip);border-radius:16px;padding:12px 14px;min-width:0}
 .tile b{display:block;font-size:20px;letter-spacing:-.02em}
 .tile span{font-size:12px;color:var(--mute)}
 @media(min-width:760px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
+/* скелетон */
+.sk{border-radius:24px;background:linear-gradient(90deg,var(--chip),var(--card),var(--chip));background-size:200% 100%;animation:sh 1.3s ease-in-out infinite}
+@keyframes sh{to{background-position:-200% 0}}
+/* доли платформ */
+.sbar{display:flex;height:14px;border-radius:99px;overflow:hidden;gap:2px;margin:12px 0 10px}
+.sbar span{min-width:2px}
+.leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--mute)}
+.leg .dot{margin-right:6px}
+/* дни недели */
+.wk{display:flex;gap:8px;height:120px;margin-top:12px}
+.wc{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:var(--mute)}
+.wbw{flex:1;display:flex;align-items:flex-end;width:100%}
+.wb{width:100%;background:var(--chip);border-radius:8px 8px 4px 4px}
+.wb.best{background:#6c5ce7}
+/* выбор цвета */
+.sws{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px;margin-top:14px}
+.sw{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:var(--mute);padding:8px;border-radius:16px}
+.sw[aria-pressed=true]{background:var(--chip);color:var(--ink)}
+.swc{width:44px;height:44px;border-radius:50%;border:2px solid var(--line)}
 </style>
 </head>
 <body>
 <main>
 <header>
-  <div><h1 id="hello">Статистика</h1><p class="sub">Ваши каналы в одном месте</p></div>
-  <button class="round" id="refresh" aria-label="Обновить">↻</button>
+<div><h1 id="hello">Статистика</h1><p class="sub">Ваши каналы в одном месте</p></div>
+<div class="acts">
+<button class="round" id="share" aria-label="Поделиться">↗</button>
+<button class="round" id="pal" aria-label="Цвет фона">🎨</button>
+<button class="round" id="refresh" aria-label="Обновить">↻</button>
+</div>
 </header>
-<div class="grid" id="app"><p class="empty">Загружаю…</p></div>
+<div class="grid" id="app"><div class="sk wide" style="height:230px"></div><div class="sk" style="height:132px"></div><div class="sk" style="height:132px"></div></div>
 <footer id="foot"></footer>
 </main>
 <script>
 (() => {
 const tg = window.Telegram && Telegram.WebApp;
-try { if (tg) { tg.ready(); tg.expand(); } } catch (e) {}
-document.documentElement.dataset.theme = (tg && tg.colorScheme) || (matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-try { if (tg) { const bg = getComputedStyle(document.documentElement).getPropertyValue('--bg').trim(); tg.setHeaderColor(bg); tg.setBackgroundColor(bg); } } catch (e) {}
+try { if (tg) { tg.ready(); tg.expand(); if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7')) tg.disableVerticalSwipes(); } } catch (e) {}
+const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} return null; };
 const tap = () => { try { tg.HapticFeedback.selectionChanged(); } catch (e) {} };
-
 const P = { yt: ['YouTube', '#ff3b30'], tg: ['Telegram', '#2aa5ee'], ig: ['Instagram', '#d62976'], tt: ['TikTok', '#12b3a8'] };
+// цвета фона: [название, светлая тема, тёмная тема]
+const BG = [['Авто'], ['Синий', '#eef0f6', '#0f1126'], ['Мятный', '#e4f3ec', '#0b1f19'], ['Персик', '#fbece3', '#241510'], ['Сирень', '#eee9fb', '#1b1232'], ['Небо', '#e3f0fb', '#0a1a2b'], ['Чёрный', '#f4f4f4', '#000000']];
 const nf = new Intl.NumberFormat('ru-RU');
 const dec = (x, d) => x.toFixed(d).replace('.', ',');
 const short = n => { const a = Math.abs(n); return a >= 1e6 ? dec(n / 1e6, 2) + 'M' : a >= 1e4 ? dec(n / 1e3, 1) + 'K' : nf.format(n); };
 const sgn = n => (n > 0 ? '+' : n < 0 ? '−' : '') + short(Math.abs(n));
-const day = s => new Date(s.length > 10 ? s : s + 'T00:00:00').toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
+const dt = s => new Date(s.length > 10 ? s : s + 'T00:00:00');
+const day = s => dt(s).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
 const cut = (s, n) => s.length > n ? s.slice(0, n - 1) + '…' : s;
+const ymd = d => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const wkey = s => { const d = dt(s); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return ymd(d); };
 const NS = 'http://www.w3.org/2000/svg';
 let uid = 0;
-
 function h(tag, attrs, ...kids) {
   const e = document.createElement(tag);
   for (const k in (attrs || {})) e.setAttribute(k, attrs[k]);
@@ -127,7 +152,20 @@ function h(tag, attrs, ...kids) {
 }
 function sv(tag, attrs) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
 
-const S = { data: null, period: 7, filter: 'all', view: 'home' };
+const S = { data: null, period: 7, filter: 'all', view: 'home', pp: 0, sort: 'views', tm: 'views', bg: +(ls('bg') ?? 1), warn: '' };
+
+// ---------- тема ----------
+const isDark = () => tg && tg.colorScheme ? tg.colorScheme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
+function applyTheme() {
+  const dk = isDark(), p = BG[S.bg] || BG[1], r = document.documentElement;
+  r.dataset.theme = dk ? 'dark' : 'light';
+  const c = p[1] ? (dk ? p[2] : p[1]) : ((tg && tg.themeParams && tg.themeParams.bg_color) || (dk ? '#0f1126' : '#eef0f6'));
+  r.style.setProperty('--bg', c);
+  try { tg.setHeaderColor(c); tg.setBackgroundColor(c); } catch (e) {}
+}
+const retheme = () => { applyTheme(); if (S.data) render(); };
+try { tg.onEvent('themeChanged', retheme); } catch (e) {}
+try { matchMedia('(prefers-color-scheme: dark)').addEventListener('change', () => { if (!tg || !tg.colorScheme) retheme(); }); } catch (e) {}
 
 // ---------- данные ----------
 function series(hist, ids) {
@@ -136,7 +174,7 @@ function series(hist, ids) {
     const raw = dates.map(d => hist[d][id]);
     let last = raw.find(v => v !== undefined);
     if (last === undefined) return;
-    per[id] = raw.map(v => { if (v !== undefined) last = v; return last; });  // до подключения платформы держим первое значение
+    per[id] = raw.map(v => { if (v !== undefined) last = v; return last; });
   });
   const keys = Object.keys(per);
   return { dates, per, total: dates.map((_, i) => keys.reduce((a, k) => a + per[k][i], 0)) };
@@ -148,8 +186,29 @@ function startIdx(dates, n) {
   dates.forEach((d, k) => { if (new Date(d).getTime() <= lim) i = k; });
   return i;
 }
+// прирост за период: абсолют, процент и сравнение с предыдущим таким же периодом
+function growth(a, dates, per) {
+  const n = dates.length, i0 = startIdx(dates, per);
+  const span = n > 1 ? Math.round((new Date(dates[n - 1]) - new Date(dates[i0])) / 864e5) : 0;
+  if (span <= 0) return null;
+  const d = a[n - 1] - a[i0], g = { d, pct: a[i0] ? d / a[i0] * 100 : null };
+  if (per && new Date(dates[0]).getTime() <= new Date(dates[n - 1]).getTime() - 2 * per * 864e5) g.prev = a[i0] - a[startIdx(dates, 2 * per)];
+  return g;
+}
+const pct = v => (v > 0 ? '+' : v < 0 ? '−' : '') + dec(Math.abs(v), 1) + '%';
+const cls = v => v > 0 ? 'up' : v < 0 ? 'down' : '';
+const pLabel = () => S.period === 7 ? 'за 7 дней' : S.period === 30 ? 'за 30 дней' : 'за всё время';
+function gchips(g) {
+  if (!g) return h('span', { class: 'chip' }, 'история копится');
+  return h('span', {}, h('span', { class: 'chip ' + cls(g.d) }, sgn(g.d) + (g.pct !== null ? ' · ' + pct(g.pct) : '') + ' ' + pLabel()),
+    g.prev !== undefined ? h('span', { class: 'chip' }, 'пред. период ' + sgn(g.prev)) : null);
+}
 function collectPosts(d) {
-  return (d.archive || []).map(p => ({ id: p.pid, title: p.title, date: p.ts, views: p.views, likes: p.likes, comm: p.comments, shares: p.shares }));
+  return (d.archive || []).map(p => {
+    const v = typeof p.views === 'number' ? p.views : null, ok = v > 0 && typeof p.likes === 'number';
+    return { id: p.pid, title: p.title, date: p.ts, views: p.views, likes: p.likes, comm: p.comments, shares: p.shares, url: p.url || p.link,
+      val: v !== null ? v : p.likes, er: ok ? (p.likes + (p.comments || 0) + (p.shares || 0)) / v * 100 : null };
+  });
 }
 
 // ---------- графики ----------
@@ -181,17 +240,95 @@ function chart(vals, w, hh, color, pad) {
   svg.append(sv('circle', { cx: last[0], cy: last[1], r: 4, fill: color }));
   return { svg, pts };
 }
+// подсказка по касанию (для любого графика)
+function hover(svg, pts, vals, dts, col, ro, fmt) {
+  fmt = fmt || (v => nf.format(v));
+  if (pts.length < 2) { ro.textContent = 'График появится, когда накопится история за несколько дней.'; return; }
+  const dot = sv('circle', { r: 5, fill: col, stroke: '#fff', 'stroke-width': 2, visibility: 'hidden' });
+  svg.append(dot);
+  const mv = e => {
+    const x = e.clientX - svg.getBoundingClientRect().left;
+    let k = 0; pts.forEach((p, j) => { if (Math.abs(p[0] - x) < Math.abs(pts[k][0] - x)) k = j; });
+    dot.setAttribute('cx', pts[k][0]); dot.setAttribute('cy', pts[k][1]); dot.setAttribute('visibility', 'visible');
+    ro.replaceChildren(day(dts[k]) + ' · ', h('b', {}, fmt(vals[k])));
+  };
+  svg.addEventListener('pointermove', mv); svg.addEventListener('pointerdown', mv);
+  svg.addEventListener('pointerleave', () => { dot.setAttribute('visibility', 'hidden'); ro.replaceChildren(); });
+}
 
-// ---------- отрисовка ----------
+// ---------- общие блоки ----------
 function go(v) {
   S.view = v; window.scrollTo(0, 0);
   try { if (tg) { v === 'home' ? tg.BackButton.hide() : tg.BackButton.show(); } } catch (e) {}
   render();
 }
-try { if (tg) tg.BackButton.onClick(() => go('home')); } catch (e) {}
+try { if (tg) { tg.BackButton.onClick(() => go('home')); tg.SettingsButton.show(); tg.SettingsButton.onClick(() => S.data && go('set')); } } catch (e) {}
+const segCtl = () => {
+  const s = h('div', { class: 'seg', role: 'group', 'aria-label': 'Период' }, [[7, '7 дн'], [30, '30 дн'], [0, 'Всё']].map(([v, t]) =>
+    h('button', { type: 'button', 'aria-pressed': String(S.period === v), 'data-p': v }, t)));
+  s.onclick = e => { const b = e.target.closest('button'); if (b) { S.period = +b.dataset.p; tap(); render(); } };
+  return s;
+};
+const chipRow = (items, cur, key) => {
+  const c = h('div', { class: 'chips' }, items.map(([k, t]) => h('button', { type: 'button', 'aria-pressed': String(cur === k), 'data-k': String(k) }, t)));
+  c.onclick = e => { const b = e.target.closest('button'); if (b) { S[key] = key === 'pp' ? +b.dataset.k : b.dataset.k; tap(); render(); } };
+  return c;
+};
+// строка публикации; по тапу открывается ссылка, если коллектор её сохранил
+function postRow(p, col, big, unit, meta) {
+  const r = h('div', { class: 'post' + (p.url ? ' lnk' : '') }, h('span', { class: 'dot', style: 'background:' + col }),
+    h('div', {}, h('div', { class: 't' }, p.title || 'Без названия'), h('div', { class: 'm' }, meta)),
+    h('div', { class: 'v' }, big, h('small', {}, unit)));
+  if (p.url) { r.setAttribute('role', 'link'); r.tabIndex = 0; r.onclick = () => { try { tg.openLink(p.url); } catch (e) { window.open(p.url, '_blank'); } }; }
+  return r;
+}
+// динамика по неделям публикации: средние просмотры или вовлечённость
+function trendCard(posts, col) {
+  const wk = {};
+  posts.filter(p => p.date && typeof p.views === 'number' && p.views > 0).forEach(p => { const k = wkey(p.date); (wk[k] = wk[k] || []).push(p); });
+  const keys = Object.keys(wk).sort().slice(-12);
+  if (keys.length < 2) return null;
+  const m = S.tm, er = m === 'er';
+  const vals = keys.map(k => { const a = wk[k], v = a.reduce((t, p) => t + p.views, 0); return er ? a.reduce((t, p) => t + (p.likes || 0) + (p.comm || 0) + (p.shares || 0), 0) / v * 100 : v / a.length; });
+  const ro = h('div', { class: 'readout' }), box = h('div', { class: 'chart' });
+  const c = h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, 'Динамика по неделям'), chipRow([['views', 'Просмотры'], ['er', 'Вовлечённость']], m, 'tm')),
+    h('div', { class: 'lbl' }, (er ? 'Вовлечённость' : 'Средние просмотры') + ' публикаций, вышедших в неделю с даты на графике'), ro, box);
+  requestAnimationFrame(() => {
+    const { svg, pts } = chart(vals, Math.max(box.clientWidth, 120), 150, col, 8);
+    box.append(svg); hover(svg, pts, vals, keys, col, ro, v => er ? dec(v, 1) + '%' : nf.format(Math.round(v)));
+  });
+  return c;
+}
+// лучший день и время публикации
+function weekCard(posts) {
+  const rows = posts.filter(p => p.date && typeof p.val === 'number');
+  if (rows.length < 5) return null;
+  const s = Array(7).fill(0), c = Array(7).fill(0), nm = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  rows.forEach(p => { const i = (dt(p.date).getDay() + 6) % 7; s[i] += p.val; c[i]++; });
+  const avg = s.map((v, i) => c[i] ? v / c[i] : 0), mx = Math.max(...avg), best = avg.indexOf(mx);
+  let hr = '';
+  const timed = rows.filter(p => p.date.length > 10);
+  if (timed.length >= 8) {
+    const hs = Array(8).fill(0), hc = Array(8).fill(0);
+    timed.forEach(p => { const b = Math.floor(dt(p.date).getHours() / 3); hs[b] += p.val; hc[b]++; });
+    let bb = -1, bv = -1; hs.forEach((v, i) => { if (hc[i] && v / hc[i] > bv) { bv = v / hc[i]; bb = i; } });
+    hr = ' · лучшее время: ' + bb * 3 + '–' + (bb * 3 + 3) + ' ч';
+  }
+  return h('div', { class: 'card wide' }, h('h2', {}, 'Когда публиковать'),
+    h('div', { class: 'lbl', style: 'margin-top:2px' }, 'Лучший день: ' + nm[best] + ' (в среднем ' + short(Math.round(mx)) + ')' + hr),
+    h('div', { class: 'wk' }, nm.map((n, i) => h('div', { class: 'wc' }, h('div', { class: 'wbw' }, h('div', { class: 'wb' + (i === best ? ' best' : ''), style: 'height:' + (mx && c[i] ? Math.max(avg[i] / mx * 100, 4) : 0) + '%' })), n))));
+}
+
+// ---------- экраны ----------
 function render() {
+  if (S.view === 'set') return renderSettings();
+  if (!S.data) return;
   if (S.view !== 'home' && !S.data.platforms[S.view]) S.view = 'home';
   S.view === 'home' ? renderHome() : renderPlatform(S.view);
+  foot();
+}
+function foot() {
+  document.getElementById('foot').textContent = S.data ? 'Обновлено ' + new Date(S.data.updated).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' · данные собираются раз в 6 часов' + (S.warn ? ' · ' + S.warn : '') : '';
 }
 function renderHome() {
   const d = S.data, app = document.getElementById('app');
@@ -202,30 +339,21 @@ function renderHome() {
   const total = good.reduce((a, id) => a + d.platforms[id].followers, 0);
   const sr = series(d.history || {}, good);
   const i0 = startIdx(sr.dates, S.period), n = sr.dates.length;
-  const span = n > 1 ? Math.round((new Date(sr.dates[n - 1]) - new Date(sr.dates[i0])) / 864e5) : 0;
-  const delta = n > 1 && span > 0 ? sr.total[n - 1] - sr.total[i0] : null;
-  const pLabel = S.period === 7 ? 'за 7 дней' : S.period === 30 ? 'за 30 дней' : 'за всё время';
-  const cls = v => v > 0 ? 'up' : v < 0 ? 'down' : '';
+  const g = n > 1 ? growth(sr.total, sr.dates, S.period) : null, delta = g ? g.d : null;
 
-  // карточка с общим числом и графиком
-  const seg = h('div', { class: 'seg', role: 'group', 'aria-label': 'Период' }, [[7, '7 дн'], [30, '30 дн'], [0, 'Всё']].map(([v, t]) =>
-    h('button', { type: 'button', 'aria-pressed': String(S.period === v), 'data-p': v }, t)));
-  seg.onclick = e => { const b = e.target.closest('button'); if (b) { S.period = +b.dataset.p; tap(); render(); } };
   const box = h('div', { class: 'chart' }), readout = h('div', { class: 'readout' });
   app.append(h('div', { class: 'card hero' },
-    h('div', { class: 'row' }, h('div', {}, h('div', { class: 'lbl' }, 'Подписчики'), h('div', { class: 'big' }, nf.format(total)),
-      delta === null ? h('span', { class: 'chip' }, 'история копится') : h('span', { class: 'chip ' + cls(delta) }, sgn(delta) + ' ' + pLabel)), seg),
+    h('div', { class: 'row' }, h('div', {}, h('div', { class: 'lbl' }, 'Подписчики'), h('div', { class: 'big' }, nf.format(total)), gchips(g)), segCtl()),
     readout, box,
     h('div', { class: 'axis' }, h('span', {}, n > 1 ? day(sr.dates[i0]) : ''), h('span', {}, n ? day(sr.dates[n - 1]) : ''))));
 
-  // цветные блоки
-  const rated = collectPosts(d).filter(p => typeof p.views === 'number' && p.views > 0 && typeof p.likes === 'number');
+  const all = collectPosts(d);
+  const rated = all.filter(p => typeof p.views === 'number' && p.views > 0 && typeof p.likes === 'number');
   const vSum = rated.reduce((a, p) => a + p.views, 0), eSum = rated.reduce((a, p) => a + p.likes + (p.comm || 0), 0);
   app.append(
-    h('div', { class: 'card stat grow' }, h('div', { class: 'lbl' }, 'Прирост'), h('div', { class: 'val' }, delta === null ? '—' : sgn(delta)), h('div', { class: 'note' }, delta === null ? 'нужно хотя бы 2 дня данных' : pLabel)),
+    h('div', { class: 'card stat grow' }, h('div', { class: 'lbl' }, 'Прирост'), h('div', { class: 'val' }, delta === null ? '—' : sgn(delta)), h('div', { class: 'note' }, delta === null ? 'нужно хотя бы 2 дня данных' : pLabel() + (g.pct !== null ? ' · ' + pct(g.pct) : ''))),
     h('div', { class: 'card stat er' }, h('div', { class: 'lbl' }, 'Вовлечённость'), h('div', { class: 'val' }, vSum ? dec(eSum / vSum * 100, 1) + '%' : '—'), h('div', { class: 'note' }, 'лайки и комментарии к просмотрам')));
 
-  // карточки платформ
   const plats = h('div', { class: 'plats' });
   ids.forEach(id => {
     const r = d.platforms[id], [name, col] = P[id] || [id, '#888'];
@@ -233,52 +361,48 @@ function renderHome() {
     c.setAttribute('role', 'button'); c.tabIndex = 0; c.onclick = () => go(id); c.onkeydown = e => { if (e.key === 'Enter') go(id); };
     if (r.error) { c.append(h('div', { class: 'perr', title: r.error }, 'Ошибка: ' + r.error)); plats.append(c); return; }
     const f = r.followers, arr = sr.per[id], m2 = r.metrics && r.metrics[1];
-    const pd = arr && n > 1 && span > 0 ? arr[n - 1] - arr[i0] : null;
+    const pg = arr && n > 1 ? growth(arr, sr.dates, S.period) : null;
     c.append(h('div', { class: 'pnum' }, typeof f === 'number' ? short(f) : '—'),
-      h('div', { class: 'pmeta' }, pd === null ? h('span', {}, 'подписчики') : h('span', { class: 'chip ' + cls(pd) }, sgn(pd)),
+      h('div', { class: 'pmeta' }, pg === null ? h('span', {}, 'подписчики') : h('span', { class: 'chip ' + cls(pg.d) }, sgn(pg.d) + (pg.pct !== null ? ' · ' + pct(pg.pct) : '')),
         m2 ? h('span', { title: m2[0] }, cut(String(m2[0]), 16).toLowerCase() + ' ', h('b', {}, typeof m2[1] === 'number' ? short(m2[1]) : m2[1])) : null));
     if (arr && n > 1) c.append(h('div', { class: 'spark', 'data-id': id }));
     plats.append(c);
   });
   app.append(plats);
 
-  // лучшие публикации
-  const posts = collectPosts(d).map(p => ({ ...p, val: typeof p.views === 'number' ? p.views : p.likes, unit: typeof p.views === 'number' ? 'просмотров' : 'лайков' }))
-    .filter(p => typeof p.val === 'number');
+  // доли платформ
+  if (good.length > 1 && total > 0) {
+    app.append(h('div', { class: 'card wide' }, h('h2', {}, 'Доли платформ'),
+      h('div', { class: 'sbar' }, good.map(id => h('span', { style: `flex:${d.platforms[id].followers};background:${(P[id] || [0, '#888'])[1]}` }))),
+      h('div', { class: 'leg' }, good.map(id => h('span', {}, h('i', { class: 'dot', style: 'background:' + (P[id] || [0, '#888'])[1] }), (P[id] || [id])[0] + ' ' + dec(d.platforms[id].followers / total * 100, 1) + '%')))));
+  }
+
+  // лучшие публикации: платформа, период, сортировка
+  const posts = all.filter(p => typeof p.val === 'number' && P[p.id]);
   const pids = [...new Set(posts.map(p => p.id))];
   if (S.filter !== 'all' && !pids.includes(S.filter)) S.filter = 'all';
-  const chips = h('div', { class: 'chips' }, ['all', ...pids].map(k =>
-    h('button', { type: 'button', 'aria-pressed': String(S.filter === k), 'data-f': k }, k === 'all' ? 'Все' : P[k][0])));
-  chips.onclick = e => { const b = e.target.closest('button'); if (b) { S.filter = b.dataset.f; tap(); render(); } };
-  const top = posts.filter(p => S.filter === 'all' || p.id === S.filter).sort((a, b) => b.val - a.val).slice(0, 6);
-  const pc = h('div', { class: 'card posts' }, h('div', { class: 'ptitle' }, h('h2', {}, 'Лучшие публикации'), pids.length > 1 ? chips : null));
-  if (!top.length) pc.append(h('div', { class: 'empty' }, 'Публикации появятся после первого обновления данных.'));
-  top.forEach(p => pc.append(h('div', { class: 'post' },
-    h('span', { class: 'dot', style: 'background:' + P[p.id][1] }),
-    h('div', {}, h('div', { class: 't' }, p.title), h('div', { class: 'm' }, P[p.id][0] + (p.date ? ' · ' + day(p.date) : ''))),
-    h('div', { class: 'v' }, short(p.val), h('small', {}, p.unit)))));
+  const base = posts.filter(p => S.filter === 'all' || p.id === S.filter), now = Date.now();
+  const key = { views: 'val', likes: 'likes', er: 'er' }[S.sort];
+  const top = base.filter(p => !S.pp || (p.date && now - dt(p.date) < S.pp * 864e5))
+    .filter(p => typeof p[key] === 'number').sort((a, b) => b[key] - a[key]).slice(0, 6);
+  const pc = h('div', { class: 'card posts' }, h('div', { class: 'ptitle' }, h('h2', {}, 'Лучшие публикации'),
+    pids.length > 1 ? chipRow([['all', 'Все'], ...pids.map(k => [k, P[k][0]])], S.filter, 'filter') : null),
+    chipRow([[0, 'Всё время'], [7, '7 дн'], [30, '30 дн']], S.pp, 'pp'),
+    chipRow([['views', 'Просмотры'], ['likes', 'Лайки'], ['er', 'Вовлечённость']], S.sort, 'sort'));
+  if (!top.length) pc.append(h('div', { class: 'empty' }, posts.length ? 'За этот период публикаций нет.' : 'Публикации появятся после первого обновления данных.'));
+  top.forEach(p => {
+    const [big, unit] = S.sort === 'er' ? [dec(p.er, 1) + '%', 'вовлечённость'] : S.sort === 'likes' ? [short(p.likes), 'лайков'] : [short(p.val), typeof p.views === 'number' ? 'просмотров' : 'лайков'];
+    pc.append(postRow(p, P[p.id][1], big, unit, P[p.id][0] + (p.date ? ' · ' + day(p.date) : '')));
+  });
   app.append(pc);
+  const tc = trendCard(base, '#e63e7a'); if (tc) app.append(tc);
+  const wc = weekCard(base); if (wc) app.append(wc);
 
-  document.getElementById('foot').textContent = 'Обновлено ' + new Date(d.updated).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' · данные собираются раз в 6 часов';
-
-  // графики рисуем, когда у блоков уже есть размеры
   requestAnimationFrame(() => {
     if (n) {
       const vals = sr.total.slice(i0), dts = sr.dates.slice(i0), w = Math.max(box.clientWidth, 120);
       const { svg, pts } = chart(vals, w, 150, '#6c5ce7', 8);
-      box.append(svg);
-      if (pts.length > 1) {
-        const dot = sv('circle', { r: 5, fill: '#6c5ce7', stroke: '#fff', 'stroke-width': 2, visibility: 'hidden' });
-        svg.append(dot);
-        const move = e => {
-          const x = e.clientX - svg.getBoundingClientRect().left;
-          let k = 0; pts.forEach((p, j) => { if (Math.abs(p[0] - x) < Math.abs(pts[k][0] - x)) k = j; });
-          dot.setAttribute('cx', pts[k][0]); dot.setAttribute('cy', pts[k][1]); dot.setAttribute('visibility', 'visible');
-          readout.replaceChildren(day(dts[k]) + ' · ', h('b', {}, nf.format(vals[k])));
-        };
-        svg.addEventListener('pointermove', move); svg.addEventListener('pointerdown', move);
-        svg.addEventListener('pointerleave', () => { dot.setAttribute('visibility', 'hidden'); readout.replaceChildren(); });
-      } else readout.textContent = 'График появится, когда накопится история за несколько дней.';
+      box.append(svg); hover(svg, pts, vals, dts, '#6c5ce7', readout);
     }
     plats.querySelectorAll('.spark').forEach(el => {
       const id = el.dataset.id, v = sr.per[id].slice(i0);
@@ -286,26 +410,20 @@ function renderHome() {
     });
   });
 }
-
 function renderPlatform(id) {
   const d = S.data, r = d.platforms[id], [name, col] = P[id], app = document.getElementById('app');
   app.replaceChildren();
   const back = h('button', { class: 'back', type: 'button' }, '← Назад'); back.onclick = () => go('home');
   const posts = collectPosts(d).filter(p => p.id === id).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   const f = r.followers, sr = series(d.history || {}, [id]), arr = sr.per[id], n = sr.dates.length, i0 = startIdx(sr.dates, S.period);
-  const span = arr && n > 1 ? Math.round((new Date(sr.dates[n - 1]) - new Date(sr.dates[i0])) / 864e5) : 0;
-  const delta = span > 0 ? arr[n - 1] - arr[i0] : null;
-  const seg = h('div', { class: 'seg', role: 'group', 'aria-label': 'Период' }, [[7, '7 дн'], [30, '30 дн'], [0, 'Всё']].map(([v, t]) =>
-    h('button', { type: 'button', 'aria-pressed': String(S.period === v), 'data-p': v }, t)));
-  seg.onclick = e => { const b = e.target.closest('button'); if (b) { S.period = +b.dataset.p; tap(); render(); } };
-  const box = h('div', { class: 'chart' });
+  const g = arr && n > 1 ? growth(arr, sr.dates, S.period) : null;
+  const box = h('div', { class: 'chart' }), ro = h('div', { class: 'readout' });
   const card = h('div', { class: 'card wide' },
     h('div', { class: 'row' }, h('div', {}, h('div', { class: 'pname' }, h('span', { class: 'dot', style: 'background:' + col }), name + (r.title ? ' · ' + r.title : '')),
-      h('div', { class: 'big' }, typeof f === 'number' ? nf.format(f) : '—'),
-      delta === null ? h('span', { class: 'chip' }, 'история копится') : h('span', { class: 'chip ' + (delta > 0 ? 'up' : delta < 0 ? 'down' : '') }, sgn(delta))), seg));
+      h('div', { class: 'big' }, typeof f === 'number' ? nf.format(f) : '—'), gchips(g)), segCtl()));
   if (r.error) card.append(h('div', { class: 'perr' }, 'Ошибка: ' + r.error));
-  card.append(box);
-  // метрики: то, что отдаёт платформа, плюс расчётные по последним публикациям
+  card.append(ro, box);
+
   const rec = posts.slice(0, 20), vv = rec.filter(p => typeof p.views === 'number'), sum = (a, k) => a.reduce((t, p) => t + (p[k] || 0), 0);
   const t = (r.metrics || []).map(m => [m[0], typeof m[1] === 'number' ? short(m[1]) : m[1]]);
   if (vv.length) {
@@ -317,24 +435,46 @@ function renderPlatform(id) {
   if (rec.length) {
     t.push(['Лайков на публикацию', short(Math.round(sum(rec, 'likes') / rec.length))]);
     if (rec.some(p => p.shares !== undefined)) t.push(['Репостов на публикацию', dec(sum(rec, 'shares') / rec.length, 1)]);
-    const recent = posts.filter(p => p.date && Date.now() - new Date(p.date) < 30 * 864e5).length;
+    const recent = posts.filter(p => p.date && Date.now() - dt(p.date) < 30 * 864e5).length;
     if (recent) t.push(['Публикаций в неделю', dec(recent / 30 * 7, 1)]);
   }
   card.append(h('div', { class: 'tiles' }, t.map(([l, v]) => h('div', { class: 'tile' }, h('b', {}, String(v)), h('span', {}, l)))));
   if (r.note) card.append(h('p', { class: 'empty' }, r.note));
+
   const pc = h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, 'Последние публикации')));
   if (!posts.length) pc.append(h('div', { class: 'empty' }, 'Публикации появятся после первого обновления данных.'));
-  posts.slice(0, 10).forEach(p => {
-    const val = typeof p.views === 'number' ? p.views : p.likes;
-    pc.append(h('div', { class: 'post' }, h('span', { class: 'dot', style: 'background:' + col }),
-      h('div', {}, h('div', { class: 't' }, p.title), h('div', { class: 'm' }, [p.date ? day(p.date) : null, typeof p.likes === 'number' ? '♥ ' + short(p.likes) : null, typeof p.comm === 'number' ? '💬 ' + short(p.comm) : null].filter(Boolean).join(' · '))),
-      h('div', { class: 'v' }, typeof val === 'number' ? short(val) : '—', h('small', {}, typeof p.views === 'number' ? 'просмотров' : 'лайков'))));
-  });
-  app.append(back, card, pc);
+  posts.slice(0, 10).forEach(p => pc.append(postRow(p, col, typeof p.val === 'number' ? short(p.val) : '—', typeof p.views === 'number' ? 'просмотров' : 'лайков',
+    [p.date ? day(p.date) : null, typeof p.likes === 'number' ? '♥ ' + short(p.likes) : null, typeof p.comm === 'number' ? '💬 ' + short(p.comm) : null].filter(Boolean).join(' · '))));
+  app.append(back, card);
+  const tc = trendCard(posts, col); if (tc) app.append(tc);
+  const wc = weekCard(posts); if (wc) app.append(wc);
+  app.append(pc);
   requestAnimationFrame(() => {
     if (!arr || n < 1) return;
-    box.append(chart(arr.slice(i0), Math.max(box.clientWidth, 120), 150, col, 8).svg);
+    const vals = arr.slice(i0), { svg, pts } = chart(vals, Math.max(box.clientWidth, 120), 150, col, 8);
+    box.append(svg); hover(svg, pts, vals, sr.dates.slice(i0), col, ro);
   });
+}
+function renderSettings() {
+  const app = document.getElementById('app'), dk = isDark();
+  app.replaceChildren();
+  const back = h('button', { class: 'back', type: 'button' }, '← Назад'); back.onclick = () => go('home');
+  const sw = h('div', { class: 'sws' }, BG.map((p, i) => {
+    const b = h('button', { type: 'button', class: 'sw', 'aria-pressed': String(S.bg === i) },
+      h('span', { class: 'swc', style: 'background:' + (p[1] ? (dk ? p[2] : p[1]) : 'linear-gradient(135deg,#fff 50%,#14172b 50%)') }), p[0]);
+    b.onclick = () => { S.bg = i; ls('bg', String(i)); applyTheme(); tap(); renderSettings(); };
+    return b;
+  }));
+  app.append(back, h('div', { class: 'card wide' }, h('h2', {}, 'Цвет фона'), h('div', { class: 'sub' }, '«Авто» берёт цвет из темы Telegram'), sw));
+}
+function share() {
+  const d = S.data; if (!d) return;
+  const ids = Object.keys(d.platforms).filter(id => typeof d.platforms[id].followers === 'number');
+  const sr = series(d.history || {}, ids), g = sr.dates.length > 1 ? growth(sr.total, sr.dates, 7) : null;
+  const txt = '📊 Подписчиков: ' + nf.format(ids.reduce((a, id) => a + d.platforms[id].followers, 0)) + (g ? ' (' + sgn(g.d) + ' за 7 дней)' : '') + '\n' +
+    ids.map(id => (P[id] || [id])[0] + ': ' + short(d.platforms[id].followers)).join('\n');
+  const u = 'https://t.me/share/url?url=' + encodeURIComponent(location.href.split('#')[0]) + '&text=' + encodeURIComponent(txt);
+  try { tg.openTelegramLink(u); } catch (e) { window.open(u, '_blank'); }
 }
 
 // ---------- загрузка ----------
@@ -351,13 +491,13 @@ async function decrypt(box, pw) {
   return JSON.parse(new TextDecoder().decode(await crypto.subtle.decrypt({ name: 'AES-GCM', iv: b(box.iv) }, key, b(box.ct))));
 }
 async function unlock(box) {
-  let saved = null; try { saved = localStorage.getItem('pw'); } catch (e) {}
-  if (saved) { try { S.data = await decrypt(box, saved); render(); return; } catch (e) { /* пароль сменили */ } }
+  const saved = ls('pw');
+  if (saved) { try { S.data = await decrypt(box, saved); S.warn = ''; render(); return; } catch (e) { /* пароль сменили */ } }
   const pw = h('input', { type: 'password', placeholder: 'Пароль', autocomplete: 'current-password', 'aria-label': 'Пароль' });
   const rem = h('input', { type: 'checkbox', checked: '' }), bad = h('div', { class: 'bad' }), ok = h('button', { class: 'go', type: 'button' }, 'Открыть');
   const submit = async () => {
     bad.textContent = ''; ok.disabled = true;
-    try { S.data = await decrypt(box, pw.value); try { if (rem.checked) localStorage.setItem('pw', pw.value); } catch (e) {} render(); }
+    try { S.data = await decrypt(box, pw.value); S.warn = ''; if (rem.checked) ls('pw', pw.value); render(); }
     catch (e) { bad.textContent = 'Неверный пароль'; ok.disabled = false; }
   };
   ok.onclick = submit; pw.onkeydown = e => { if (e.key === 'Enter') submit(); };
@@ -365,16 +505,31 @@ async function unlock(box) {
     h('div', { class: 'sub' }, 'Введите пароль, чтобы открыть'), pw, h('label', {}, rem, 'Запомнить на этом устройстве'), bad, ok));
   pw.focus();
 }
-function load() {
+async function load() {
   btn.classList.add('spin');
   const get = u => fetch(u + '?t=' + Date.now()).then(r => { if (!r.ok) throw 0; return r.json(); });
-  return get('data.enc').then(unlock, () => get('data.json').then(d => { S.data = d; render(); }))
-    .catch(() => document.getElementById('app').replaceChildren(h('p', { class: 'empty' }, 'Данных пока нет. Запустите обновление на GitHub: вкладка Actions, «update-stats», «Run workflow».')))
-    .finally(() => btn.classList.remove('spin'));
+  try {
+    const box = await get('data.enc').catch(() => null);
+    if (box) { ls('box', JSON.stringify(box)); await unlock(box); }
+    else { S.data = await get('data.json'); S.warn = ''; render(); }
+  } catch (e) {
+    if (S.data) { S.warn = 'не удалось обновить, показаны прошлые данные'; foot(); }
+    else document.getElementById('app').replaceChildren(h('p', { class: 'empty' }, 'Данных пока нет. Запустите обновление на GitHub: вкладка Actions, «update-stats», «Run workflow».'));
+  }
+  btn.classList.remove('spin');
 }
 btn.onclick = () => { tap(); load(); };
+document.getElementById('share').onclick = () => { tap(); share(); };
+document.getElementById('pal').onclick = () => { if (S.data) { tap(); go('set'); } };
 let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => S.data && render(), 200); });
-greet(); load();
+
+(async () => {
+  applyTheme(); greet();
+  // мгновенный показ из кэша: хранится зашифрованный файл, расшифровка паролем устройства
+  const cb = ls('box'), pw = ls('pw');
+  if (cb && pw) { try { S.data = await decrypt(JSON.parse(cb), pw); render(); } catch (e) {} }
+  load();
+})();
 })();
 </script>
 </body>
