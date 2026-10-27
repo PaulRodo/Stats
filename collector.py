@@ -7,6 +7,7 @@ import html
 import json
 import os
 import re
+import sys
 
 import requests
 
@@ -62,7 +63,7 @@ def youtube():
     vd = []
     try:
         pl = it["contentDetails"]["relatedPlaylists"]["uploads"]
-        vids = call("GET", B + "playlistItems", params={"part": "contentDetails", "maxResults": 8, "playlistId": pl, "key": key})
+        vids = call("GET", B + "playlistItems", params={"part": "contentDetails", "maxResults": 20, "playlistId": pl, "key": key})
         ids = ",".join(x["contentDetails"]["videoId"] for x in vids.get("items", []))
         if ids:
             vd = call("GET", B + "videos", params={"part": "snippet,statistics", "id": ids, "key": key}).get("items", [])
@@ -73,9 +74,9 @@ def youtube():
     return {
         "title": it["snippet"]["title"], "followers": subs,
         "metrics": [["Подписчики", "скрыты" if hidden else subs], ["Просмотры", int(s["viewCount"])], ["Видео", int(s["videoCount"])]],
-        "cols": ["Видео", "Дата", "Просмотры", "Лайки", "Комм."],
-        "rows": [[cut(v["snippet"]["title"]), day(v["snippet"]["publishedAt"]), int(v["statistics"].get("viewCount", 0)),
-                  int(v["statistics"].get("likeCount", 0)), int(v["statistics"].get("commentCount", 0))] for v in vd],
+        "posts": [{"id": v["id"], "title": cut(v["snippet"]["title"]), "ts": v["snippet"]["publishedAt"],
+                   "views": int(v["statistics"].get("viewCount", 0)), "likes": int(v["statistics"].get("likeCount", 0)),
+                   "comments": int(v["statistics"].get("commentCount", 0))} for v in vd],
     }
 
 
@@ -107,8 +108,8 @@ def tg_posts(name):
         t = re.search(r'<time[^>]*datetime="([^"]+)"', chunk)
         tx = re.search(r'js-message_text"[^>]*>(.*?)</div>', chunk, re.S)
         text = html.unescape(re.sub(r"<[^>]+>", " ", tx.group(1))) if tx else ""
-        posts.append([cut(text), day(t.group(1)) if t else "", parse_views(v.group(1))])
-    return posts[-10:][::-1]
+        posts.append({"id": pid.group(1), "title": cut(text), "ts": t.group(1) if t else "", "views": parse_views(v.group(1))})
+    return posts[::-1]
 
 
 def telegram():
@@ -125,9 +126,8 @@ def telegram():
     res = {"title": title, "followers": n, "metrics": [["Подписчики", n]]}
     posts = tg_posts(chat.lstrip("@")) if chat.startswith("@") else []
     if posts:
-        res["metrics"].append(["Просмотров на пост (в среднем)", sum(p[2] for p in posts) // len(posts)])
-        res["cols"] = ["Пост", "Дата", "Просмотры"]
-        res["rows"] = posts
+        res["metrics"].append(["Просмотров на пост (в среднем)", sum(p["views"] for p in posts) // len(posts)])
+        res["posts"] = posts
         res["note"] = "Просмотры постов взяты с публичной страницы канала, у больших чисел они округлены."
     else:
         res["note"] = "Просмотры постов получить не удалось: канал должен быть публичным (с @именем)."
@@ -189,14 +189,15 @@ def instagram():
     u = call("GET", B + node, params={"fields": "username,followers_count,follows_count,media_count", "access_token": tok})
     rows = []
     try:
-        m = call("GET", B + node + "/media", params={"fields": "caption,like_count,comments_count,timestamp", "limit": 8, "access_token": tok})
-        rows = [[cut(x.get("caption")), day(x.get("timestamp")), x.get("like_count", 0), x.get("comments_count", 0)] for x in m["data"]]
+        m = call("GET", B + node + "/media", params={"fields": "id,caption,like_count,comments_count,timestamp", "limit": 20, "access_token": tok})
+        rows = [{"id": x["id"], "title": cut(x.get("caption")), "ts": iso(x.get("timestamp", "")),
+                 "likes": x.get("like_count", 0), "comments": x.get("comments_count", 0)} for x in m["data"]]
     except (RuntimeError, KeyError):
         pass
     return {
         "title": "@" + u["username"], "followers": u["followers_count"],
         "metrics": [["Подписчики", u["followers_count"]], ["Подписки", u.get("follows_count", 0)], ["Публикации", u.get("media_count", 0)]],
-        "cols": ["Публикация", "Дата", "Лайки", "Комм."], "rows": rows,
+        "posts": rows,
     }
 
 
@@ -214,15 +215,14 @@ def tiktok_manual():
         for key, label in (("likes", "Лайки"), ("views", "Просмотры"), ("videos", "Видео")):
             if d.get(key):
                 metrics.append([label, int(d[key])])
-        rows = [[cut(x.get("title")), str(x.get("date", "")), int(x.get("views") or 0), int(x.get("likes") or 0),
-                 int(x.get("comments") or 0)] for x in d.get("recent", [])]
+        rows = [{"title": cut(x.get("title")), "ts": str(x.get("date", "")) + "T12:00:00+00:00", "views": int(x.get("views") or 0),
+                 "likes": int(x.get("likes") or 0), "comments": int(x.get("comments") or 0)} for x in d.get("recent", [])]
     except (ValueError, TypeError, AttributeError):
         raise RuntimeError("в tiktok.json ошибка: проверьте запятые, кавычки и что в числах нет пробелов")
     note = "Цифры введены вручную" + (f" (обновлено {d['updated']})." if d.get("updated") else ".")
     res = {"title": d.get("username", ""), "followers": followers, "metrics": metrics, "note": note}
     if rows:
-        res["cols"] = ["Видео", "Дата", "Просмотры", "Лайки", "Комм."]
-        res["rows"] = rows
+        res["posts"] = rows
     return res
 
 
@@ -282,34 +282,93 @@ def tiktok():
     vids = []
     try:
         vids = call("POST", "https://open.tiktokapis.com/v2/video/list/", headers=H, json={"max_count": 20},
-                    params={"fields": "title,create_time,view_count,like_count,comment_count"})["data"].get("videos", [])
+                    params={"fields": "id,title,create_time,view_count,like_count,comment_count,share_count"})["data"].get("videos", [])
     except RuntimeError:
         pass
-    rows = [[cut(x.get("title")), dt.datetime.fromtimestamp(x["create_time"], dt.timezone.utc).strftime("%Y-%m-%d"),
-             x.get("view_count", 0), x.get("like_count", 0), x.get("comment_count", 0)] for x in vids[:8]]
+    rows = [{"id": x.get("id"), "title": cut(x.get("title")), "ts": dt.datetime.fromtimestamp(x["create_time"], dt.timezone.utc).isoformat(),
+             "views": x.get("view_count", 0), "likes": x.get("like_count", 0), "comments": x.get("comment_count", 0),
+             "shares": x.get("share_count", 0)} for x in vids]
     metrics = []
     if "follower_count" in u:
         metrics += [["Подписчики", u["follower_count"]], ["Лайки", u.get("likes_count", 0)], ["Видео", u.get("video_count", 0)]]
     if vids:
         metrics.append([f"Просмотры (последние {len(vids)} видео)", sum(x.get("view_count", 0) for x in vids)])
     res = {"title": u.get("display_name", ""), "followers": u.get("follower_count"), "metrics": metrics or [["Аккаунт", "подключён"]],
-           "cols": ["Видео", "Дата", "Просмотры", "Лайки", "Комм."], "rows": rows}
+           "posts": rows}
     if note:
         res["note"] = note
     return res
 
 
-def main():
-    old = {}
-    if os.path.exists("data.json"):
+def iso(ts):
+    """Instagram отдаёт время как +0000, а браузеры Safari такое не читают: приводим к +00:00."""
+    try:
+        return dt.datetime.strptime(ts, "%Y-%m-%dT%H:%M:%S%z").isoformat()
+    except ValueError:
+        return ts
+
+
+DATA_FILE, ENC_FILE = "data.json", "data.enc"
+NAMES = {"yt": "YouTube", "tg": "Telegram", "ig": "Instagram", "tt": "TikTok"}
+
+
+def _aes_key(pw, salt):
+    from cryptography.hazmat.primitives import hashes
+    from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
+    return PBKDF2HMAC(algorithm=hashes.SHA256(), length=32, salt=salt, iterations=200000).derive(pw.encode("utf-8"))
+
+
+def encrypt_data(obj, pw):
+    """AES-GCM с ключом из пароля (PBKDF2). Страница расшифровывает это средствами браузера."""
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    salt, iv = os.urandom(16), os.urandom(12)
+    ct = AESGCM(_aes_key(pw, salt)).encrypt(iv, json.dumps(obj, ensure_ascii=False).encode("utf-8"), None)
+    b64 = lambda x: base64.b64encode(x).decode()
+    return {"v": 1, "iter": 200000, "salt": b64(salt), "iv": b64(iv), "ct": b64(ct)}
+
+
+def decrypt_data(box, pw):
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    raw = base64.b64decode
+    return json.loads(AESGCM(_aes_key(pw, raw(box["salt"]))).decrypt(raw(box["iv"]), raw(box["ct"]), None))
+
+
+def load_old(pw):
+    if pw and os.path.exists(ENC_FILE):
         try:
-            with open("data.json", encoding="utf-8") as f:
-                old = json.load(f)
+            with open(ENC_FILE, encoding="utf-8") as f:
+                return decrypt_data(json.load(f), pw)
+        except Exception:
+            sys.exit("Не удалось расшифровать data.enc: пароль DATA_PASSWORD изменился. "
+                     "Верните прежний пароль или удалите data.enc, чтобы начать историю заново.")
+    if os.path.exists(DATA_FILE):
+        try:
+            with open(DATA_FILE, encoding="utf-8") as f:
+                return json.load(f)
         except ValueError:
             pass
-    hist = old.get("history", {})
-    today = dt.datetime.now(dt.timezone.utc).strftime("%Y-%m-%d")
-    out = {"updated": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"), "platforms": {}, "history": hist}
+    return {}
+
+
+def notify(text):
+    tok, chat = env("TG_BOT_TOKEN"), env("TG_ALERT_CHAT")
+    if not (tok and chat):
+        return False
+    try:
+        call("GET", f"https://api.telegram.org/bot{tok}/sendMessage", params={"chat_id": chat, "text": text})
+        return True
+    except RuntimeError:
+        return False
+
+
+def main():
+    pw = env("DATA_PASSWORD")
+    old = load_old(pw)
+    hist, alerts = old.get("history", {}), old.get("alerts", {})
+    arch = {(p["pid"], p.get("id") or p["title"]): p for p in old.get("archive", [])}
+    now = dt.datetime.now(dt.timezone.utc)
+    today = now.strftime("%Y-%m-%d")
+    out = {"updated": now.isoformat(timespec="seconds"), "platforms": {}}
     for pid, fn in (("yt", youtube), ("tg", telegram), ("ig", instagram), ("tt", tiktok)):
         try:
             res = fn()
@@ -317,12 +376,27 @@ def main():
             res = {"title": "", "error": str(e)[:200]}
         if res is None:
             continue
+        for p in res.pop("posts", []):  # свежие публикации попадают в архив и обновляют свои цифры
+            arch[(pid, p.get("id") or p["title"])] = {**p, "pid": pid}
         out["platforms"][pid] = res
         if res.get("followers") is not None:
             hist.setdefault(today, {})[pid] = res["followers"]
-    out["history"] = {d: hist[d] for d in sorted(hist)[-120:]}
-    with open("data.json", "w", encoding="utf-8") as f:
-        json.dump(out, f, ensure_ascii=False, indent=1)
+        if res.get("error"):
+            if alerts.get(pid) != today and notify(f"⚠️ {NAMES[pid]}: {res['error']}"):
+                alerts[pid] = today  # не чаще раза в сутки
+        else:
+            alerts.pop(pid, None)
+    out["history"] = {d: hist[d] for d in sorted(hist)[-400:]}
+    out["alerts"] = alerts
+    out["archive"] = sorted(arch.values(), key=lambda p: p.get("ts", ""), reverse=True)[:1000]
+    if pw:
+        with open(ENC_FILE, "w", encoding="utf-8") as f:
+            json.dump(encrypt_data(out, pw), f)
+        if os.path.exists(DATA_FILE):
+            os.remove(DATA_FILE)  # открытая копия больше не нужна
+    else:
+        with open(DATA_FILE, "w", encoding="utf-8") as f:
+            json.dump(out, f, ensure_ascii=False, indent=1)
     print("Готово:", ", ".join(out["platforms"]) or "ни одна платформа не подключена")
 
 
