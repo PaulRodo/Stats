@@ -134,10 +134,45 @@ def telegram():
     return res
 
 
+IG_STATE = "instagram_state.enc"
+
+
+def ig_token():
+    """Токен Instagram. Раз в неделю продлевает его ещё на 60 дней и хранит новый в зашифрованном виде.
+    Если вы вставите в секрет IG_TOKEN новый токен, скрипт сам перейдёт на него."""
+    tok, pw = env("IG_TOKEN"), env("TT_STATE_KEY")
+    if not tok or env("IG_USER_ID") or not pw:
+        return tok  # старый вариант через Facebook или нет ключа шифрования: берём токен как есть
+    origin = hashlib.sha256(tok.encode("utf-8")).hexdigest()
+    st = {}
+    if os.path.exists(IG_STATE):
+        try:
+            with open(IG_STATE, "rb") as f:
+                st = json.loads(_fernet(pw).decrypt(f.read()))
+        except Exception:
+            st = {}
+    if st.get("origin") != origin:
+        st = {"origin": origin, "token": tok, "refreshed": ""}
+    today = dt.datetime.now(dt.timezone.utc).date()
+    last = st.get("refreshed")
+    if last and (today - dt.date.fromisoformat(last)).days < 7:
+        return st["token"]
+    try:
+        d = call("GET", "https://graph.instagram.com/refresh_access_token",
+                 params={"grant_type": "ig_refresh_token", "access_token": st["token"]})
+        if d.get("access_token"):
+            st.update(token=d["access_token"], refreshed=today.isoformat())
+            with open(IG_STATE, "wb") as f:
+                f.write(_fernet(pw).encrypt(json.dumps(st).encode("utf-8")))
+    except RuntimeError:
+        pass  # например, токену меньше суток: попробуем при следующем запуске
+    return st["token"]
+
+
 def instagram():
     """Работает с токеном «Instagram API with Instagram Login» (ID не нужен)
     и со старым вариантом через Facebook (тогда нужен ещё IG_USER_ID)."""
-    tok, uid = env("IG_TOKEN"), env("IG_USER_ID")
+    tok, uid = ig_token(), env("IG_USER_ID")
     if not tok:
         return None
     if uid:
