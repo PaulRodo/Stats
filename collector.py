@@ -30,7 +30,7 @@ def call(method, url, **kw):
     err = d.get("error")
     failed = (err.get("code") not in (None, "", "ok")) if isinstance(err, dict) else bool(err)
     if not r.ok or failed or d.get("ok") is False:
-        msg = (err.get("message") or err.get("code") if isinstance(err, dict) else err) or d.get("error_description") or d.get("description") or ""
+        msg = (err.get("message") or err.get("code") if isinstance(err, dict) else err) or d.get("error_message") or d.get("error_description") or d.get("description") or ""
         raise RuntimeError(f"{r.status_code}: {str(msg)[:150]}")
     return d
 
@@ -137,22 +137,29 @@ def telegram():
 IG_STATE = "instagram_state.enc"
 
 
+def _ig_state(pw):
+    if not os.path.exists(IG_STATE):
+        return {}
+    try:
+        with open(IG_STATE, "rb") as f:
+            return json.loads(_fernet(pw).decrypt(f.read()))
+    except Exception:
+        return {}
+
+
 def ig_token():
     """Токен Instagram. Раз в неделю продлевает его ещё на 60 дней и хранит новый в зашифрованном виде.
-    Если вы вставите в секрет IG_TOKEN новый токен, скрипт сам перейдёт на него."""
+    Токен можно задать секретом IG_TOKEN или получить один раз через ig_auth.py (по коду авторизации)."""
     tok, pw = env("IG_TOKEN"), env("TT_STATE_KEY")
-    if not tok or env("IG_USER_ID") or not pw:
+    if env("IG_USER_ID") or not pw:
         return tok  # старый вариант через Facebook или нет ключа шифрования: берём токен как есть
-    origin = hashlib.sha256(tok.encode("utf-8")).hexdigest()
-    st = {}
-    if os.path.exists(IG_STATE):
-        try:
-            with open(IG_STATE, "rb") as f:
-                st = json.loads(_fernet(pw).decrypt(f.read()))
-        except Exception:
-            st = {}
-    if st.get("origin") != origin:
-        st = {"origin": origin, "token": tok, "refreshed": ""}
+    st = _ig_state(pw)
+    if tok:
+        origin = hashlib.sha256(tok.encode("utf-8")).hexdigest()
+        if st.get("origin") != origin:  # в секрет вставили новый токен
+            st = {"origin": origin, "token": tok, "refreshed": ""}
+    elif not st.get("token"):
+        return ""
     today = dt.datetime.now(dt.timezone.utc).date()
     last = st.get("refreshed")
     if last and (today - dt.date.fromisoformat(last)).days < 7:
