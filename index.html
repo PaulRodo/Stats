@@ -8,7 +8,7 @@
 <script src="https://telegram.org/js/telegram-web-app.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
-:root{--bg:#eef0f6;--card:#fff;--ink:#14172b;--mute:#7a7f99;--line:#e7e9f2;--chip:#f1f3f9;--up:#14a05a;--down:#e5484d;
+:root{--bg:#eef0f6;--card:#fff;--ink:#14172b;--mute:#7a7f99;--line:#e7e9f2;--chip:#f1f3f9;--up:#14a05a;--down:#e5484d;--acc:#6c5ce7;
 --sh:0 1px 2px rgba(20,23,43,.04),0 8px 24px rgba(20,23,43,.06);color-scheme:light}
 :root[data-theme=dark]{--card:color-mix(in srgb,var(--bg) 86%,#fff);--chip:color-mix(in srgb,var(--bg) 76%,#fff);--line:color-mix(in srgb,var(--bg) 70%,#fff);--ink:#eef0fb;--mute:#9a9fbb;--up:#3ddc84;--down:#ff6b70;--sh:none;color-scheme:dark}
 *{box-sizing:border-box}
@@ -28,15 +28,17 @@ h1{font-size:22px;font-weight:700;letter-spacing:-.02em;margin:0}
 .card{background:var(--card);border-radius:24px;padding:18px;box-shadow:var(--sh);min-width:0}
 .hero,.posts,.plats,.wide{grid-column:1/-1}
 .lbl{color:var(--mute);font-size:13px;font-weight:500}
-.row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
-.big{font-size:44px;font-weight:800;letter-spacing:-.04em;line-height:1.05;margin:4px 0 6px}
-.chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--chip);color:var(--mute);white-space:nowrap;margin-right:4px}
+.row{display:flex;justify-content:space-between;align-items:flex-start;gap:8px 12px;flex-wrap:wrap}
+.row>div:first-child{min-width:0}
+.big{font-size:44px;font-weight:800;letter-spacing:-.04em;line-height:1.05;margin:4px 0 6px;font-variant-numeric:tabular-nums}
+.chipline{display:flex;flex-wrap:wrap;gap:4px}
+.chip{display:inline-block;padding:2px 9px;border-radius:99px;font-size:12px;font-weight:600;background:var(--chip);color:var(--mute);white-space:nowrap}
 .chip.up{background:color-mix(in srgb,var(--up) 15%,transparent);color:var(--up)}
 .chip.down{background:color-mix(in srgb,var(--down) 15%,transparent);color:var(--down)}
 .seg{display:flex;background:var(--chip);border-radius:99px;padding:3px;flex:none}
 .seg button{padding:5px 11px;border-radius:99px;font-size:13px;font-weight:600;color:var(--mute)}
 .seg button[aria-pressed=true]{background:var(--card);color:var(--ink);box-shadow:0 1px 3px rgba(0,0,0,.12)}
-.readout{height:20px;margin-top:10px;font-size:13px;color:var(--mute)}
+.readout{min-height:20px;margin-top:10px;font-size:13px;color:var(--mute)}
 .readout b{color:var(--ink)}
 .chart{height:150px;touch-action:pan-y}
 .chart svg{display:block;overflow:visible}
@@ -45,15 +47,17 @@ h1{font-size:22px;font-weight:700;letter-spacing:-.02em;margin:0}
 .stat .lbl{color:rgba(255,255,255,.92)}
 .stat .val{font-size:34px;font-weight:800;letter-spacing:-.03em;line-height:1.1}
 .stat .note{font-size:12px;color:rgba(255,255,255,.92)}
-.grow{background:linear-gradient(135deg,#e63e7a,#f26b3a)}
+.grow{background:linear-gradient(135deg,var(--acc),#f26b3a)}
 .er{background:linear-gradient(150deg,#1faa59,#0c8a45)}
 .plats{display:grid;gap:12px;grid-template-columns:repeat(2,minmax(0,1fr))}
 .plats .plat:last-child:nth-child(odd){grid-column:1/-1}
-.plat{padding:14px 16px;cursor:pointer}
-.pname{display:flex;align-items:center;gap:7px;font-weight:600;font-size:14px}
+.plat{padding:14px 16px;cursor:pointer;background:linear-gradient(135deg,color-mix(in srgb,var(--g,transparent) 16%,var(--card)),var(--card) 62%)}
+.pname{display:flex;align-items:center;gap:8px;font-weight:600;font-size:14px}
+.bdg{width:22px;height:22px;border-radius:7px;display:inline-grid;place-items:center;flex:none}
+.bdg svg{width:16px;height:16px}
 .dot{width:9px;height:9px;border-radius:50%;flex:none;display:inline-block}
-.pnum{font-size:26px;font-weight:700;letter-spacing:-.03em;margin:8px 0 2px}
-.pmeta{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-top:6px;font-size:12px;color:var(--mute)}
+.pnum{font-size:26px;font-weight:700;letter-spacing:-.03em;margin:8px 0 2px;font-variant-numeric:tabular-nums}
+.pmeta{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:4px 8px;margin-top:6px;font-size:12px;color:var(--mute)}
 .pmeta b{color:var(--ink);font-weight:600}
 .plat .spark{height:38px;margin-top:8px}
 .perr{font-size:12px;color:var(--down);margin-top:8px;display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
@@ -78,7 +82,6 @@ footer{color:var(--mute);font-size:12px;text-align:center;margin:18px 0 0}
 .plats .plat:last-child:nth-child(odd){grid-column:auto}
 .stat{min-height:0}
 }
-@media(prefers-reduced-motion:reduce){.round.spin,.sk{animation:none}}
 .lock{grid-column:1/-1;max-width:340px;width:100%;margin:10vh auto 0;text-align:center}
 .lock input[type=password]{width:100%;padding:13px 14px;font:inherit;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);margin:14px 0 8px}
 .lock label{display:flex;gap:8px;align-items:center;justify-content:center;font-size:13px;color:var(--mute);margin:6px 0 10px}
@@ -90,25 +93,49 @@ footer{color:var(--mute);font-size:12px;text-align:center;margin:18px 0 0}
 .tile b{display:block;font-size:20px;letter-spacing:-.02em}
 .tile span{font-size:12px;color:var(--mute)}
 @media(min-width:760px){.tiles{grid-template-columns:repeat(4,minmax(0,1fr))}}
-/* скелетон */
 .sk{border-radius:24px;background:linear-gradient(90deg,var(--chip),var(--card),var(--chip));background-size:200% 100%;animation:sh 1.3s ease-in-out infinite}
 @keyframes sh{to{background-position:-200% 0}}
-/* доли платформ */
 .sbar{display:flex;height:14px;border-radius:99px;overflow:hidden;gap:2px;margin:12px 0 10px}
 .sbar span{min-width:2px}
 .leg{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--mute)}
 .leg .dot{margin-right:6px}
-/* дни недели */
 .wk{display:flex;gap:8px;height:120px;margin-top:12px}
 .wc{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:var(--mute)}
 .wbw{flex:1;display:flex;align-items:flex-end;width:100%}
-.wb{width:100%;background:var(--chip);border-radius:8px 8px 4px 4px}
-.wb.best{background:#6c5ce7}
-/* выбор цвета */
+.wb{width:100%;background:var(--chip);border-radius:8px 8px 4px 4px;transition:height .6s cubic-bezier(.2,.7,.2,1)}
+.wb.best{background:var(--acc)}
+.hm{display:grid;grid-template-columns:30px repeat(8,1fr);gap:4px;margin-top:12px;font-size:11px;color:var(--mute);align-items:center}
+.hm i{height:22px;border-radius:6px;background:var(--chip)}
+.hm i.thin{opacity:.45;outline:1px dashed var(--line)}
+.fm{margin-top:12px}
+.fm .row{font-size:14px;align-items:baseline}
+.fb{height:10px;border-radius:99px;background:var(--chip);margin-top:6px;overflow:hidden}
+.fb i{display:block;height:100%;border-radius:99px}
 .sws{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:10px;margin-top:14px}
 .sw{display:flex;flex-direction:column;align-items:center;gap:6px;font-size:12px;color:var(--mute);padding:8px;border-radius:16px}
 .sw[aria-pressed=true]{background:var(--chip);color:var(--ink)}
 .swc{width:44px;height:44px;border-radius:50%;border:2px solid var(--line)}
+.srow{display:flex;align-items:center;gap:10px;padding:9px 0;border-top:1px solid var(--line)}
+.srow .g1{flex:1;font-weight:500}
+.mv{width:32px;height:32px;border-radius:50%;background:var(--chip);color:var(--mute)}
+.tgl{padding:6px 14px;border-radius:99px;background:var(--chip);color:var(--mute);font-size:13px;font-weight:600}
+.tgl[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.sec{margin:18px 0 2px;font-size:13px;font-weight:600;color:var(--mute);text-transform:uppercase;letter-spacing:.04em}
+#toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom));transform:translate(-50%,20px);background:var(--ink);color:var(--bg);padding:10px 18px;border-radius:99px;font-weight:600;font-size:14px;opacity:0;pointer-events:none;transition:.35s;z-index:60;max-width:90vw;text-align:center}
+#toast.on{opacity:1;transform:translate(-50%,0)}
+#ptr{position:fixed;top:6px;left:50%;width:36px;height:36px;border-radius:50%;background:var(--card);box-shadow:0 2px 10px rgba(0,0,0,.18);display:grid;place-items:center;opacity:0;pointer-events:none;z-index:40;transform:translate(-50%,-40px)}
+#cf{position:fixed;inset:0;pointer-events:none;z-index:70}
+.anim>*{animation:rise .5s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*50ms)}
+@keyframes rise{from{opacity:0;transform:translateY(14px)}}
+.area{animation:fade .9s both}
+@keyframes fade{from{opacity:0}}
+::view-transition-group(*){animation-duration:.32s}
+.compact .card{padding:12px;border-radius:18px}
+.compact .big{font-size:34px}
+.compact .spark{display:none}
+.compact .stat{min-height:96px}
+.compact .grid{gap:8px}
+@media(prefers-reduced-motion:reduce){.anim>*,.area,.round.spin,.sk{animation:none}.wb{transition:none}}
 </style>
 </head>
 <body>
@@ -117,26 +144,41 @@ footer{color:var(--mute);font-size:12px;text-align:center;margin:18px 0 0}
 <div><h1 id="hello">Статистика</h1><p class="sub">Ваши каналы в одном месте</p></div>
 <div class="acts">
 <button class="round" id="share" aria-label="Поделиться">↗</button>
-<button class="round" id="pal" aria-label="Цвет фона">🎨</button>
+<button class="round" id="pal" aria-label="Настройки">🎨</button>
 <button class="round" id="refresh" aria-label="Обновить">↻</button>
 </div>
 </header>
 <div class="grid" id="app"><div class="sk wide" style="height:230px"></div><div class="sk" style="height:132px"></div><div class="sk" style="height:132px"></div></div>
 <footer id="foot"></footer>
 </main>
+<div id="ptr" aria-hidden="true">↻</div>
+<div id="toast" role="status"></div>
+<canvas id="cf" aria-hidden="true"></canvas>
 <script>
 (() => {
 const tg = window.Telegram && Telegram.WebApp;
 try { if (tg) { tg.ready(); tg.expand(); if (tg.isVersionAtLeast && tg.isVersionAtLeast('7.7')) tg.disableVerticalSwipes(); } } catch (e) {}
 const ls = (k, v) => { try { if (v === undefined) return localStorage.getItem(k); v === null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch (e) {} return null; };
+const RM = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const tap = () => { try { tg.HapticFeedback.selectionChanged(); } catch (e) {} };
+const hap = t => { try { tg.HapticFeedback.impactOccurred(t || 'light'); } catch (e) {} };
+const okh = () => { try { tg.HapticFeedback.notificationOccurred('success'); } catch (e) {} };
 const P = { yt: ['YouTube', '#ff3b30'], tg: ['Telegram', '#2aa5ee'], ig: ['Instagram', '#d62976'], tt: ['TikTok', '#12b3a8'] };
+const ICON = {
+  yt: '<svg viewBox="0 0 24 24"><path fill="#fff" d="M9.5 7.2v9.6l8-4.8z"/></svg>',
+  tg: '<svg viewBox="0 0 24 24"><path fill="#fff" d="M4.3 11.4l14.8-5.7c.7-.3 1.3.2 1.1 1.2l-2.5 11.8c-.2.9-.7 1.1-1.4.7l-3.9-2.9-1.9 1.8c-.2.2-.4.4-.8.4l.3-4 7.2-6.5c.3-.3-.1-.4-.5-.2L8.8 13.7l-3.9-1.2c-.8-.3-.8-.8.2-1.1z"/></svg>',
+  ig: '<svg viewBox="0 0 24 24"><rect x="5" y="5" width="14" height="14" rx="4.2" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="12" cy="12" r="3.2" fill="none" stroke="#fff" stroke-width="1.8"/><circle cx="16.3" cy="7.7" r="1.1" fill="#fff"/></svg>',
+  tt: '<svg viewBox="0 0 24 24"><path fill="#fff" d="M13.2 4.5v9.4a2.9 2.9 0 1 1-2-2.8V8.9a5 5 0 1 0 4 4.9V9.2a5.2 5.2 0 0 0 3 1V7.5a3.3 3.3 0 0 1-3-3z"/></svg>'
+};
 // цвета фона: [название, светлая тема, тёмная тема]
 const BG = [['Авто'], ['Синий', '#eef0f6', '#0f1126'], ['Мятный', '#e4f3ec', '#0b1f19'], ['Персик', '#fbece3', '#241510'], ['Сирень', '#eee9fb', '#1b1232'], ['Небо', '#e3f0fb', '#0a1a2b'], ['Чёрный', '#f4f4f4', '#000000']];
+const ACC = ['#6c5ce7', '#e63e7a', '#2aa5ee', '#1faa59', '#f26b3a'];
+const DN = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
 const nf = new Intl.NumberFormat('ru-RU');
 const dec = (x, d) => x.toFixed(d).replace('.', ',');
 const short = n => { const a = Math.abs(n); return a >= 1e6 ? dec(n / 1e6, 2) + 'M' : a >= 1e4 ? dec(n / 1e3, 1) + 'K' : nf.format(n); };
 const sgn = n => (n > 0 ? '+' : n < 0 ? '−' : '') + short(Math.abs(n));
+const mmss = s => Math.floor(s / 60) + ':' + String(Math.round(s % 60)).padStart(2, '0');
 const dt = s => new Date(s.length > 10 ? s : s + 'T00:00:00');
 const day = s => dt(s).toLocaleDateString('ru-RU', { day: 'numeric', month: 'short' });
 const cut = (s, n) => s.length > n ? s.slice(0, n - 1) + '…' : s;
@@ -151,8 +193,17 @@ function h(tag, attrs, ...kids) {
   return e;
 }
 function sv(tag, attrs) { const e = document.createElementNS(NS, tag); for (const k in attrs) e.setAttribute(k, attrs[k]); return e; }
+function badge(id) { const b = h('span', { class: 'bdg', style: 'background:' + (P[id] || [0, '#888'])[1] }); if (ICON[id]) b.innerHTML = ICON[id]; return b; }
 
+// ---------- настройки (хранятся на устройстве) ----------
+let CFG = {}; try { CFG = JSON.parse(ls('cfg') || '{}') || {}; } catch (e) {}
+CFG.hide = CFG.hide || []; CFG.order = CFG.order || []; CFG.acc = CFG.acc || 0; CFG.compact = !!CFG.compact;
+const saveCfg = () => ls('cfg', JSON.stringify(CFG));
+const sortIds = ids => ids.slice().sort((a, b) => { const x = CFG.order.indexOf(a), y = CFG.order.indexOf(b); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); });
+const vis = ids => sortIds(ids).filter(i => !CFG.hide.includes(i));
+const acc = () => ACC[CFG.acc] || ACC[0];
 const S = { data: null, period: 7, filter: 'all', view: 'home', pp: 0, sort: 'views', tm: 'views', bg: +(ls('bg') ?? 1), warn: '' };
+let fresh = true, casc = false, DRAW = false, VT = false;
 
 // ---------- тема ----------
 const isDark = () => tg && tg.colorScheme ? tg.colorScheme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
@@ -161,6 +212,8 @@ function applyTheme() {
   r.dataset.theme = dk ? 'dark' : 'light';
   const c = p[1] ? (dk ? p[2] : p[1]) : ((tg && tg.themeParams && tg.themeParams.bg_color) || (dk ? '#0f1126' : '#eef0f6'));
   r.style.setProperty('--bg', c);
+  r.style.setProperty('--acc', acc());
+  document.body.classList.toggle('compact', CFG.compact);
   try { tg.setHeaderColor(c); tg.setBackgroundColor(c); } catch (e) {}
 }
 const retheme = () => { applyTheme(); if (S.data) render(); };
@@ -186,7 +239,6 @@ function startIdx(dates, n) {
   dates.forEach((d, k) => { if (new Date(d).getTime() <= lim) i = k; });
   return i;
 }
-// прирост за период: абсолют, процент и сравнение с предыдущим таким же периодом
 function growth(a, dates, per) {
   const n = dates.length, i0 = startIdx(dates, per);
   const span = n > 1 ? Math.round((new Date(dates[n - 1]) - new Date(dates[i0])) / 864e5) : 0;
@@ -195,20 +247,86 @@ function growth(a, dates, per) {
   if (per && new Date(dates[0]).getTime() <= new Date(dates[n - 1]).getTime() - 2 * per * 864e5) g.prev = a[i0] - a[startIdx(dates, 2 * per)];
   return g;
 }
+// лучшие 7 дней за всю историю
+function bestWeek(a, dates) {
+  let best = null;
+  for (let i = 1; i < dates.length; i++) {
+    const lim = new Date(dates[i]).getTime() - 7 * 864e5; let j = -1;
+    for (let k = 0; k < i; k++) { if (new Date(dates[k]).getTime() <= lim) j = k; else break; }
+    if (j < 0) continue;
+    const g = a[i] - a[j];
+    if (!best || g > best.g) best = { g, from: dates[j], to: dates[i], i };
+  }
+  return best;
+}
+// необычные всплески роста: индекс -> подпись
+function records(vals) {
+  const dd = vals.map((v, i) => i ? v - vals[i - 1] : 0), pos = dd.slice(1).filter(x => x > 0).sort((a, b) => a - b), m = {};
+  if (pos.length < 5) return m;
+  const med = pos[pos.length >> 1], mx = Math.max(...dd);
+  dd.forEach((x, i) => { if (i && x > 0 && x >= 2.5 * med && x >= mx * 0.6) m[i] = (x === mx ? '🏆 рекорд роста ' : '🔥 всплеск ') + sgn(x); });
+  return m;
+}
 const pct = v => (v > 0 ? '+' : v < 0 ? '−' : '') + dec(Math.abs(v), 1) + '%';
 const cls = v => v > 0 ? 'up' : v < 0 ? 'down' : '';
 const pLabel = () => S.period === 7 ? 'за 7 дней' : S.period === 30 ? 'за 30 дней' : 'за всё время';
 function gchips(g) {
   if (!g) return h('span', { class: 'chip' }, 'история копится');
-  return h('span', {}, h('span', { class: 'chip ' + cls(g.d) }, sgn(g.d) + (g.pct !== null ? ' · ' + pct(g.pct) : '') + ' ' + pLabel()),
+  return h('span', { class: 'chipline' }, h('span', { class: 'chip ' + cls(g.d) }, sgn(g.d) + (g.pct !== null ? ' · ' + pct(g.pct) : '') + ' ' + pLabel()),
     g.prev !== undefined ? h('span', { class: 'chip' }, 'пред. период ' + sgn(g.prev)) : null);
 }
 function collectPosts(d) {
   return (d.archive || []).map(p => {
     const v = typeof p.views === 'number' ? p.views : null, ok = v > 0 && typeof p.likes === 'number';
     return { id: p.pid, title: p.title, date: p.ts, views: p.views, likes: p.likes, comm: p.comments, shares: p.shares, url: p.url || p.link,
+      fmt: p.fmt, avd: p.avd, avp: p.avp, ctr: p.ctr, impr: p.impr,
       val: v !== null ? v : p.likes, er: ok ? (p.likes + (p.comments || 0) + (p.shares || 0)) / v * 100 : null };
   });
+}
+
+// ---------- анимации ----------
+const shown = {};
+function countUp(el, key, to, fmt) {
+  const from = shown[key] === undefined ? 0 : shown[key]; shown[key] = to;
+  el.textContent = fmt(from);
+  if (RM || from === to) { el.textContent = fmt(to); return; }
+  const t0 = performance.now();
+  const step = t => { const k = Math.min((t - t0) / 800, 1), e = 1 - Math.pow(1 - k, 3); el.textContent = fmt(Math.round(from + (to - from) * e)); if (k < 1) requestAnimationFrame(step); };
+  requestAnimationFrame(step);
+}
+function drawIn(svg) {
+  if (RM) return;
+  const p = svg.querySelector('path[data-l]');
+  if (!p || !p.getTotalLength) return;
+  const L = p.getTotalLength();
+  p.style.strokeDasharray = L; p.style.strokeDashoffset = L; p.getBoundingClientRect();
+  p.style.transition = 'stroke-dashoffset .9s ease'; p.style.strokeDashoffset = 0;
+}
+let tt;
+function toast(t) { const e = document.getElementById('toast'); e.textContent = t; e.classList.add('on'); clearTimeout(tt); tt = setTimeout(() => e.classList.remove('on'), 3800); }
+function confetti() {
+  if (RM) return;
+  const c = document.getElementById('cf'), x = c.getContext('2d'); c.width = innerWidth; c.height = innerHeight;
+  const cols = ['#6c5ce7', '#e63e7a', '#2aa5ee', '#1faa59', '#f26b3a', '#ffd23f'];
+  const ps = Array.from({ length: 90 }, () => ({ x: innerWidth / 2, y: innerHeight * .35, vx: (Math.random() - .5) * 12, vy: -Math.random() * 12 - 3, s: 4 + Math.random() * 5, c: cols[Math.random() * 6 | 0], r: Math.random() * 6 }));
+  let t = 0;
+  (function f() {
+    x.clearRect(0, 0, c.width, c.height);
+    ps.forEach(p => { p.vy += .35; p.x += p.vx; p.y += p.vy; p.r += .2; x.save(); x.translate(p.x, p.y); x.rotate(p.r); x.fillStyle = p.c; x.fillRect(-p.s / 2, -p.s / 2, p.s, p.s * .6); x.restore(); });
+    if (++t < 110) requestAnimationFrame(f); else x.clearRect(0, 0, c.width, c.height);
+  })();
+}
+// круглые цифры: 100, 250, 500, 1 000, 2 500, ...
+const MS = []; for (let k = 100; k <= 1e8; k *= 10) MS.push(k, k * 2.5, k * 5);
+const msOf = n => MS.filter(m => m <= n).pop() || 0;
+function checkMilestones() {
+  const d = S.data, ids = vis(Object.keys(d.platforms)).filter(i => typeof d.platforms[i].followers === 'number');
+  const now = { all: ids.reduce((a, i) => a + d.platforms[i].followers, 0) }; ids.forEach(i => { now[i] = d.platforms[i].followers; });
+  let seen = null; try { seen = JSON.parse(ls('seen') || 'null'); } catch (e) {}
+  let msg = null;
+  if (seen) for (const k of Object.keys(now)) if (seen[k] !== undefined && msOf(now[k]) > msOf(seen[k])) msg = '🎉 ' + (k === 'all' ? 'Всего' : P[k][0]) + ': ' + nf.format(msOf(now[k])) + ' подписчиков!';
+  ls('seen', JSON.stringify(now));
+  if (msg) { toast(msg); confetti(); okh(); }
 }
 
 // ---------- графики ----------
@@ -231,8 +349,8 @@ function chart(vals, w, hh, color, pad) {
     lg.append(sv('stop', { offset: '0', 'stop-color': color, 'stop-opacity': '.28' }), sv('stop', { offset: '1', 'stop-color': color, 'stop-opacity': '0' }));
     defs.append(lg); svg.append(defs);
     const l = curve(pts);
-    svg.append(sv('path', { d: `${l} L${pts[pts.length - 1][0]},${hh} L${pts[0][0]},${hh} Z`, fill: `url(#${g})` }),
-      sv('path', { d: l, fill: 'none', stroke: color, 'stroke-width': 2.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round' }));
+    svg.append(sv('path', { d: `${l} L${pts[pts.length - 1][0]},${hh} L${pts[0][0]},${hh} Z`, fill: `url(#${g})`, class: 'area' }),
+      sv('path', { d: l, fill: 'none', stroke: color, 'stroke-width': 2.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'data-l': '1' }));
   } else {
     svg.append(sv('line', { x1: pad, x2: w - pad, y1: hh / 2, y2: hh / 2, stroke: color, 'stroke-opacity': '.35', 'stroke-dasharray': '4 5', 'stroke-width': 2 }));
   }
@@ -240,29 +358,45 @@ function chart(vals, w, hh, color, pad) {
   svg.append(sv('circle', { cx: last[0], cy: last[1], r: 4, fill: color }));
   return { svg, pts };
 }
-// подсказка по касанию (для любого графика)
-function hover(svg, pts, vals, dts, col, ro, fmt) {
-  fmt = fmt || (v => nf.format(v));
+// подсказка по касанию; marks: индекс -> подпись события
+function hover(svg, pts, vals, dts, col, ro, fmt, marks) {
+  fmt = fmt || (v => nf.format(v)); marks = marks || {};
   if (pts.length < 2) { ro.textContent = 'График появится, когда накопится история за несколько дней.'; return; }
+  Object.keys(marks).forEach(i => svg.append(sv('circle', { cx: pts[i][0], cy: pts[i][1], r: 6, fill: 'none', stroke: col, 'stroke-width': 2 })));
   const dot = sv('circle', { r: 5, fill: col, stroke: '#fff', 'stroke-width': 2, visibility: 'hidden' });
   svg.append(dot);
   const mv = e => {
     const x = e.clientX - svg.getBoundingClientRect().left;
     let k = 0; pts.forEach((p, j) => { if (Math.abs(p[0] - x) < Math.abs(pts[k][0] - x)) k = j; });
     dot.setAttribute('cx', pts[k][0]); dot.setAttribute('cy', pts[k][1]); dot.setAttribute('visibility', 'visible');
-    ro.replaceChildren(day(dts[k]) + ' · ', h('b', {}, fmt(vals[k])));
+    ro.replaceChildren(day(dts[k]) + ' · ', h('b', {}, fmt(vals[k])), marks[k] ? '  ' + marks[k] : '');
   };
   svg.addEventListener('pointermove', mv); svg.addEventListener('pointerdown', mv);
   svg.addEventListener('pointerleave', () => { dot.setAttribute('visibility', 'hidden'); ro.replaceChildren(); });
 }
+// столбики вверх и вниз от нулевой линии (приход и уход подписчиков)
+function netBars(vals, labels) {
+  const n = vals.length, mx = Math.max(...vals.map(Math.abs), 1);
+  const svg = sv('svg', { viewBox: `0 0 ${n * 10} 64`, preserveAspectRatio: 'none', width: '100%', height: 84, role: 'img', 'aria-label': 'Изменение по дням' });
+  svg.append(sv('line', { x1: 0, x2: n * 10, y1: 32, y2: 32, style: 'stroke:var(--line)', 'stroke-width': 1 }));
+  vals.forEach((v, i) => {
+    const hh = Math.max(Math.abs(v) / mx * 28, v ? 1.5 : 0);
+    const r = sv('rect', { x: i * 10 + 1.5, width: 7, height: hh, y: v >= 0 ? 32 - hh : 32, rx: 1.5, style: 'fill:var(' + (v >= 0 ? '--up' : '--down') + ')' });
+    const t = sv('title', {}); t.textContent = labels[i] + ': ' + (v > 0 ? '+' : '') + v; r.append(t); svg.append(r);
+  });
+  return svg;
+}
 
 // ---------- общие блоки ----------
 function go(v) {
-  S.view = v; window.scrollTo(0, 0);
-  try { if (tg) { v === 'home' ? tg.BackButton.hide() : tg.BackButton.show(); } } catch (e) {}
-  render();
+  const run = () => {
+    S.view = v; fresh = true; VT = !!(document.startViewTransition && !RM); window.scrollTo(0, 0);
+    try { if (tg) { v === 'home' ? tg.BackButton.hide() : tg.BackButton.show(); } } catch (e) {}
+    render();
+  };
+  if (document.startViewTransition && !RM) document.startViewTransition(run); else run();
 }
-try { if (tg) { tg.BackButton.onClick(() => go('home')); tg.SettingsButton.show(); tg.SettingsButton.onClick(() => S.data && go('set')); } } catch (e) {}
+try { if (tg) { tg.BackButton.onClick(() => go('home')); tg.SettingsButton.show(); tg.SettingsButton.onClick(() => go('set')); } } catch (e) {}
 const segCtl = () => {
   const s = h('div', { class: 'seg', role: 'group', 'aria-label': 'Период' }, [[7, '7 дн'], [30, '30 дн'], [0, 'Всё']].map(([v, t]) =>
     h('button', { type: 'button', 'aria-pressed': String(S.period === v), 'data-p': v }, t)));
@@ -271,10 +405,9 @@ const segCtl = () => {
 };
 const chipRow = (items, cur, key) => {
   const c = h('div', { class: 'chips' }, items.map(([k, t]) => h('button', { type: 'button', 'aria-pressed': String(cur === k), 'data-k': String(k) }, t)));
-  c.onclick = e => { const b = e.target.closest('button'); if (b) { S[key] = key === 'pp' ? +b.dataset.k : b.dataset.k; tap(); render(); } };
+  c.onclick = e => { const b = e.target.closest('button'); if (b) { const v = b.dataset.k; S[key] = key === 'pp' ? +v : v; tap(); render(); } };
   return c;
 };
-// строка публикации; по тапу открывается ссылка, если коллектор её сохранил
 function postRow(p, col, big, unit, meta) {
   const r = h('div', { class: 'post' + (p.url ? ' lnk' : '') }, h('span', { class: 'dot', style: 'background:' + col }),
     h('div', {}, h('div', { class: 't' }, p.title || 'Без названия'), h('div', { class: 'm' }, meta)),
@@ -282,41 +415,123 @@ function postRow(p, col, big, unit, meta) {
   if (p.url) { r.setAttribute('role', 'link'); r.tabIndex = 0; r.onclick = () => { try { tg.openLink(p.url); } catch (e) { window.open(p.url, '_blank'); } }; }
   return r;
 }
-// динамика по неделям публикации: средние просмотры или вовлечённость
 function trendCard(posts, col) {
   const wk = {};
   posts.filter(p => p.date && typeof p.views === 'number' && p.views > 0).forEach(p => { const k = wkey(p.date); (wk[k] = wk[k] || []).push(p); });
   const keys = Object.keys(wk).sort().slice(-12);
   if (keys.length < 2) return null;
-  const m = S.tm, er = m === 'er';
+  const m = S.tm, er = m === 'er', an = DRAW;
   const vals = keys.map(k => { const a = wk[k], v = a.reduce((t, p) => t + p.views, 0); return er ? a.reduce((t, p) => t + (p.likes || 0) + (p.comm || 0) + (p.shares || 0), 0) / v * 100 : v / a.length; });
   const ro = h('div', { class: 'readout' }), box = h('div', { class: 'chart' });
   const c = h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, 'Динамика по неделям'), chipRow([['views', 'Просмотры'], ['er', 'Вовлечённость']], m, 'tm')),
     h('div', { class: 'lbl' }, (er ? 'Вовлечённость' : 'Средние просмотры') + ' публикаций, вышедших в неделю с даты на графике'), ro, box);
   requestAnimationFrame(() => {
     const { svg, pts } = chart(vals, Math.max(box.clientWidth, 120), 150, col, 8);
-    box.append(svg); hover(svg, pts, vals, keys, col, ro, v => er ? dec(v, 1) + '%' : nf.format(Math.round(v)));
+    box.append(svg); if (an) drawIn(svg); hover(svg, pts, vals, keys, col, ro, v => er ? dec(v, 1) + '%' : nf.format(Math.round(v)));
   });
   return c;
 }
-// лучший день и время публикации
-function weekCard(posts) {
-  const rows = posts.filter(p => p.date && typeof p.val === 'number');
+// лучший день и время; groups: [[название, цвет, публикации]] для разбивки по платформам
+function bestDay(rows) {
+  rows = rows.filter(p => p.date && typeof p.val === 'number');
   if (rows.length < 5) return null;
-  const s = Array(7).fill(0), c = Array(7).fill(0), nm = ['Пн', 'Вт', 'Ср', 'Чт', 'Пт', 'Сб', 'Вс'];
+  const s = Array(7).fill(0), c = Array(7).fill(0);
   rows.forEach(p => { const i = (dt(p.date).getDay() + 6) % 7; s[i] += p.val; c[i]++; });
   const avg = s.map((v, i) => c[i] ? v / c[i] : 0), mx = Math.max(...avg), best = avg.indexOf(mx);
-  let hr = '';
-  const timed = rows.filter(p => p.date.length > 10);
-  if (timed.length >= 8) {
+  let hr = ''; const tm = rows.filter(p => p.date.length > 10);
+  if (tm.length >= 8) {
     const hs = Array(8).fill(0), hc = Array(8).fill(0);
-    timed.forEach(p => { const b = Math.floor(dt(p.date).getHours() / 3); hs[b] += p.val; hc[b]++; });
+    tm.forEach(p => { const b = Math.floor(dt(p.date).getHours() / 3); hs[b] += p.val; hc[b]++; });
     let bb = -1, bv = -1; hs.forEach((v, i) => { if (hc[i] && v / hc[i] > bv) { bv = v / hc[i]; bb = i; } });
-    hr = ' · лучшее время: ' + bb * 3 + '–' + (bb * 3 + 3) + ' ч';
+    hr = bb * 3 + '–' + (bb * 3 + 3) + ' ч';
   }
-  return h('div', { class: 'card wide' }, h('h2', {}, 'Когда публиковать'),
-    h('div', { class: 'lbl', style: 'margin-top:2px' }, 'Лучший день: ' + nm[best] + ' (в среднем ' + short(Math.round(mx)) + ')' + hr),
-    h('div', { class: 'wk' }, nm.map((n, i) => h('div', { class: 'wc' }, h('div', { class: 'wbw' }, h('div', { class: 'wb' + (i === best ? ' best' : ''), style: 'height:' + (mx && c[i] ? Math.max(avg[i] / mx * 100, 4) : 0) + '%' })), n))));
+  return { avg, c, mx, best, hr, n: rows.length };
+}
+function weekCard(posts, groups) {
+  const b = bestDay(posts);
+  if (!b) return null;
+  const card = h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, 'Когда публиковать'), b.n < 10 ? h('span', { class: 'chip' }, 'мало данных: ' + b.n + ' публикаций') : null),
+    h('div', { class: 'lbl' }, 'Лучший день: ' + DN[b.best] + ' (в среднем ' + short(Math.round(b.mx)) + ')' + (b.hr ? ' · лучшее время: ' + b.hr : '')),
+    h('div', { class: 'wk' }, DN.map((n, i) => h('div', { class: 'wc' }, h('div', { class: 'wbw' }, h('div', { class: 'wb' + (i === b.best ? ' best' : ''), style: 'height:' + (b.mx && b.c[i] ? Math.max(b.avg[i] / b.mx * 100, 4) : 0) + '%' })), n))));
+  (groups || []).forEach(([name, col, rows]) => {
+    const g = bestDay(rows);
+    card.append(h('div', { class: 'lbl', style: 'margin-top:10px' }, h('i', { class: 'dot', style: 'background:' + col + ';margin-right:6px' }),
+      name + ': ' + (g ? DN[g.best] + (g.hr ? ' · ' + g.hr : '') + (g.n < 10 ? ' (мало данных)' : '') : 'мало публикаций для вывода')));
+  });
+  return card;
+}
+function heatCard(posts) {
+  const tm = posts.filter(p => p.date && p.date.length > 10 && typeof p.val === 'number');
+  if (tm.length < 15) return null;
+  const s = DN.map(() => Array(8).fill(0)), c = DN.map(() => Array(8).fill(0));
+  tm.forEach(p => { const d = dt(p.date), i = (d.getDay() + 6) % 7, b = Math.floor(d.getHours() / 3); s[i][b] += p.val; c[i][b]++; });
+  let mx = 1; s.forEach((r, i) => r.forEach((v, j) => { if (c[i][j]) mx = Math.max(mx, v / c[i][j]); }));
+  const grid = h('div', { class: 'hm' }, h('span', {}), [...Array(8)].map((_, j) => h('span', { style: 'text-align:center' }, j * 3)));
+  DN.forEach((n, i) => {
+    grid.append(h('span', {}, n));
+    for (let j = 0; j < 8; j++) {
+      const a = c[i][j] ? s[i][j] / c[i][j] : 0, cell = h('i', { class: c[i][j] < 2 ? 'thin' : '', style: c[i][j] ? `background:color-mix(in srgb,var(--acc) ${Math.round(15 + a / mx * 80)}%,var(--chip))` : '' });
+      cell.title = c[i][j] ? DN[i] + ' ' + j * 3 + '–' + (j * 3 + 3) + ' ч: ' + short(Math.round(a)) + ' (' + c[i][j] + ' публ.)' : '';
+      grid.append(cell);
+    }
+  });
+  return h('div', { class: 'card wide' }, h('h2', {}, 'Тепловая карта публикаций'), h('div', { class: 'lbl', style: 'margin-top:2px' }, 'Дни недели и часы (по 3 часа), чем ярче, тем лучше результат. Бледные клетки: мало данных.'), grid);
+}
+const FM = { yt: [['short', 'Короткие (до 3 мин)'], ['long', 'Длинные']], ig: [['reel', 'Reels'], ['post', 'Публикации']] };
+function fmtCard(posts, id, col) {
+  const f = FM[id]; if (!f) return null;
+  const g = f.map(([k, t]) => { const a = posts.filter(p => p.fmt === k && typeof p.val === 'number'); return [t, a.length, a.length ? a.reduce((s, p) => s + p.val, 0) / a.length : 0]; });
+  if (g.some(x => x[1] < 3)) return null;
+  const mx = Math.max(...g.map(x => x[2]), 1);
+  return h('div', { class: 'card wide' }, h('h2', {}, 'Форматы'), h('div', { class: 'lbl' }, 'Среднее по ' + (id === 'yt' ? 'просмотрам' : 'лайкам') + ' на публикацию'),
+    g.map(([t, n, v]) => h('div', { class: 'fm' }, h('div', { class: 'row' }, h('span', {}, t + ' · ' + n), h('b', {}, short(Math.round(v)))), h('div', { class: 'fb' }, h('i', { style: `width:${v / mx * 100}%;background:${col}` })))));
+}
+function ytDeep(r) {
+  const d = r.deep;
+  if (!d) return r.deep_error ? h('div', { class: 'card wide' }, h('h2', {}, 'Углублённая аналитика YouTube'), h('div', { class: 'empty' }, 'Не удалось получить: ' + r.deep_error)) : null;
+  const t = [];
+  if (d.avd !== undefined) t.push(['Среднее время просмотра', mmss(d.avd)]);
+  if (d.avp !== undefined) t.push(['Удержание', dec(d.avp, 1) + '%']);
+  if (d.watch !== undefined) t.push(['Время просмотра', dec(d.watch / 60, 1) + ' ч']);
+  if (d.gained !== undefined) t.push(['Подписчики: пришло / ушло', h('span', {}, h('span', { style: 'color:var(--up)' }, '+' + nf.format(d.gained)), ' / ', h('span', { style: 'color:var(--down)' }, '−' + nf.format(d.lost || 0)))]);
+  if (d.ctr !== undefined) t.push(['CTR значков', dec(d.ctr, 1) + '%']);
+  else if (d.ctr_wait) t.push(['CTR значков', 'скоро']);
+  const c = h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, 'Углублённая аналитика'), h('span', { class: 'chip' }, 'за ' + d.days + ' дней')),
+    h('div', { class: 'tiles' }, t.map(([l, v]) => h('div', { class: 'tile' }, h('b', {}, v), h('span', {}, l)))));
+  if (d.ctr_wait) c.append(h('div', { class: 'empty' }, 'CTR появится через 1–2 дня: YouTube готовит эти отчёты с задержкой.'));
+  if (d.ctr_error) c.append(h('div', { class: 'empty' }, 'CTR недоступен: ' + d.ctr_error));
+  if (d.gender) {
+    const GL = { female: ['Женщины', '#e63e7a'], male: ['Мужчины', '#2aa5ee'], user_specified: ['Другое', '#9a9fbb'] }, ks = Object.keys(d.gender).filter(k => GL[k]);
+    c.append(h('div', { class: 'lbl', style: 'margin-top:16px' }, 'Пол зрителей'), h('div', { class: 'sbar' }, ks.map(k => h('span', { style: `flex:${d.gender[k]};background:${GL[k][1]}` }))),
+      h('div', { class: 'leg' }, ks.map(k => h('span', {}, h('i', { class: 'dot', style: 'background:' + GL[k][1] }), GL[k][0] + ' ' + dec(d.gender[k], 0) + '%'))));
+  }
+  if (d.age) {
+    const ks = Object.keys(d.age), mx = Math.max(...ks.map(k => d.age[k]), 1);
+    c.append(h('div', { class: 'lbl', style: 'margin-top:16px' }, 'Возраст'), ...ks.map(k => h('div', { class: 'fm' }, h('div', { class: 'row' }, h('span', {}, k.replace('age', '').replace('-', '–').replace(/–$/, '+')), h('b', {}, dec(d.age[k], 0) + '%')),
+      h('div', { class: 'fb' }, h('i', { style: `width:${d.age[k] / mx * 100}%;background:var(--acc)` })))));
+  }
+  if (d.daily && d.daily.length > 2) c.append(h('div', { class: 'lbl', style: 'margin-top:16px' }, 'Подписчики по дням: пришло минус ушло'), netBars(d.daily.map(x => x[1] - x[2]), d.daily.map(x => day(x[0]))),
+    h('div', { class: 'axis' }, h('span', {}, day(d.daily[0][0])), h('span', {}, day(d.daily[d.daily.length - 1][0]))));
+  return c;
+}
+function flowCard(arr, dates) {
+  const n = dates.length; if (!arr || n < 3) return null;
+  const vals = [], lb = [];
+  for (let i = Math.max(1, n - 14); i < n; i++) { vals.push(arr[i] - arr[i - 1]); lb.push(day(dates[i])); }
+  const sum = vals.reduce((a, b) => a + b, 0);
+  return h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, 'Приток подписчиков по дням'), h('span', { class: 'chip ' + cls(sum) }, sgn(sum) + ' за ' + vals.length + ' дн.')),
+    h('div', { class: 'lbl' }, 'Чистое изменение за день: пришло минус отписалось'), netBars(vals, lb), h('div', { class: 'axis' }, h('span', {}, lb[0]), h('span', {}, lb[lb.length - 1])));
+}
+function compCard(d, id) {
+  const cs = (d.competitors || []).filter(c => c.pid === id); if (!cs.length) return null;
+  const hs = d.history || {}, rows = cs.map(c => { const sr = series(hs, ['c:' + c.key]), a = sr.per['c:' + c.key]; return { name: c.name, f: c.followers, g: a && sr.dates.length > 1 ? growth(a, sr.dates, S.period) : null }; });
+  const mine = d.platforms[id].followers, me = d.platforms[id].title || P[id][0], sr = series(hs, [id]), ma = sr.per[id];
+  rows.push({ name: me + ' (вы)', f: mine, g: ma && sr.dates.length > 1 ? growth(ma, sr.dates, S.period) : null, me: true });
+  rows.sort((a, b) => b.f - a.f);
+  const card = h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, 'Сравнение с другими каналами'), segCtl()));
+  rows.forEach(r => card.append(h('div', { class: 'post' }, h('span', { class: 'dot', style: 'background:' + (r.me ? P[id][1] : 'var(--mute)') }),
+    h('div', {}, h('div', { class: 't' }, r.name), r.g ? h('div', { class: 'm' }, sgn(r.g.d) + (r.g.pct !== null ? ' · ' + pct(r.g.pct) : '') + ' ' + pLabel()) : null), h('div', { class: 'v' }, short(r.f)))));
+  return card;
 }
 
 // ---------- экраны ----------
@@ -324,30 +539,38 @@ function render() {
   if (S.view === 'set') return renderSettings();
   if (!S.data) return;
   if (S.view !== 'home' && !S.data.platforms[S.view]) S.view = 'home';
+  DRAW = fresh; casc = fresh && !VT; fresh = false; VT = false;
+  const app = document.getElementById('app');
+  app.classList.toggle('anim', casc);
   S.view === 'home' ? renderHome() : renderPlatform(S.view);
+  [...app.children].forEach((c, i) => c.style.setProperty('--i', Math.min(i, 9)));
   foot();
 }
 function foot() {
   document.getElementById('foot').textContent = S.data ? 'Обновлено ' + new Date(S.data.updated).toLocaleString('ru-RU', { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' · данные собираются раз в 6 часов' + (S.warn ? ' · ' + S.warn : '') : '';
 }
 function renderHome() {
-  const d = S.data, app = document.getElementById('app');
+  const d = S.data, app = document.getElementById('app'), an = DRAW;
   app.replaceChildren();
-  const ids = Object.keys(d.platforms);
-  if (!ids.length) { app.append(h('p', { class: 'empty' }, 'Пока ни одна соцсеть не подключена.')); return; }
+  const allIds = Object.keys(d.platforms), ids = vis(allIds);
+  if (!allIds.length) { app.append(h('p', { class: 'empty' }, 'Пока ни одна соцсеть не подключена.')); return; }
+  if (!ids.length) { app.append(h('p', { class: 'empty' }, 'Все платформы скрыты. Включить их можно в настройках (кнопка 🎨).')); return; }
   const good = ids.filter(id => !d.platforms[id].error && typeof d.platforms[id].followers === 'number');
   const total = good.reduce((a, id) => a + d.platforms[id].followers, 0);
   const sr = series(d.history || {}, good);
   const i0 = startIdx(sr.dates, S.period), n = sr.dates.length;
   const g = n > 1 ? growth(sr.total, sr.dates, S.period) : null, delta = g ? g.d : null;
+  const bw = n > 7 ? bestWeek(sr.total, sr.dates) : null;
 
-  const box = h('div', { class: 'chart' }), readout = h('div', { class: 'readout' });
+  const box = h('div', { class: 'chart' }), readout = h('div', { class: 'readout' }), big = h('div', { class: 'big' }, nf.format(total));
+  countUp(big, 'total', total, nf.format);
   app.append(h('div', { class: 'card hero' },
-    h('div', { class: 'row' }, h('div', {}, h('div', { class: 'lbl' }, 'Подписчики'), h('div', { class: 'big' }, nf.format(total)), gchips(g)), segCtl()),
+    h('div', { class: 'row' }, h('div', {}, h('div', { class: 'lbl' }, 'Подписчики'), big, gchips(g)), segCtl()),
+    bw && bw.g > 0 ? h('div', { class: 'chipline', style: 'margin-top:6px' }, h('span', { class: 'chip' }, '🏆 лучшая неделя ' + sgn(bw.g) + ' (' + day(bw.from) + '–' + day(bw.to) + ')' + (bw.i === n - 1 ? ' · сейчас' : ''))) : null,
     readout, box,
     h('div', { class: 'axis' }, h('span', {}, n > 1 ? day(sr.dates[i0]) : ''), h('span', {}, n ? day(sr.dates[n - 1]) : ''))));
 
-  const all = collectPosts(d);
+  const all = collectPosts(d).filter(p => ids.includes(p.id));
   const rated = all.filter(p => typeof p.views === 'number' && p.views > 0 && typeof p.likes === 'number');
   const vSum = rated.reduce((a, p) => a + p.views, 0), eSum = rated.reduce((a, p) => a + p.likes + (p.comm || 0), 0);
   app.append(
@@ -357,27 +580,25 @@ function renderHome() {
   const plats = h('div', { class: 'plats' });
   ids.forEach(id => {
     const r = d.platforms[id], [name, col] = P[id] || [id, '#888'];
-    const c = h('div', { class: 'card plat' }, h('div', { class: 'pname' }, h('span', { class: 'dot', style: 'background:' + col }), name));
+    const c = h('div', { class: 'card plat', style: `--g:${col};view-transition-name:pc-${id}` }, h('div', { class: 'pname' }, badge(id), name));
     c.setAttribute('role', 'button'); c.tabIndex = 0; c.onclick = () => go(id); c.onkeydown = e => { if (e.key === 'Enter') go(id); };
     if (r.error) { c.append(h('div', { class: 'perr', title: r.error }, 'Ошибка: ' + r.error)); plats.append(c); return; }
     const f = r.followers, arr = sr.per[id], m2 = r.metrics && r.metrics[1];
-    const pg = arr && n > 1 ? growth(arr, sr.dates, S.period) : null;
-    c.append(h('div', { class: 'pnum' }, typeof f === 'number' ? short(f) : '—'),
-      h('div', { class: 'pmeta' }, pg === null ? h('span', {}, 'подписчики') : h('span', { class: 'chip ' + cls(pg.d) }, sgn(pg.d) + (pg.pct !== null ? ' · ' + pct(pg.pct) : '')),
-        m2 ? h('span', { title: m2[0] }, cut(String(m2[0]), 16).toLowerCase() + ' ', h('b', {}, typeof m2[1] === 'number' ? short(m2[1]) : m2[1])) : null));
+    const pg = arr && n > 1 ? growth(arr, sr.dates, S.period) : null, pn = h('div', { class: 'pnum' }, typeof f === 'number' ? short(f) : '—');
+    if (typeof f === 'number') countUp(pn, 'p' + id, f, short);
+    c.append(pn, h('div', { class: 'pmeta' }, pg === null ? h('span', {}, 'подписчики') : h('span', { class: 'chip ' + cls(pg.d) }, sgn(pg.d) + (pg.pct !== null ? ' · ' + pct(pg.pct) : '')),
+      m2 ? h('span', { title: m2[0] }, cut(String(m2[0]), 16).toLowerCase() + ' ', h('b', {}, typeof m2[1] === 'number' ? short(m2[1]) : m2[1])) : null));
     if (arr && n > 1) c.append(h('div', { class: 'spark', 'data-id': id }));
     plats.append(c);
   });
   app.append(plats);
 
-  // доли платформ
   if (good.length > 1 && total > 0) {
     app.append(h('div', { class: 'card wide' }, h('h2', {}, 'Доли платформ'),
       h('div', { class: 'sbar' }, good.map(id => h('span', { style: `flex:${d.platforms[id].followers};background:${(P[id] || [0, '#888'])[1]}` }))),
       h('div', { class: 'leg' }, good.map(id => h('span', {}, h('i', { class: 'dot', style: 'background:' + (P[id] || [0, '#888'])[1] }), (P[id] || [id])[0] + ' ' + dec(d.platforms[id].followers / total * 100, 1) + '%')))));
   }
 
-  // лучшие публикации: платформа, период, сортировка
   const posts = all.filter(p => typeof p.val === 'number' && P[p.id]);
   const pids = [...new Set(posts.map(p => p.id))];
   if (S.filter !== 'all' && !pids.includes(S.filter)) S.filter = 'all';
@@ -391,18 +612,19 @@ function renderHome() {
     chipRow([['views', 'Просмотры'], ['likes', 'Лайки'], ['er', 'Вовлечённость']], S.sort, 'sort'));
   if (!top.length) pc.append(h('div', { class: 'empty' }, posts.length ? 'За этот период публикаций нет.' : 'Публикации появятся после первого обновления данных.'));
   top.forEach(p => {
-    const [big, unit] = S.sort === 'er' ? [dec(p.er, 1) + '%', 'вовлечённость'] : S.sort === 'likes' ? [short(p.likes), 'лайков'] : [short(p.val), typeof p.views === 'number' ? 'просмотров' : 'лайков'];
-    pc.append(postRow(p, P[p.id][1], big, unit, P[p.id][0] + (p.date ? ' · ' + day(p.date) : '')));
+    const [bg, unit] = S.sort === 'er' ? [dec(p.er, 1) + '%', 'вовлечённость'] : S.sort === 'likes' ? [short(p.likes), 'лайков'] : [short(p.val), typeof p.views === 'number' ? 'просмотров' : 'лайков'];
+    pc.append(postRow(p, P[p.id][1], bg, unit, P[p.id][0] + (p.date ? ' · ' + day(p.date) : '')));
   });
   app.append(pc);
-  const tc = trendCard(base, '#e63e7a'); if (tc) app.append(tc);
-  const wc = weekCard(base); if (wc) app.append(wc);
+  const tc = trendCard(base, acc()); if (tc) app.append(tc);
+  const groups = S.filter === 'all' && pids.length > 1 ? pids.map(k => [P[k][0], P[k][1], posts.filter(p => p.id === k)]) : null;
+  const wc = weekCard(base, groups); if (wc) app.append(wc);
 
   requestAnimationFrame(() => {
     if (n) {
       const vals = sr.total.slice(i0), dts = sr.dates.slice(i0), w = Math.max(box.clientWidth, 120);
-      const { svg, pts } = chart(vals, w, 150, '#6c5ce7', 8);
-      box.append(svg); hover(svg, pts, vals, dts, '#6c5ce7', readout);
+      const { svg, pts } = chart(vals, w, 150, acc(), 8);
+      box.append(svg); if (an) drawIn(svg); hover(svg, pts, vals, dts, acc(), readout, null, records(vals));
     }
     plats.querySelectorAll('.spark').forEach(el => {
       const id = el.dataset.id, v = sr.per[id].slice(i0);
@@ -411,16 +633,16 @@ function renderHome() {
   });
 }
 function renderPlatform(id) {
-  const d = S.data, r = d.platforms[id], [name, col] = P[id], app = document.getElementById('app');
+  const d = S.data, r = d.platforms[id], [name, col] = P[id], app = document.getElementById('app'), an = DRAW;
   app.replaceChildren();
   const back = h('button', { class: 'back', type: 'button' }, '← Назад'); back.onclick = () => go('home');
   const posts = collectPosts(d).filter(p => p.id === id).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   const f = r.followers, sr = series(d.history || {}, [id]), arr = sr.per[id], n = sr.dates.length, i0 = startIdx(sr.dates, S.period);
   const g = arr && n > 1 ? growth(arr, sr.dates, S.period) : null;
-  const box = h('div', { class: 'chart' }), ro = h('div', { class: 'readout' });
-  const card = h('div', { class: 'card wide' },
-    h('div', { class: 'row' }, h('div', {}, h('div', { class: 'pname' }, h('span', { class: 'dot', style: 'background:' + col }), name + (r.title ? ' · ' + r.title : '')),
-      h('div', { class: 'big' }, typeof f === 'number' ? nf.format(f) : '—'), gchips(g)), segCtl()));
+  const box = h('div', { class: 'chart' }), ro = h('div', { class: 'readout' }), big = h('div', { class: 'big' }, typeof f === 'number' ? nf.format(f) : '—');
+  if (typeof f === 'number') countUp(big, 'p' + id, f, nf.format);
+  const card = h('div', { class: 'card wide', style: 'view-transition-name:pc-' + id },
+    h('div', { class: 'row' }, h('div', {}, h('div', { class: 'pname' }, badge(id), name + (r.title ? ' · ' + r.title : '')), big, gchips(g)), segCtl()));
   if (r.error) card.append(h('div', { class: 'perr' }, 'Ошибка: ' + r.error));
   card.append(ro, box);
 
@@ -444,20 +666,22 @@ function renderPlatform(id) {
   const pc = h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, 'Последние публикации')));
   if (!posts.length) pc.append(h('div', { class: 'empty' }, 'Публикации появятся после первого обновления данных.'));
   posts.slice(0, 10).forEach(p => pc.append(postRow(p, col, typeof p.val === 'number' ? short(p.val) : '—', typeof p.views === 'number' ? 'просмотров' : 'лайков',
-    [p.date ? day(p.date) : null, typeof p.likes === 'number' ? '♥ ' + short(p.likes) : null, typeof p.comm === 'number' ? '💬 ' + short(p.comm) : null].filter(Boolean).join(' · '))));
+    [p.date ? day(p.date) : null, typeof p.likes === 'number' ? '♥ ' + short(p.likes) : null, typeof p.comm === 'number' ? '💬 ' + short(p.comm) : null,
+      p.avd ? '⏱ ' + mmss(p.avd) : null, typeof p.ctr === 'number' ? 'CTR ' + dec(p.ctr, 1) + '%' : null,
+      id === 'tg' && f > 0 && p.views ? 'охват ' + dec(p.views / f * 100, 1) + '%' : null].filter(Boolean).join(' · '))));
   app.append(back, card);
-  const tc = trendCard(posts, col); if (tc) app.append(tc);
-  const wc = weekCard(posts); if (wc) app.append(wc);
-  app.append(pc);
+  if (id === 'yt') { const c = ytDeep(r); if (c) app.append(c); }
+  if (id === 'tg') { const c = flowCard(arr, sr.dates); if (c) app.append(c); }
+  [trendCard(posts, col), fmtCard(posts, id, col), weekCard(posts), heatCard(posts), compCard(d, id), pc].forEach(c => { if (c) app.append(c); });
   requestAnimationFrame(() => {
     if (!arr || n < 1) return;
     const vals = arr.slice(i0), { svg, pts } = chart(vals, Math.max(box.clientWidth, 120), 150, col, 8);
-    box.append(svg); hover(svg, pts, vals, sr.dates.slice(i0), col, ro);
+    box.append(svg); if (an) drawIn(svg); hover(svg, pts, vals, sr.dates.slice(i0), col, ro, null, records(vals));
   });
 }
 function renderSettings() {
   const app = document.getElementById('app'), dk = isDark();
-  app.replaceChildren();
+  app.classList.remove('anim'); app.replaceChildren();
   const back = h('button', { class: 'back', type: 'button' }, '← Назад'); back.onclick = () => go('home');
   const sw = h('div', { class: 'sws' }, BG.map((p, i) => {
     const b = h('button', { type: 'button', class: 'sw', 'aria-pressed': String(S.bg === i) },
@@ -465,11 +689,31 @@ function renderSettings() {
     b.onclick = () => { S.bg = i; ls('bg', String(i)); applyTheme(); tap(); renderSettings(); };
     return b;
   }));
-  app.append(back, h('div', { class: 'card wide' }, h('h2', {}, 'Цвет фона'), h('div', { class: 'sub' }, '«Авто» берёт цвет из темы Telegram'), sw));
+  const ac = h('div', { class: 'sws' }, ACC.map((c, i) => {
+    const b = h('button', { type: 'button', class: 'sw', 'aria-pressed': String(CFG.acc === i), 'aria-label': 'Акцент ' + (i + 1) }, h('span', { class: 'swc', style: 'background:' + c }));
+    b.onclick = () => { CFG.acc = i; saveCfg(); applyTheme(); tap(); renderSettings(); };
+    return b;
+  }));
+  const cp = h('button', { type: 'button', class: 'tgl', 'aria-pressed': String(CFG.compact) }, CFG.compact ? 'Включён' : 'Выключен');
+  cp.onclick = () => { CFG.compact = !CFG.compact; saveCfg(); applyTheme(); tap(); renderSettings(); };
+  const list = sortIds(Object.keys(P));
+  const rows = list.map((id, i) => {
+    const up = h('button', { type: 'button', class: 'mv', 'aria-label': 'Выше' }, '↑'), dn = h('button', { type: 'button', class: 'mv', 'aria-label': 'Ниже' }, '↓');
+    const off = CFG.hide.includes(id), tg2 = h('button', { type: 'button', class: 'tgl', 'aria-pressed': String(!off) }, off ? 'Скрыта' : 'Показана');
+    const mvTo = j => { if (j < 0 || j >= list.length) return; [list[i], list[j]] = [list[j], list[i]]; CFG.order = list.slice(); saveCfg(); tap(); renderSettings(); };
+    up.onclick = () => mvTo(i - 1); dn.onclick = () => mvTo(i + 1);
+    tg2.onclick = () => { CFG.hide = off ? CFG.hide.filter(x => x !== id) : [...CFG.hide, id]; saveCfg(); tap(); renderSettings(); };
+    return h('div', { class: 'srow' }, badge(id), h('span', { class: 'g1' }, P[id][0]), up, dn, tg2);
+  });
+  app.append(back,
+    h('div', { class: 'card wide' }, h('h2', {}, 'Цвет фона'), h('div', { class: 'sub' }, '«Авто» берёт цвет из темы Telegram'), sw,
+      h('div', { class: 'sec' }, 'Акцентный цвет'), ac,
+      h('div', { class: 'sec' }, 'Компактный режим'), h('div', { class: 'row', style: 'align-items:center;margin-top:6px' }, h('span', { class: 'sub' }, 'Меньше отступов, без мини-графиков'), cp),
+      h('div', { class: 'sec' }, 'Платформы: порядок и видимость'), rows));
 }
 function share() {
   const d = S.data; if (!d) return;
-  const ids = Object.keys(d.platforms).filter(id => typeof d.platforms[id].followers === 'number');
+  const ids = vis(Object.keys(d.platforms)).filter(id => typeof d.platforms[id].followers === 'number');
   const sr = series(d.history || {}, ids), g = sr.dates.length > 1 ? growth(sr.total, sr.dates, 7) : null;
   const txt = '📊 Подписчиков: ' + nf.format(ids.reduce((a, id) => a + d.platforms[id].followers, 0)) + (g ? ' (' + sgn(g.d) + ' за 7 дней)' : '') + '\n' +
     ids.map(id => (P[id] || [id])[0] + ': ' + short(d.platforms[id].followers)).join('\n');
@@ -497,7 +741,7 @@ async function unlock(box) {
   const rem = h('input', { type: 'checkbox', checked: '' }), bad = h('div', { class: 'bad' }), ok = h('button', { class: 'go', type: 'button' }, 'Открыть');
   const submit = async () => {
     bad.textContent = ''; ok.disabled = true;
-    try { S.data = await decrypt(box, pw.value); S.warn = ''; if (rem.checked) ls('pw', pw.value); render(); }
+    try { S.data = await decrypt(box, pw.value); S.warn = ''; if (rem.checked) ls('pw', pw.value); render(); checkMilestones(); }
     catch (e) { bad.textContent = 'Неверный пароль'; ok.disabled = false; }
   };
   ok.onclick = submit; pw.onkeydown = e => { if (e.key === 'Enter') submit(); };
@@ -505,23 +749,39 @@ async function unlock(box) {
     h('div', { class: 'sub' }, 'Введите пароль, чтобы открыть'), pw, h('label', {}, rem, 'Запомнить на этом устройстве'), bad, ok));
   pw.focus();
 }
-async function load() {
+async function load(manual) {
   btn.classList.add('spin');
   const get = u => fetch(u + '?t=' + Date.now()).then(r => { if (!r.ok) throw 0; return r.json(); });
   try {
     const box = await get('data.enc').catch(() => null);
     if (box) { ls('box', JSON.stringify(box)); await unlock(box); }
     else { S.data = await get('data.json'); S.warn = ''; render(); }
+    if (S.data) { checkMilestones(); if (manual) okh(); }
   } catch (e) {
     if (S.data) { S.warn = 'не удалось обновить, показаны прошлые данные'; foot(); }
     else document.getElementById('app').replaceChildren(h('p', { class: 'empty' }, 'Данных пока нет. Запустите обновление на GitHub: вкладка Actions, «update-stats», «Run workflow».'));
   }
   btn.classList.remove('spin');
 }
-btn.onclick = () => { tap(); load(); };
+btn.onclick = () => { tap(); load(true); };
 document.getElementById('share').onclick = () => { tap(); share(); };
-document.getElementById('pal').onclick = () => { if (S.data) { tap(); go('set'); } };
-let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => S.data && render(), 200); });
+document.getElementById('pal').onclick = () => { tap(); go('set'); };
+let rt; addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(() => { if (S.data) { fresh = false; render(); } }, 200); });
+
+// потянуть вниз, чтобы обновить
+(() => {
+  const el = document.getElementById('ptr'); let y0 = null, dy = 0;
+  addEventListener('touchstart', e => { y0 = scrollY <= 0 && e.touches.length === 1 ? e.touches[0].clientY : null; dy = 0; }, { passive: true });
+  addEventListener('touchmove', e => {
+    if (y0 === null) return;
+    dy = e.touches[0].clientY - y0;
+    if (dy > 0) { el.style.opacity = Math.min(dy / 80, 1); el.style.transform = `translate(-50%,${Math.min(dy / 2, 50)}px) rotate(${dy * 3}deg)`; }
+  }, { passive: true });
+  addEventListener('touchend', () => {
+    if (y0 !== null && dy > 90 && S.view !== 'set') { hap('medium'); load(true); }
+    y0 = null; el.style.opacity = 0; el.style.transform = 'translate(-50%,-40px)';
+  }, { passive: true });
+})();
 
 (async () => {
   applyTheme(); greet();
