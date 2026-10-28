@@ -13,6 +13,10 @@ on:
         description: "Код авторизации Instagram (только при первом подключении)"
         required: false
         default: ""
+      youtube_code:
+        description: "Код авторизации YouTube Analytics (только при первом подключении)"
+        required: false
+        default: ""
 
 permissions:
   contents: write
@@ -45,6 +49,15 @@ jobs:
           IG_TOKEN: ${{ secrets.IG_TOKEN }}
           TT_STATE_KEY: ${{ secrets.TT_STATE_KEY }}
           IG_REDIRECT_URI: https://paulrodo.github.io/Stats/
+      - name: YouTube Analytics first-time authorization
+        if: ${{ inputs.youtube_code != '' }}
+        run: python yt_auth.py
+        env:
+          YT_CODE: ${{ inputs.youtube_code }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          TT_STATE_KEY: ${{ secrets.TT_STATE_KEY }}
+          YT_REDIRECT_URI: https://paulrodo.github.io/Stats/
       - name: Collect stats
         run: python collector.py
         env:
@@ -55,6 +68,9 @@ jobs:
           TG_ALERT_CHAT: ${{ secrets.TG_ALERT_CHAT }}
           NOTIFY_BOT_TOKEN: ${{ secrets.NOTIFY_BOT_TOKEN }}
           NOTIFY_CHAT_ID: ${{ secrets.NOTIFY_CHAT_ID }}
+          NOTIFY_DAILY: ${{ vars.NOTIFY_DAILY }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           IG_TOKEN: ${{ secrets.IG_TOKEN }}
           IG_USER_ID: ${{ secrets.IG_USER_ID }}
           TT_CLIENT_KEY: ${{ secrets.TT_CLIENT_KEY }}
