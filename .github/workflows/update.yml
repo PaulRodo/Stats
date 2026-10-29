@@ -39,6 +39,7 @@ jobs:
           TT_CLIENT_SECRET: ${{ secrets.TT_CLIENT_SECRET }}
           TT_STATE_KEY: ${{ secrets.TT_STATE_KEY }}
           TT_REDIRECT_URI: https://paulrodo.github.io/Stats/tiktok.html
+          SUMMARY_KEY: ${{ secrets.SUMMARY_KEY }}
       - name: Instagram first-time authorization
         if: ${{ inputs.instagram_code != '' }}
         run: python ig_auth.py
