@@ -17,6 +17,7 @@ import time
 import requests
 
 WARN = []  # предупреждения (ключ, текст): токены, доступы. Отправляются раз в сутки
+TOK = {}  # статусы токенов для экрана «Профиль»: {платформа: {"expires": unix-время} или {"ok": bool}}
 
 
 def env(k):
@@ -194,6 +195,8 @@ def ig_token():
         except RuntimeError:
             pass  # например, токену меньше суток: попробуем при следующем запуске
     left = (st.get("expires", 0) - time.time()) / 86400 if st.get("expires") else None
+    if st.get("expires"):
+        TOK["ig"] = {"expires": int(st["expires"])}
     if left is not None and left < 10:
         WARN.append(("tok_ig", f"🔑 Instagram: токен истекает через {max(int(left), 0)} дн. Если он не продлится сам, получите новый код (workflow, поле instagram_code)."))
     return st["token"]
@@ -288,6 +291,8 @@ def tt_token():
     rexp = d.get("refresh_expires_in")
     state_save(pw, {"refresh_token": d.get("refresh_token") or st["refresh_token"],
                     **({"refresh_expires": int(time.time()) + int(rexp)} if rexp else {})})
+    if rexp:
+        TOK["tt"] = {"expires": int(time.time()) + int(rexp)}
     if rexp and int(rexp) < 14 * 86400:
         WARN.append(("tok_tt", f"🔑 TikTok: доступ истекает через {int(rexp) // 86400} дн. Подключите заново (workflow, поле tiktok_code)."))
     return d["access_token"]
@@ -379,6 +384,20 @@ def yt_deep(tok, today):
     try:
         r = yt_report(tok, startDate=start, endDate=end, dimensions="day", metrics="subscribersGained,subscribersLost", sort="day")
         deep["daily"] = [[d, int(g), int(l)] for d, g, l in r.get("rows", [])]
+    except RuntimeError:
+        pass
+    try:  # источники трафика
+        r = yt_report(tok, startDate=start, endDate=end, dimensions="insightTrafficSourceType", metrics="views", sort="-views")
+        rows = [[k, int(v)] for k, v in r.get("rows", [])]
+        if rows:
+            deep["src"] = rows[:10]
+    except RuntimeError:
+        pass
+    try:  # страны зрителей
+        r = yt_report(tok, startDate=start, endDate=end, dimensions="country", metrics="views", sort="-views", maxResults=10)
+        rows = [[k, int(v)] for k, v in r.get("rows", [])]
+        if rows:
+            deep["cn"] = rows
     except RuntimeError:
         pass
     try:
@@ -651,6 +670,39 @@ def viral(out, now):
     out["alerts"]["viral"] = sent[-200:]
 
 
+def make_summary(out, now):
+    """Короткая сводка для бота /stats (бот на Cloudflare Workers, см. worker.js)."""
+    hist = out["history"]
+    if not hist:
+        return None
+    base = lambda n: _base(hist, (now.date() - dt.timedelta(days=n)).isoformat())
+    b1, b7, b30 = base(1), base(7), base(30)
+    rows = []
+    for pid, r in out["platforms"].items():
+        f = r.get("followers")
+        if isinstance(f, (int, float)):
+            rows.append({"id": pid, "name": NAMES.get(pid, pid), "f": int(f), "d1": int(f - b1.get(pid, f)),
+                         "d7": int(f - b7.get(pid, f)), "d30": int(f - b30.get(pid, f))})
+    lim = (now.date() - dt.timedelta(days=7)).isoformat()
+    c = [p for p in out["archive"] if isinstance(p.get("views"), int) and p.get("ts", "")[:10] >= lim]
+    best = max(c, key=lambda p: p["views"]) if c else None
+    return {"updated": out["updated"], "rows": rows,
+            "best": {"title": best["title"], "pid": NAMES.get(best["pid"], best["pid"]), "views": best["views"]} if best else None}
+
+
+def write_summary(out, now):
+    """summary.enc: AES-GCM со случайным ключом SUMMARY_KEY (хранится в секретах GitHub и Cloudflare). Пароль не нужен."""
+    key = env("SUMMARY_KEY")
+    sm = make_summary(out, now) if key else None
+    if not sm:
+        return
+    from cryptography.hazmat.primitives.ciphers.aead import AESGCM
+    iv = os.urandom(12)
+    ct = AESGCM(hashlib.sha256(key.encode("utf-8")).digest()).encrypt(iv, json.dumps(sm, ensure_ascii=False).encode("utf-8"), None)
+    with open("summary.enc", "w", encoding="utf-8") as f:
+        json.dump({"iv": base64.b64encode(iv).decode(), "ct": base64.b64encode(ct).decode()}, f)
+
+
 def main():
     pw = env("DATA_PASSWORD")
     old = load_old(pw)
@@ -670,9 +722,11 @@ def main():
                 deep, vmap = yt_extra(ytx, now)
                 if deep:
                     res["deep"] = deep
+                    TOK["yt"] = {"ok": True}
             except RuntimeError as e:
                 res["deep_error"] = str(e)[:150]
                 if "invalid_grant" in str(e):
+                    TOK["yt"] = {"ok": False}
                     WARN.append(("tok_yt", "🔑 YouTube: доступ к аналитике больше не действует. Подключите заново (workflow, поле youtube_code)."))
         if res is None:
             continue
@@ -715,6 +769,7 @@ def main():
         out["ytx"] = ytx
     out["history"] = {d: hist[d] for d in sorted(hist)[-400:]}
     out["alerts"] = alerts
+    out["tokens"] = TOK
     out["archive"] = sorted(arch.values(), key=lambda p: p.get("ts", ""), reverse=True)[:1000]
     for fn in (periodic, viral):
         try:
@@ -732,6 +787,10 @@ def main():
     else:
         with open(DATA_FILE, "w", encoding="utf-8") as f:
             json.dump(out, f, ensure_ascii=False, indent=1)
+    try:
+        write_summary(out, now)
+    except Exception as e:  # сводка для бота не должна ломать сбор данных
+        print("Сводка для бота не записана:", e)
     print("Готово:", ", ".join(out["platforms"]) or "ни одна платформа не подключена")
 
 
