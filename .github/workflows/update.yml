@@ -78,6 +78,7 @@ jobs:
           TT_CLIENT_SECRET: ${{ secrets.TT_CLIENT_SECRET }}
           TT_STATE_KEY: ${{ secrets.TT_STATE_KEY }}
           DATA_PASSWORD: ${{ secrets.DATA_PASSWORD }}
+          SUMMARY_KEY: ${{ secrets.SUMMARY_KEY }}
       - name: Save results
         run: |
           git config user.name "stats-bot"
