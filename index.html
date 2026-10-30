@@ -127,7 +127,7 @@ footer{color:var(--mute);font-size:12px;text-align:center;margin:18px 0 0}
 #cf{position:fixed;inset:0;pointer-events:none;z-index:70}
 .anim>*{animation:rise .5s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*50ms)}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}}
-.area{animation:fade .9s both}
+.draw .area{animation:fade .9s both}
 @keyframes fade{from{opacity:0}}
 ::view-transition-group(*){animation-duration:.32s}
 .compact .card{padding:12px;border-radius:18px}
@@ -135,7 +135,7 @@ footer{color:var(--mute);font-size:12px;text-align:center;margin:18px 0 0}
 .compact .spark{display:none}
 .compact .stat{min-height:96px}
 .compact .grid{gap:8px}
-@media(prefers-reduced-motion:reduce){.anim>*,.area,.round.spin,.sk,.arr,.hot .spark svg,.hero.hot .chart svg{animation:none}.wb{transition:none}#bgfx{display:none}#splash .ln,#splash .ln2{animation:none;stroke-dashoffset:0}#sp-hi,#sp-num,#sp-dot{animation:none;opacity:1}}
+@media(prefers-reduced-motion:reduce){.anim>*,.draw .area,.round.spin,.sk,.arr,.hot .spark svg,.hero.hot .chart svg{animation:none}.wb{transition:none}#bgfx{display:none}#splash .ln,#splash .ln2{animation:none;stroke-dashoffset:0}#sp-hi,#sp-num,#sp-dot{animation:none;opacity:1}}
 .calm .anim>*,.calm .area,.calm .sk{animation:none}
 
 main{position:relative;z-index:1}
@@ -296,7 +296,7 @@ const EN = {
 'Чистое изменение за день: пришло минус отписалось': 'Net change per day: gained minus unsubscribed', 'Это закономерности в вашей статистике, а не гарантия результата.': 'These are patterns in your statistics, not a guarantee of results.',
 'Это связь, а не причина: слово может просто совпасть с удачной темой. Длина считается по сохранённому названию (до 70 символов).': 'This is correlation, not cause: a word may simply coincide with a successful topic. Length is measured on the stored title (up to 70 characters).',
 'Это устройство не поддерживает': 'This device does not support it', 'Язык интерфейса': 'Interface language', 'Ярлык на главном экране': 'Home screen shortcut', 'вовлечённость': 'engagement',
-'данные собираются раз в 6 часов': 'data is collected every 6 hours', 'дата подключения неизвестна': 'connection date unknown', 'дней без публикаций: {n}': 'days without posts: {n}', 'дней истории': 'days of history',
+'данные собираются раз в час': 'data is collected every hour', 'дата подключения неизвестна': 'connection date unknown', 'дней без публикаций: {n}': 'days without posts: {n}', 'дней истории': 'days of history',
 'до {a} симв.': 'up to {a} chars', 'доступ к аналитике активен': 'analytics access active', 'за 30 дней': 'over 30 days', 'за 7 дней': 'over 7 days', 'за {d} дней': 'over {d} days', 'за {n} дн.': 'over {n} d',
 'за всё время': 'all time', 'история копится': 'history is building up', 'лайки и комментарии к просмотрам': 'likes and comments per view', 'лайков': 'likes', 'мало данных: {n} публикаций': 'little data: {n} posts',
 'мало публикаций для вывода': 'too few posts for a conclusion', 'на всех платформах': 'across all platforms', 'нужно подключить заново': 'needs reconnecting', 'нужно хотя бы 2 дня данных': 'at least 2 days of data are needed',
@@ -916,13 +916,13 @@ function render() {
   if (S.view !== 'home' && !S.data.platforms[S.view]) S.view = 'home';
   DRAW = fresh; casc = fresh && !VT; fresh = false; VT = false;
   const app = document.getElementById('app');
-  app.classList.toggle('anim', casc);
+  app.classList.toggle('anim', casc); app.classList.toggle('draw', DRAW);
   S.view === 'home' ? renderHome() : renderPlatform(S.view);
   [...app.children].forEach((c, i) => c.style.setProperty('--i', Math.min(i, 9)));
   foot();
 }
 function foot() {
-  document.getElementById('foot').textContent = S.data ? L('Обновлено') + ' ' + new Date(S.data.updated).toLocaleString(LOC(), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' · ' + L('данные собираются раз в 6 часов') + (S.warn ? ' · ' + L(S.warn) : '') : '';
+  document.getElementById('foot').textContent = S.data ? L('Обновлено') + ' ' + new Date(S.data.updated).toLocaleString(LOC(), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' · ' + L('данные собираются раз в час') + (S.warn ? ' · ' + L(S.warn) : '') : '';
 }
 const TILES = { growth: ['Прирост', 'grow'], er: ['Вовлечённость', 'er'], avgv: ['Просмотров на публикацию', 't3'], posts: ['Публикаций за 30 дней', 't4'], bestp: ['Лучшая публикация', 't5'] };
 const BL = [['tiles', 'Плитки'], ['plats', 'Платформы'], ['share', 'Доли платформ'], ['best', 'Лучшие публикации'], ['reco', 'Рекомендации'], ['cal', 'Календарь публикаций'], ['trend', 'Динамика по неделям'], ['week', 'Когда публиковать'], ['titles', 'Анализ заголовков']];
