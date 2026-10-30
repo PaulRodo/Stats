@@ -670,6 +670,37 @@ def viral(out, now):
     out["alerts"]["viral"] = sent[-200:]
 
 
+def anomaly(out, now):
+    """Резкий отток или всплеск подписчиков за прошлый день: сравнение с тем же днём недели в прошлые недели."""
+    hist, alerts = out["history"], out["alerts"]
+    days = sorted(hist)
+    if days and days[-1] == now.strftime("%Y-%m-%d"):
+        days = days[:-1]  # сегодняшний день ещё не закончился
+    if len(days) < 22:
+        return
+    keys = lambda d: {k for k, v in hist[d].items() if not k.startswith("c:") and isinstance(v, (int, float))}
+    tot = lambda d: sum(hist[d][k] for k in keys(d))
+    day, prev = days[-1], days[-2]
+    if alerts.get("anom") == day or keys(day) != keys(prev):
+        return  # уже сообщали, либо в какой-то из дней платформа не ответила
+    wd = dt.date.fromisoformat(day).weekday()
+    ref = [tot(days[i]) - tot(days[i - 1]) for i in range(1, len(days) - 1)
+           if dt.date.fromisoformat(days[i]).weekday() == wd and keys(days[i]) == keys(days[i - 1])][-8:]
+    if len(ref) < 3:
+        return
+    med = statistics.median(ref)
+    spread = max(statistics.median(abs(x - med) for x in ref), 3)
+    d = tot(day) - tot(prev)
+    if d < 0 and d < med - 4 * spread:
+        txt = f"📉 Отток подписчиков за {day}: {d:+.0f}, обычно в этот день недели {med:+.0f}"
+    elif d >= 10 and d > med + 4 * spread:
+        txt = f"🚀 Всплеск подписчиков за {day}: {d:+.0f}, обычно {med:+.0f}"
+    else:
+        return
+    if notify(txt, loud=d < 0):
+        alerts["anom"] = day
+
+
 def make_summary(out, now):
     """Короткая сводка для бота /stats (бот на Cloudflare Workers, см. worker.js)."""
     hist = out["history"]
@@ -770,8 +801,23 @@ def main():
     out["history"] = {d: hist[d] for d in sorted(hist)[-400:]}
     out["alerts"] = alerts
     out["tokens"] = TOK
+    curves = old.get("curves", {})  # почасовая динамика просмотров новых публикаций (первые 48 часов)
+    for p in arch.values():
+        v = p.get("views")
+        if not p.get("ts") or not isinstance(v, int):
+            continue
+        try:
+            t = dt.datetime.fromisoformat(p["ts"].replace("Z", "+00:00"))
+        except ValueError:
+            continue
+        age = (now - (t if t.tzinfo else t.replace(tzinfo=dt.timezone.utc))).total_seconds() / 3600
+        if 0 <= age <= 48:
+            cv = curves.setdefault(f"{p['pid']}:{p.get('id') or p['title']}", {"t": p.get("title", ""), "pid": p["pid"], "pts": []})
+            if not cv["pts"] or age - cv["pts"][-1][0] >= 0.5:
+                cv["pts"].append([round(age, 1), v])
+    out["curves"] = dict(list(curves.items())[-60:])
     out["archive"] = sorted(arch.values(), key=lambda p: p.get("ts", ""), reverse=True)[:1000]
-    for fn in (periodic, viral):
+    for fn in (periodic, viral, anomaly):
         try:
             fn(out, now)
         except Exception as e:  # уведомления не должны ломать сбор данных
