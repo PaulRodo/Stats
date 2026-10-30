@@ -1,0 +1,15 @@
+name = "stats"
+main = "worker.js"
+compatibility_date = "2026-10-01"
+workers_dev = true
+keep_vars = true   # не стирать переменные, заданные в панели Cloudflare (секреты и так сохраняются)
+
+[ai]
+binding = "AI"
+
+[[kv_namespaces]]
+binding = "LINKS"
+id = "55d4c901c84d45e599963efa409ba668"
+
+[triggers]
+crons = ["0 6 * * 1"]
