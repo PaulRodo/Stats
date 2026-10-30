@@ -658,6 +658,8 @@ def viral(out, now):
         if len(old) < 5:
             continue
         med = statistics.median(old)
+        if med < 20:
+            continue  # слишком мало просмотров, «втрое больше» ничего не значит
         for a, p in ps:
             key = f"{pid}:{p.get('id') or p['title']}"
             if a >= dt.timedelta(hours=48) or key in sent or p["views"] < max(3 * med, 100):
@@ -668,6 +670,56 @@ def viral(out, now):
             if notify(txt + ("\n" + p["url"] if p.get("url") else ""), loud=True):
                 sent.append(key)
     out["alerts"]["viral"] = sent[-200:]
+
+
+POS = ("спасибо", "круто", "класс", "супер", "отлично", "полезн", "люблю", "лучш", "прекрасн", "нравится", "👍", "❤", "🔥")
+NEG = ("плох", "ужас", "фигн", "отстой", "бред", "скучн", "обман", "разочар", "не работает", "👎")
+STOP = set("это как так что для или при если уже был была были будет еще только очень можно когда тоже все всё вот нет они его ему меня тебя вас нас мне себя этот этой этом чтобы потому какой есть даже просто ведь надо тут там сам".split())
+
+
+def comments():
+    """Свежие комментарии YouTube без ИИ: тон по словарю (грубо), вопросы без ответа, частые слова."""
+    key, ch = env("YT_API_KEY"), env("YT_CHANNEL")
+    if not (key and ch):
+        return None
+    B = "https://www.googleapis.com/youtube/v3/"
+    items = call("GET", B + "channels", params={"part": "id", "key": key, ("id" if re.match(r"^UC[\w-]{20,}$", ch) else "forHandle"): ch.lstrip("@")}).get("items")
+    if not items:
+        return None
+    r = call("GET", B + "commentThreads", params={"part": "snippet", "allThreadsRelatedToChannelId": items[0]["id"], "maxResults": 100,
+                                                  "order": "time", "textFormat": "plainText", "key": key})
+    pos = neg = n = 0
+    words, qs = {}, []
+    for it in r.get("items", []):
+        sn = it["snippet"]
+        c = sn["topLevelComment"]["snippet"]
+        t = c.get("textDisplay", "")
+        low = t.lower()
+        n += 1
+        pos += any(w in low for w in POS)
+        neg += any(w in low for w in NEG)
+        for w in re.findall(r"[а-яёa-z]{4,}", low):
+            if w not in STOP:
+                words[w] = words.get(w, 0) + 1
+        if "?" in t and sn.get("totalReplyCount", 0) == 0:
+            qs.append({"t": t[:200], "v": sn.get("videoId", ""), "d": c.get("publishedAt", "")[:10]})
+    top = sorted(words.items(), key=lambda kv: -kv[1])[:8]
+    return {"n": n, "pos": pos, "neg": neg, "q": qs[:8], "w": [[w, k] for w, k in top if k >= 3]}
+
+
+def retention(tok, vids, today):
+    """Удержание зрителей: сколько процентов аудитории смотрит видео на каждом отрезке (100 точек)."""
+    res = {}
+    for v in vids:
+        try:
+            r = yt_report(tok, metrics="audienceWatchRatio", dimensions="elapsedVideoTimeRatio", filters="video==" + v["id"],
+                          startDate="2020-01-01", endDate=today.isoformat())
+        except RuntimeError:
+            continue
+        pts = [round(x[1] * 100) for x in r.get("rows", [])]
+        if len(pts) >= 20:
+            res[v["id"]] = {"t": v.get("title", ""), "p": pts}
+    return res
 
 
 def anomaly(out, now):
@@ -681,6 +733,9 @@ def anomaly(out, now):
     keys = lambda d: {k for k, v in hist[d].items() if not k.startswith("c:") and isinstance(v, (int, float))}
     tot = lambda d: sum(hist[d][k] for k in keys(d))
     day, prev = days[-1], days[-2]
+    total = tot(day)
+    if total < 200:
+        return  # при малой аудитории прирост «шумит», оповещения не нужны
     if alerts.get("anom") == day or keys(day) != keys(prev):
         return  # уже сообщали, либо в какой-то из дней платформа не ответила
     wd = dt.date.fromisoformat(day).weekday()
@@ -691,9 +746,9 @@ def anomaly(out, now):
     med = statistics.median(ref)
     spread = max(statistics.median(abs(x - med) for x in ref), 3)
     d = tot(day) - tot(prev)
-    if d < 0 and d < med - 4 * spread:
+    if d <= -max(5, total * 0.005) and d < med - 4 * spread:
         txt = f"📉 Отток подписчиков за {day}: {d:+.0f}, обычно в этот день недели {med:+.0f}"
-    elif d >= 10 and d > med + 4 * spread:
+    elif d >= max(20, total * 0.015) and d > med + 4 * spread:
         txt = f"🚀 Всплеск подписчиков за {day}: {d:+.0f}, обычно {med:+.0f}"
     else:
         return
@@ -717,7 +772,11 @@ def make_summary(out, now):
     lim = (now.date() - dt.timedelta(days=7)).isoformat()
     c = [p for p in out["archive"] if isinstance(p.get("views"), int) and p.get("ts", "")[:10] >= lim]
     best = max(c, key=lambda p: p["views"]) if c else None
-    return {"updated": out["updated"], "rows": rows,
+    top = sorted(c, key=lambda p: p["views"], reverse=True)[:5]
+    days = [[d, sum(v for k, v in hist[d].items() if not k.startswith("c:") and isinstance(v, (int, float)))] for d in sorted(hist)[-31:]]
+    bad = [NAMES.get(k, k) for k, v in out.get("platforms", {}).items() if v and v.get("error")]
+    return {"updated": out["updated"], "rows": rows, "days": days, "bad": bad,
+            "top": [{"title": p["title"], "pid": NAMES.get(p["pid"], p["pid"]), "views": p["views"], "url": p.get("url", "")} for p in top],
             "best": {"title": best["title"], "pid": NAMES.get(best["pid"], best["pid"]), "views": best["views"]} if best else None}
 
 
@@ -816,6 +875,16 @@ def main():
             if not cv["pts"] or age - cv["pts"][-1][0] >= 0.5:
                 cv["pts"].append([round(age, 1), v])
     out["curves"] = dict(list(curves.items())[-60:])
+    try:
+        out["comments"] = comments() or old.get("comments")
+    except RuntimeError:
+        out["comments"] = old.get("comments")
+    try:
+        tk = yt_token()
+        vs = sorted((p for p in arch.values() if p["pid"] == "yt" and p.get("id") and p.get("ts")), key=lambda p: p["ts"], reverse=True)[:5]
+        out["retention"] = (retention(tk, vs, now.date()) if tk and vs else {}) or old.get("retention", {})
+    except RuntimeError:
+        out["retention"] = old.get("retention", {})
     out["archive"] = sorted(arch.values(), key=lambda p: p.get("ts", ""), reverse=True)[:1000]
     for fn in (periodic, viral, anomaly):
         try:

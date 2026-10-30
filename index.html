@@ -300,7 +300,7 @@ const EN = {
 'Чистое изменение за день: пришло минус отписалось': 'Net change per day: gained minus unsubscribed', 'Это закономерности в вашей статистике, а не гарантия результата.': 'These are patterns in your statistics, not a guarantee of results.',
 'Это связь, а не причина: слово может просто совпасть с удачной темой. Длина считается по сохранённому названию (до 70 символов).': 'This is correlation, not cause: a word may simply coincide with a successful topic. Length is measured on the stored title (up to 70 characters).',
 'Это устройство не поддерживает': 'This device does not support it', 'Язык интерфейса': 'Interface language', 'Ярлык на главном экране': 'Home screen shortcut', 'вовлечённость': 'engagement',
-'данные собираются раз в час': 'data is collected every hour', 'Тепловая карта роста': 'Growth heatmap', 'Каждый квадрат — день: чем ярче, тем больше прирост подписчиков': 'Each square is a day: the brighter, the more followers gained', 'Нажмите на день': 'Tap a day', 'Первые часы публикации': 'First hours of a post', 'нет сравнения': 'no comparison', 'Пока нет данных: отслеживаются публикации младше 48 часов, они появятся после ближайшего обновления.': 'No data yet: posts younger than 48 hours are tracked and will appear after the next update.', 'замеров': 'samples', 'для сравнения': 'for comparison', 'Первая строка появится, когда замеры дойдут до 1, 3, 6, 12 или 24 часов после выхода поста.': 'The first row appears once samples reach 1, 3, 6, 12 or 24 hours after the post.', 'к обычному': 'vs usual', 'Данные появятся через час после выхода новой публикации.': 'Data will appear an hour after a new post goes live.', 'Во весь экран': 'Full screen', 'Выйти из полного экрана': 'Exit full screen', 'Добавить на главный экран': 'Add to home screen', 'дата подключения неизвестна': 'connection date unknown', 'дней без публикаций: {n}': 'days without posts: {n}', 'дней истории': 'days of history',
+'данные собираются раз в час': 'data is collected every hour', 'Тепловая карта роста': 'Growth heatmap', 'Каждый квадрат — день: чем ярче, тем больше прирост подписчиков': 'Each square is a day: the brighter, the more followers gained', 'Нажмите на день': 'Tap a day', 'Удержание зрителей': 'Audience retention', 'на середине видео': 'at video midpoint', 'Комментарии': 'Comments', 'свежих': 'recent', 'тон оценён по словарю, это грубая оценка': 'tone is estimated from a word list, roughly', 'Вопросы без ответа': 'Unanswered questions', 'Первые часы публикации': 'First hours of a post', 'нет сравнения': 'no comparison', 'Пока нет данных: отслеживаются публикации младше 48 часов, они появятся после ближайшего обновления.': 'No data yet: posts younger than 48 hours are tracked and will appear after the next update.', 'замеров': 'samples', 'для сравнения': 'for comparison', 'Первая строка появится, когда замеры дойдут до 1, 3, 6, 12 или 24 часов после выхода поста.': 'The first row appears once samples reach 1, 3, 6, 12 or 24 hours after the post.', 'к обычному': 'vs usual', 'Данные появятся через час после выхода новой публикации.': 'Data will appear an hour after a new post goes live.', 'Во весь экран': 'Full screen', 'Выйти из полного экрана': 'Exit full screen', 'Добавить на главный экран': 'Add to home screen', 'дата подключения неизвестна': 'connection date unknown', 'дней без публикаций: {n}': 'days without posts: {n}', 'дней истории': 'days of history',
 'до {a} симв.': 'up to {a} chars', 'доступ к аналитике активен': 'analytics access active', 'за 30 дней': 'over 30 days', 'за 7 дней': 'over 7 days', 'за {d} дней': 'over {d} days', 'за {n} дн.': 'over {n} d',
 'за всё время': 'all time', 'история копится': 'history is building up', 'лайки и комментарии к просмотрам': 'likes and comments per view', 'лайков': 'likes', 'мало данных: {n} публикаций': 'little data: {n} posts',
 'мало публикаций для вывода': 'too few posts for a conclusion', 'на всех платформах': 'across all platforms', 'нужно подключить заново': 'needs reconnecting', 'нужно хотя бы 2 дня данных': 'at least 2 days of data are needed',
@@ -937,6 +937,7 @@ function heatCard(dates, total) {
     for (let i = 1; i < dates.length; i++) m[dates[i]] = total[i] - total[i - 1];
     const end = U(dates[dates.length - 1]), first = Math.max(U(dates[1]), end - 364 * D);
     const g0 = first - ((new Date(first).getUTCDay() + 6) % 7) * D, vs = Object.values(m);
+    if (dates.length < 15 || vs.filter(v => v).length < 3) return null;
     const mx = Math.max(1, ...vs), mn = Math.max(1, ...vs.map(v => -v));
     const cols = Math.ceil(((end - g0) / D + 1) / 7), svg = sv('svg', { width: cols * 15 - 3, height: 102, viewBox: `0 0 ${cols * 15 - 3} 102` });
     for (let t = g0; t <= end; t += D) {
@@ -953,10 +954,10 @@ function heatCard(dates, total) {
   } catch (e) { return null; }
 }
 // первые часы последней публикации в сравнении с обычными
-function curveCard(cv) {
+function curveCard(cv, pid) {
   try {
-    const ks = Object.keys(cv || {});
-    if (!ks.length) return h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, L('Первые часы публикации'))), h('div', { class: 'empty' }, L('Пока нет данных: отслеживаются публикации младше 48 часов, они появятся после ближайшего обновления.')));
+    const ks = Object.keys(cv || {}).filter(k => !pid || cv[k].pid === pid);
+    if (!ks.length) return null;
     const at = (pts, t) => { let a = null, b = null; for (const q of pts) { if (q[0] <= t) a = q; else { b = q; break; } } if (a && b) return a[1] + (b[1] - a[1]) * (t - a[0]) / (b[0] - a[0]); return a && t - a[0] <= 1.5 ? a[1] : null; };
     const cur = cv[ks[ks.length - 1]], rest = ks.slice(0, -1).map(k => cv[k].pts);
     const card = h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, L('Первые часы публикации'))), h('div', { class: 'lbl' }, cut(cur.t || '', 60) + ' · ' + cur.pts.length + ' ' + L('замеров') + ', ' + (ks.length - 1) + ' ' + L('для сравнения')));
@@ -969,11 +970,33 @@ function curveCard(cv) {
         h('span', { style: 'color:' + (k === null ? 'var(--mute)' : k >= 0 ? 'var(--up)' : 'var(--down)') }, k === null ? L('нет сравнения') : (k >= 0 ? '+' : '−') + Math.round(Math.abs(k) * 100) + '% ' + L('к обычному'))));
       n++;
     });
-    if (!n) card.append(h('div', { class: 'empty' }, L('Первая строка появится, когда замеры дойдут до 1, 3, 6, 12 или 24 часов после выхода поста.')));
+    if (!n) return null;
     return card;
   } catch (e) { return null; }
 }
-const BL = [['tiles', 'Плитки'], ['plats', 'Платформы'], ['share', 'Доли платформ'], ['best', 'Лучшие публикации'], ['reco', 'Рекомендации'], ['cal', 'Календарь публикаций'], ['trend', 'Динамика по неделям'], ['week', 'Когда публиковать'], ['titles', 'Анализ заголовков'], ['heat', 'Тепловая карта роста'], ['early', 'Первые часы публикации']];
+function retentionCard(rt) {
+  try {
+    const ks = Object.keys(rt || {}); if (!ks.length) return null;
+    const card = h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, L('Удержание зрителей')))), lbl = h('div', { class: 'lbl' }), box = h('div', {}), chips = h('div', { style: 'display:flex;gap:6px;flex-wrap:wrap;margin:6px 0' });
+    const draw = k => {
+      const v = rt[k], p = v.p, mx = Math.max(100, ...p), W = 300, H = 110, svg = sv('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', height: 130, preserveAspectRatio: 'none' });
+      svg.append(sv('polyline', { points: p.map((y, i) => (i / (p.length - 1) * W).toFixed(1) + ',' + (H - y / mx * H).toFixed(1)).join(' '), fill: 'none', stroke: 'var(--up)', 'stroke-width': 2, 'vector-effect': 'non-scaling-stroke' }));
+      box.replaceChildren(svg); lbl.textContent = cut(v.t, 50) + ' · ' + L('на середине видео') + ' ' + p[p.length >> 1] + '%';
+    };
+    ks.forEach(k => { const b = document.createElement('button'); b.type = 'button'; b.className = 'tbtn'; b.textContent = cut(rt[k].t, 16); b.onclick = () => draw(k); chips.append(b); });
+    card.append(chips, lbl, box); draw(ks[0]); return card;
+  } catch (e) { return null; }
+}
+function commentsCard(c) {
+  try {
+    if (!c || !c.n) return null;
+    const card = h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, L('Комментарии'))), h('div', { class: 'lbl' }, c.n + ' ' + L('свежих') + ' · 👍 ' + c.pos + ' · 👎 ' + c.neg + ' · ' + L('тон оценён по словарю, это грубая оценка')));
+    if (c.w && c.w.length) card.append(h('div', { style: 'margin:6px 0' }, c.w.map(x => x[0] + ' ×' + x[1]).join(' · ')));
+    if (c.q && c.q.length) { card.append(h('div', { class: 'lbl' }, L('Вопросы без ответа'))); c.q.forEach(q => card.append(h('a', { href: 'https://youtu.be/' + q.v, target: '_blank', style: 'display:block;padding:6px 0;border-top:1px solid var(--line);color:inherit;text-decoration:none' }, q.t))); }
+    return card;
+  } catch (e) { return null; }
+}
+const BL = [['tiles', 'Плитки'], ['plats', 'Платформы'], ['share', 'Доли платформ'], ['best', 'Лучшие публикации'], ['reco', 'Рекомендации'], ['cal', 'Календарь публикаций'], ['trend', 'Динамика по неделям'], ['week', 'Когда публиковать'], ['titles', 'Анализ заголовков'], ['heat', 'Тепловая карта роста']];
 const blockIds = () => { const ids = BL.map(b => b[0]); return ids.slice().sort((a, b) => { const x = CFG.blocks.indexOf(a), y = CFG.blocks.indexOf(b); return (x < 0 ? 99 + ids.indexOf(a) : x) - (y < 0 ? 99 + ids.indexOf(b) : y); }); };
 function tileEl(k, c) {
   const [lbl, gc] = TILES[k]; let val = '—', note = '';
@@ -1084,8 +1107,7 @@ function renderHome() {
     trend: () => trendCard(base, acc()),
     week: () => weekCard(base, S.filter === 'all' && pids.length > 1 ? pids.map(k => [P[k][0], P[k][1], posts.filter(p => p.id === k)]) : null),
     titles: () => titleCard(base),
-    heat: () => heatCard(sr.dates, sr.total),
-    early: () => curveCard(d.curves)
+    heat: () => heatCard(sr.dates, sr.total)
   };
   blockIds().filter(k => !CFG.hb.includes(k)).forEach(k => { const r = B[k](); if (r) app.append(...[].concat(r)); });
 
@@ -1152,7 +1174,7 @@ function renderPlatform(id) {
   if (id === 'yt') { [ytDeep(r), ytSrcCard(r)].forEach(c => { if (c) app.append(c); }); }
   if (id === 'tg') { const c = flowCard(arr, sr.dates); if (c) app.append(c); }
   const vp = posts.filter(p => typeof p.val === 'number');
-  [trendCard(posts, col), fmtCard(posts, id, col), recoCard(insights(vp, id).slice(0, 5).map(i => ({ ...i, id }))), weekCard(posts), heatCard(posts), calCard(posts), titleCard(vp), compCard(d, id), pc].forEach(c => { if (c) app.append(c); });
+  [curveCard(d.curves, id), id === 'yt' ? retentionCard(d.retention) : null, id === 'yt' ? commentsCard(d.comments) : null, trendCard(posts, col), fmtCard(posts, id, col), recoCard(insights(vp, id).slice(0, 5).map(i => ({ ...i, id }))), weekCard(posts), heatCard(posts), calCard(posts), titleCard(vp), compCard(d, id), pc].forEach(c => { if (c) app.append(c); });
   requestAnimationFrame(() => {
     if (!arr || n < 1) return;
     const vals = arr.slice(i0), { svg, pts } = chart(vals, Math.max(box.clientWidth, 120), 150, col, 8);
