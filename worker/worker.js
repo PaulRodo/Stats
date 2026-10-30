@@ -1,9 +1,6 @@
-// Cloudflare Worker: бот со сводками из summary.enc, ИИ-разбором недели и короткими ссылками со счётчиком кликов.
+// Cloudflare Worker: бот со сводками из summary.enc, недельным отчётом, контролем сбора и короткими ссылками со счётчиком кликов.
 // Переменные (Settings → Variables and Secrets): BOT_TOKEN, WEBHOOK_SECRET, SUMMARY_KEY, OWNER_ID, DATA_URL, APP_URL (необязательно)
-// Привязки (Settings → Bindings), обе необязательные:
-//   LINKS  KV-хранилище: короткие ссылки и клики (команды /link, /links, /unlink)
-//   AI     Workers AI: ИИ-разбор недели (команда /digest и автоотправка по понедельникам)
-// Cron Trigger (Settings → Trigger Events): например «0 6 * * 1», тогда разбор приходит сам.
+// Привязка LINKS (KV): короткие ссылки, клики и память контроля сбора. Расписание задано в wrangler.toml.
 const b64 = s => Uint8Array.from(atob(s), c => c.charCodeAt(0));
 const nf = n => Math.round(n).toLocaleString('ru-RU').replace(/\u00a0/g, ' ');
 const sg = n => (n > 0 ? '+' : n < 0 ? '−' : '') + nf(Math.abs(n));
@@ -40,23 +37,35 @@ function forecast(s, goal) {
   out.push('Это грубая оценка по линейному темпу.');
   return out.join('\n');
 }
-const MODELS = ['@cf/zai-org/glm-4.7-flash', '@cf/google/gemma-4-26b-a4b-it']; // если одну отключат, берётся следующая
-async function digest(env, s) {
-  const base = text(s);
-  if (!env.AI) return base + '\n\n(ИИ-разбор не подключён: добавьте привязку AI в Cloudflare)';
-  const messages = [
-    { role: 'system', content: 'Ты аналитик соцсетей. Отвечай по-русски, коротко и по делу. Используй только числа из данных, ничего не выдумывай.' },
-    { role: 'user', content: 'Данные:\n' + base + '\n\n' + top(s) + '\n\nНапиши разбор недели: 1) что выросло или просело, 2) что сработало, 3) три гипотезы на следующую неделю. Не больше 900 знаков.' }];
-  let err = '';
-  for (const model of MODELS) {
-    try {
-      const r = await env.AI.run(model, { messages, max_tokens: 1000 });
-      const t = String(r.response || (r.choices && r.choices[0] && r.choices[0].message && r.choices[0].message.content) || '').trim();
-      if (t) return '🧠 Разбор недели\n' + t + '\n\n' + base;
-      err = 'пустой ответ модели';
-    } catch (e) { err = e.message; }
-  }
-  return base + '\n\n(ИИ-разбор не удался: ' + err + ')';
+function week(s) {
+  const rows = s.rows.filter(r => r.f > 0), o = ['🗓 Итоги недели'];
+  const f = rows.reduce((a, r) => a + r.f, 0), d7 = rows.reduce((a, r) => a + r.d7, 0);
+  o.push(`Подписчики: ${nf(f)} (${sg(d7)} за неделю)`);
+  const up = [...rows].sort((a, b) => b.d7 - a.d7)[0];
+  if (up && up.d7 > 0) o.push(`Быстрее всех растёт: ${up.name} (${sg(up.d7)})`);
+  const flat = rows.filter(r => r.d7 === 0).map(r => r.name), down = rows.filter(r => r.d7 < 0).map(r => `${r.name} (${sg(r.d7)})`);
+  if (down.length) o.push('⚠️ Убыль: ' + down.join(', '));
+  if (flat.length) o.push('Без роста: ' + flat.join(', '));
+  if (s.best) o.push('', `🔥 Лучшая публикация: ${s.best.title} (${s.best.pid}), ${nf(s.best.views)} просмотров`);
+  const tips = [];
+  if (s.best) tips.push('повторить формат лучшей публикации');
+  if (flat.length) tips.push('выпустить новое на платформах без роста: ' + flat.join(', '));
+  if (tips.length) o.push('', 'Что можно сделать: ' + tips.join('; ') + '.');
+  if ((s.days || []).length >= 8) o.push('', forecast(s, 0).split('\n').slice(1, 3).join(' · '));
+  return o.join('\n');
+}
+// контроль сбора: сообщает один раз при поломке и один раз при восстановлении
+async function health(env) {
+  if (!env.LINKS) return;
+  let cat = '', msg = '';
+  try {
+    const s = await summary(env), age = (Date.now() - new Date(s.updated)) / 36e5;
+    if (age > 3) { cat = 'stale'; msg = `⚠️ Данные не обновлялись уже ${Math.floor(age)} ч. Проверьте запуск update-stats в GitHub Actions.`; }
+    else if (s.bad && s.bad.length) { cat = 'bad:' + s.bad.join(','); msg = '⚠️ Не отвечают платформы: ' + s.bad.join(', ') + '. Остальные данные обновляются.'; }
+  } catch (e) { cat = 'read'; msg = '⚠️ Не удаётся прочитать данные: ' + e.message; }
+  const prev = await env.LINKS.get('health');
+  if (cat && cat !== prev) { await send(env, env.OWNER_ID, msg); await env.LINKS.put('health', cat); }
+  else if (!cat && prev) { await send(env, env.OWNER_ID, '✅ Сбор данных снова работает.'); await env.LINKS.delete('health'); }
 }
 const send = (env, chat, t) => fetch('https://api.telegram.org/bot' + env.BOT_TOKEN + '/sendMessage', {
   method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ chat_id: chat, text: t.slice(0, 4000), disable_web_page_preview: true })
@@ -107,11 +116,10 @@ export default {
     try {
       if (cmd === 'stats' || cmd === 'start') { out = text(await summary(env)); app = true; }
       else if (cmd === 'top') out = top(await summary(env));
-      else if (cmd === 'week') { const s = await summary(env); out = text(s) + '\n\n' + top(s); }
+      else if (cmd === 'week' || cmd === 'digest') out = week(await summary(env));
       else if (cmd === 'forecast') out = forecast(await summary(env), parseInt(arg.replace(/\s/g, ''), 10) || 0);
-      else if (cmd === 'digest') out = await digest(env, await summary(env));
       else if (cmd === 'link' || cmd === 'links' || cmd === 'unlink') out = await links(env, u.origin, cmd, arg);
-      else if (cmd === 'help') out = 'Команды:\n/stats сводка\n/top лучшие публикации недели\n/week сводка и топ\n/forecast [цель] прогноз роста\n/digest ИИ-разбор недели\n/link метка адрес создать короткую ссылку\n/links клики по ссылкам\n/unlink метка удалить';
+      else if (cmd === 'help') out = 'Команды:\n/stats сводка сейчас\n/top лучшие публикации недели\n/week итоги и советы недели\n/forecast [цель] прогноз роста\n/link метка адрес создать короткую ссылку\n/links клики по ссылкам\n/unlink метка удалить';
       else return new Response('ok');
     } catch (e) { out = '⚠️ Не получилось: ' + e.message; }
     const reply = { method: 'sendMessage', chat_id: m.chat.id, text: out.slice(0, 4000), disable_notification: true, disable_web_page_preview: true };
@@ -119,6 +127,11 @@ export default {
     return Response.json(reply);
   },
   async scheduled(ev, env, ctx) {
-    ctx.waitUntil((async () => { try { await send(env, env.OWNER_ID, await digest(env, await summary(env))); } catch (e) { await send(env, env.OWNER_ID, '⚠️ Не удалось собрать разбор недели: ' + e.message); } })());
+    ctx.waitUntil((async () => {
+      try {
+        if (ev.cron === '0 6 * * 1') await send(env, env.OWNER_ID, week(await summary(env)));
+        else await health(env);
+      } catch (e) { /* следующий запуск повторит */ }
+    })());
   }
 };
