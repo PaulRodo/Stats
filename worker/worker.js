@@ -51,6 +51,8 @@ function week(s) {
   if (s.best) tips.push('повторить формат лучшей публикации');
   if (flat.length) tips.push('выпустить новое на платформах без роста: ' + flat.join(', '));
   if (tips.length) o.push('', 'Что можно сделать: ' + tips.join('; ') + '.');
+  const id = s.ideas || {};
+  if (id.q && id.q.length) o.push('', '💡 Идеи из комментариев (вопросы без ответа):', ...id.q.map(q => '• ' + q), id.w && id.w.length ? 'Частые темы: ' + id.w.join(', ') : '');
   if ((s.days || []).length >= 8) o.push('', forecast(s, 0).split('\n').slice(1, 3).join(' · '));
   return o.join('\n');
 }
@@ -91,6 +93,25 @@ async function links(env, origin, cmd, arg) {
   }
   return '🔗 Ссылки и клики\n' + rows.join('\n');
 }
+// журнал экспериментов: сравнивает ежедневный прирост за 7 дней до и после даты записи
+async function tests(env, s, cmd, arg) {
+  if (!env.LINKS) return 'Журнал не подключён: нужна привязка LINKS.';
+  if (cmd === 'test') {
+    if (!arg.trim()) return 'Формат: /test что вы изменили, например /test новая обложка';
+    await env.LINKS.put('t:' + Date.now(), JSON.stringify({ d: dayKey(0), x: arg.trim().slice(0, 120) }));
+    return '🧪 Записал. Через 7 дней покажу, как изменился прирост подписчиков: /tests';
+  }
+  const ks = (await env.LINKS.list({ prefix: 't:', limit: 20 })).keys, days = s.days || [], out = ['🧪 Эксперименты'];
+  for (const k of ks) {
+    const t = JSON.parse(await env.LINKS.get(k.name)), age = Math.floor((Date.now() - new Date(t.d)) / 864e5), i = days.findIndex(x => x[0] >= t.d);
+    let r;
+    if (age < 7) r = `ждём ещё ${7 - age} дн.`;
+    else if (i < 7 || i + 7 >= days.length) r = 'данных за эти даты уже или ещё нет';
+    else { const b = (days[i][1] - days[i - 7][1]) / 7, a = (days[i + 7][1] - days[i][1]) / 7; r = `прирост в день ${b.toFixed(1)} → ${a.toFixed(1)}`; }
+    out.push(`${t.d} · ${t.x}\n   ${r}`);
+  }
+  return ks.length ? out.join('\n') : 'Экспериментов нет. Запишите: /test что вы изменили';
+}
 async function click(env, slug) {
   try { const k = `c:${slug}:${dayKey(0)}`; await env.LINKS.put(k, String((+(await env.LINKS.get(k)) || 0) + 1), { expirationTtl: 40 * 864e5 }); } catch (e) {}
 }
@@ -118,8 +139,9 @@ export default {
       else if (cmd === 'top') out = top(await summary(env));
       else if (cmd === 'week' || cmd === 'digest') out = week(await summary(env));
       else if (cmd === 'forecast') out = forecast(await summary(env), parseInt(arg.replace(/\s/g, ''), 10) || 0);
+      else if (cmd === 'test' || cmd === 'tests') out = await tests(env, cmd === 'tests' ? await summary(env) : null, cmd, arg);
       else if (cmd === 'link' || cmd === 'links' || cmd === 'unlink') out = await links(env, u.origin, cmd, arg);
-      else if (cmd === 'help') out = 'Команды:\n/stats сводка сейчас\n/top лучшие публикации недели\n/week итоги и советы недели\n/forecast [цель] прогноз роста\n/link метка адрес создать короткую ссылку\n/links клики по ссылкам\n/unlink метка удалить';
+      else if (cmd === 'help') out = 'Команды:\n/stats сводка сейчас\n/top лучшие публикации недели\n/week итоги и советы недели\n/forecast [цель] прогноз роста\n/test что изменили · /tests журнал экспериментов\n/link метка адрес создать короткую ссылку\n/links клики по ссылкам\n/unlink метка удалить';
       else return new Response('ok');
     } catch (e) { out = '⚠️ Не получилось: ' + e.message; }
     const reply = { method: 'sendMessage', chat_id: m.chat.id, text: out.slice(0, 4000), disable_notification: true, disable_web_page_preview: true };
