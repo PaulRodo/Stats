@@ -131,6 +131,11 @@ footer{color:var(--mute);font-size:12px;text-align:center;margin:18px 0 0}
 @keyframes pop{from{opacity:0;transform:scale(.9) translateY(12px)}to{opacity:1;transform:none}}
 body.up{background-image:radial-gradient(120% 55% at 50% -8%,color-mix(in srgb,var(--up) 13%,transparent),transparent)}
 body.down{background-image:radial-gradient(120% 55% at 50% -8%,color-mix(in srgb,var(--down) 13%,transparent),transparent)}
+::view-transition-group(root){animation-duration:.01s}
+.vt-reveal::view-transition-old(root),.vt-reveal::view-transition-new(root){animation:none;mix-blend-mode:normal}
+.vt-reveal::view-transition-old(root){z-index:1}.vt-reveal::view-transition-new(root){z-index:2}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--card);padding:10px 16px;border-radius:16px;font-weight:700;box-shadow:0 8px 30px #0003;z-index:60;max-width:90vw;text-align:center;animation:toastIn .45s both,toastOut .4s 3.1s forwards}
+@keyframes toastIn{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}@keyframes toastOut{to{opacity:0;transform:translate(-50%,10px)}}
 body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity .7s;background:radial-gradient(120% 45% at 50% -8%,color-mix(in srgb,var(--aur,transparent) 26%,transparent),transparent)}body.aur::before{opacity:1}
 .heat{overflow-x:auto;padding:4px 0 8px;-webkit-overflow-scrolling:touch}.heat svg{display:block}
 #tools{padding:0 4px 14px}.tbtn{border:0;background:var(--chip);color:var(--ink);border-radius:14px;padding:9px 14px;font:inherit;font-size:13px;margin:4px 4px 0 0}
@@ -605,10 +610,48 @@ function go(v) {
   if (document.startViewTransition && !RM) document.startViewTransition(run); else run();
 }
 try { if (tg) { tg.BackButton.onClick(() => go('home')); tg.SettingsButton.show(); tg.SettingsButton.onClick(() => go('set')); } } catch (e) {}
+// плавные переходы: тема расходится кругом от нажатия, а линия графика перетекает в новую форму
+function revealFrom(e, fn) {
+  if (!document.startViewTransition || RM || !e || e.clientX === undefined) return fn();
+  const x = e.clientX, y = e.clientY, r = Math.hypot(Math.max(x, innerWidth - x), Math.max(y, innerHeight - y)), root = document.documentElement;
+  root.classList.add('vt-reveal');
+  const t = document.startViewTransition(fn);
+  t.ready.then(() => root.animate({ clipPath: [`circle(0px at ${x}px ${y}px)`, `circle(${r}px at ${x}px ${y}px)`] }, { duration: 650, easing: 'ease-out', pseudoElement: '::view-transition-new(root)' })).catch(() => {});
+  t.finished.finally(() => root.classList.remove('vt-reveal'));
+}
+const samp = (p, n = 48) => { const len = p.getTotalLength(), a = []; for (let i = 0; i < n; i++) { const q = p.getPointAtLength(len * i / (n - 1)); a.push([q.x, q.y]); } return a; };
+const snapLines = () => { try { return [...document.querySelectorAll('#app path[data-l]')].map(p => samp(p)); } catch (e) { return []; } };
+function morphTo(old, tries = 0) {
+  try {
+    if (RM || !old.length) return;
+    const ls = [...document.querySelectorAll('#app path[data-l]')];
+    if (!ls.length && tries < 20) return requestAnimationFrame(() => morphTo(old, tries + 1)); // графики рисуются на следующем кадре
+    if (ls.length !== old.length) return;
+    const jobs = ls.map((l, i) => { const a = l.previousElementSibling; return { l, a: a && a.classList.contains('area') ? a : null, d0: l.getAttribute('d'), a0: a && a.getAttribute('d'), to: samp(l), fr: old[i], hh: l.ownerSVGElement.viewBox.baseVal.height }; });
+    const poly = p => 'M' + p.map(q => q[0].toFixed(1) + ' ' + q[1].toFixed(1)).join(' L'), t0 = performance.now(), D = 480;
+    const step = now => {
+      const t = Math.min(1, (now - t0) / D), e = 1 - (1 - t) ** 3;
+      jobs.forEach(j => { const p = j.to.map((q, k) => [j.fr[k][0] + (q[0] - j.fr[k][0]) * e, j.fr[k][1] + (q[1] - j.fr[k][1]) * e]); j.l.setAttribute('d', poly(p)); if (j.a) j.a.setAttribute('d', poly(p) + ` L${p[p.length - 1][0]} ${j.hh} L${p[0][0]} ${j.hh} Z`); });
+      if (t < 1) requestAnimationFrame(step); else jobs.forEach(j => { j.l.setAttribute('d', j.d0); if (j.a) j.a.setAttribute('d', j.a0); });
+    };
+    requestAnimationFrame(step);
+  } catch (e) {}
+}
+// плашка при обновлении данных: что изменилось с прошлого раза
+let lastData = null;
+function notifyChange(a, b) {
+  try {
+    const ch = vis(Object.keys(b.platforms)).map(id => [id, (b.platforms[id].followers || 0) - ((a.platforms[id] || {}).followers || 0)]).filter(x => x[1] && P[x[0]]);
+    if (!ch.length) return;
+    const tot = ch.reduce((s, x) => s + x[1], 0), el = document.createElement('div'); el.className = 'toast';
+    el.textContent = sgn(tot) + ' · ' + ch.map(x => P[x[0]][0] + ' ' + sgn(x[1])).join(', '); el.style.color = tot > 0 ? 'var(--up)' : 'var(--down)';
+    document.body.append(el); setTimeout(() => el.remove(), 3600);
+  } catch (e) {}
+}
 const segCtl = () => {
   const s = h('div', { class: 'seg', role: 'group', 'aria-label': L('Период') }, [[7, L('7 дн')], [30, L('30 дн')], [0, L('Всё')]].map(([v, t]) =>
     h('button', { type: 'button', 'aria-pressed': String(S.period === v), 'data-p': v }, t)));
-  s.onclick = e => { const b = e.target.closest('button'); if (b) { S.period = +b.dataset.p; tap(); render(); } };
+  s.onclick = e => { const b = e.target.closest('button'); if (b) { const old = snapLines(); S.period = +b.dataset.p; tap(); render(); morphTo(old); } };
   return s;
 };
 const chipRow = (items, cur, key) => {
@@ -927,6 +970,7 @@ function curTotal() {
   return vis(Object.keys(d.platforms)).filter(id => !d.platforms[id].error && typeof d.platforms[id].followers === 'number').reduce((a, id) => a + d.platforms[id].followers, 0);
 }
 function render() {
+  if (S.data && S.data !== lastData) { if (lastData) notifyChange(lastData, S.data); lastData = S.data; }
   document.body.style.setProperty('--aur', P[S.view] ? P[S.view][1] : 'transparent'); document.body.classList.toggle('aur', !!P[S.view]);
   if (S.view === 'set') return renderSettings();
   if (S.view === 'prof') return renderProfile();
@@ -1424,12 +1468,12 @@ function renderSettingsOnly() {
   const sw = h('div', { class: 'sws' }, BG.map((p, i) => {
     const b = h('button', { type: 'button', class: 'sw', 'aria-pressed': String(S.bg === i) },
       h('span', { class: 'swc', style: 'background:' + (p[1] ? (dk ? p[2] : p[1]) : 'linear-gradient(135deg,#fff 50%,#14172b 50%)') }), L(p[0]));
-    b.onclick = () => { S.bg = i; saveCfg(); applyTheme(); tap(); renderSettings(); };
+    b.onclick = e => { tap(); revealFrom(e, () => { S.bg = i; saveCfg(); applyTheme(); renderSettings(); }); };
     return b;
   }));
   const ac = h('div', { class: 'sws' }, ACC.map((c, i) => {
     const b = h('button', { type: 'button', class: 'sw', 'aria-pressed': String(CFG.acc === i), 'aria-label': L('Акцент') + ' ' + (i + 1) }, h('span', { class: 'swc', style: 'background:' + c }));
-    b.onclick = () => { CFG.acc = i; saveCfg(); applyTheme(); tap(); renderSettings(); };
+    b.onclick = e => { tap(); revealFrom(e, () => { CFG.acc = i; saveCfg(); applyTheme(); renderSettings(); }); };
     return b;
   }));
   const lang = h('div', { class: 'seg' }, [['ru', 'Русский'], ['en', 'English']].map(([k, t]) => { const b = h('button', { type: 'button', 'aria-pressed': String(LANG === k) }, t); b.onclick = () => { setLang(k); tap(); renderSettings(); }; return b; }));
