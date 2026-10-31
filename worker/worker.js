@@ -112,6 +112,17 @@ async function tests(env, s, cmd, arg) {
   }
   return ks.length ? out.join('\n') : 'Экспериментов нет. Запишите: /test что вы изменили';
 }
+function dayInfo(s, arg) {
+  const m = arg.trim().match(/^(\d{1,2})\.(\d{1,2})(?:\.(\d{4}))?$/);
+  if (!m) return 'Формат: /day 12.10 (число.месяц, можно с годом)';
+  const key = `${m[3] || new Date().getFullYear()}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`, d = s.days || [], i = d.findIndex(x => x[0] === key);
+  if (i < 0) return 'За эту дату данных в боте нет: он помнит последние 31 день.';
+  const o = [`📅 ${m[1]}.${m[2]}: всего ${nf(d[i][1])}`];
+  if (i > 0) o.push(`За день: ${sg(d[i][1] - d[i - 1][1])}`);
+  if (i >= 7) o.push(`За неделю до этой даты: ${sg(d[i][1] - d[i - 7][1])}`);
+  if (i < d.length - 1) o.push(`С тех пор: ${sg(d[d.length - 1][1] - d[i][1])}`);
+  return o.join('\n');
+}
 async function click(env, slug) {
   try { const k = `c:${slug}:${dayKey(0)}`; await env.LINKS.put(k, String((+(await env.LINKS.get(k)) || 0) + 1), { expirationTtl: 40 * 864e5 }); } catch (e) {}
 }
@@ -140,8 +151,9 @@ export default {
       else if (cmd === 'week' || cmd === 'digest') out = week(await summary(env));
       else if (cmd === 'forecast') out = forecast(await summary(env), parseInt(arg.replace(/\s/g, ''), 10) || 0);
       else if (cmd === 'test' || cmd === 'tests') out = await tests(env, cmd === 'tests' ? await summary(env) : null, cmd, arg);
+      else if (cmd === 'day') out = dayInfo(await summary(env), arg);
       else if (cmd === 'link' || cmd === 'links' || cmd === 'unlink') out = await links(env, u.origin, cmd, arg);
-      else if (cmd === 'help') out = 'Команды:\n/stats сводка сейчас\n/top лучшие публикации недели\n/week итоги и советы недели\n/forecast [цель] прогноз роста\n/test что изменили · /tests журнал экспериментов\n/link метка адрес создать короткую ссылку\n/links клики по ссылкам\n/unlink метка удалить';
+      else if (cmd === 'help') out = 'Команды:\n/stats сводка сейчас\n/top лучшие публикации недели\n/week итоги и советы недели\n/forecast [цель] прогноз роста\n/day 12.10 как выглядел этот день\n/test что изменили · /tests журнал экспериментов\n/link метка адрес создать короткую ссылку\n/links клики по ссылкам\n/unlink метка удалить';
       else return new Response('ok');
     } catch (e) { out = '⚠️ Не получилось: ' + e.message; }
     const reply = { method: 'sendMessage', chat_id: m.chat.id, text: out.slice(0, 4000), disable_notification: true, disable_web_page_preview: true };
