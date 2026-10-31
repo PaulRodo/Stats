@@ -774,8 +774,10 @@ def make_summary(out, now):
     best = max(c, key=lambda p: p["views"]) if c else None
     top = sorted(c, key=lambda p: p["views"], reverse=True)[:5]
     days = [[d, sum(v for k, v in hist[d].items() if not k.startswith("c:") and isinstance(v, (int, float)))] for d in sorted(hist)[-31:]]
+    cm = out.get("comments") or {}
+    ideas = {"q": [q["t"][:140] for q in cm.get("q", [])[:3]], "w": [w for w, _ in cm.get("w", [])[:5]]}
     bad = [NAMES.get(k, k) for k, v in out.get("platforms", {}).items() if v and v.get("error")]
-    return {"updated": out["updated"], "rows": rows, "days": days, "bad": bad,
+    return {"updated": out["updated"], "rows": rows, "days": days, "bad": bad, "ideas": ideas,
             "top": [{"title": p["title"], "pid": NAMES.get(p["pid"], p["pid"]), "views": p["views"], "url": p.get("url", "")} for p in top],
             "best": {"title": best["title"], "pid": NAMES.get(best["pid"], best["pid"]), "views": best["views"]} if best else None}
 

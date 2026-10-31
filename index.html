@@ -128,6 +128,9 @@ footer{color:var(--mute);font-size:12px;text-align:center;margin:18px 0 0}
 .anim>*{animation:rise .5s cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*50ms)}
 @keyframes rise{from{opacity:0;transform:translateY(14px)}}
 .draw .area{animation:fade .9s both}
+@keyframes pop{from{opacity:0;transform:scale(.9) translateY(12px)}to{opacity:1;transform:none}}
+body.up{background-image:radial-gradient(120% 55% at 50% -8%,color-mix(in srgb,var(--up) 13%,transparent),transparent)}
+body.down{background-image:radial-gradient(120% 55% at 50% -8%,color-mix(in srgb,var(--down) 13%,transparent),transparent)}
 .heat{overflow-x:auto;padding:4px 0 8px;-webkit-overflow-scrolling:touch}.heat svg{display:block}
 #tools{padding:0 4px 14px}.tbtn{border:0;background:var(--chip);color:var(--ink);border-radius:14px;padding:9px 14px;font:inherit;font-size:13px;margin:4px 4px 0 0}
 body.fs{padding-top:calc(var(--tg-safe-area-inset-top,0px) + var(--tg-content-safe-area-inset-top,0px))}
@@ -300,7 +303,7 @@ const EN = {
 'Чистое изменение за день: пришло минус отписалось': 'Net change per day: gained minus unsubscribed', 'Это закономерности в вашей статистике, а не гарантия результата.': 'These are patterns in your statistics, not a guarantee of results.',
 'Это связь, а не причина: слово может просто совпасть с удачной темой. Длина считается по сохранённому названию (до 70 символов).': 'This is correlation, not cause: a word may simply coincide with a successful topic. Length is measured on the stored title (up to 70 characters).',
 'Это устройство не поддерживает': 'This device does not support it', 'Язык интерфейса': 'Interface language', 'Ярлык на главном экране': 'Home screen shortcut', 'вовлечённость': 'engagement',
-'данные собираются раз в час': 'data is collected every hour', 'Тепловая карта роста': 'Growth heatmap', 'Каждый квадрат — день: чем ярче, тем больше прирост подписчиков': 'Each square is a day: the brighter, the more followers gained', 'Нажмите на день': 'Tap a day', 'Удержание зрителей': 'Audience retention', 'на середине видео': 'at video midpoint', 'Комментарии': 'Comments', 'свежих': 'recent', 'тон оценён по словарю, это грубая оценка': 'tone is estimated from a word list, roughly', 'Вопросы без ответа': 'Unanswered questions', 'Первые часы публикации': 'First hours of a post', 'нет сравнения': 'no comparison', 'Пока нет данных: отслеживаются публикации младше 48 часов, они появятся после ближайшего обновления.': 'No data yet: posts younger than 48 hours are tracked and will appear after the next update.', 'замеров': 'samples', 'для сравнения': 'for comparison', 'Первая строка появится, когда замеры дойдут до 1, 3, 6, 12 или 24 часов после выхода поста.': 'The first row appears once samples reach 1, 3, 6, 12 or 24 hours after the post.', 'к обычному': 'vs usual', 'Данные появятся через час после выхода новой публикации.': 'Data will appear an hour after a new post goes live.', 'Во весь экран': 'Full screen', 'Выйти из полного экрана': 'Exit full screen', 'Добавить на главный экран': 'Add to home screen', 'дата подключения неизвестна': 'connection date unknown', 'дней без публикаций: {n}': 'days without posts: {n}', 'дней истории': 'days of history',
+'данные собираются раз в час': 'data is collected every hour', 'Тепловая карта роста': 'Growth heatmap', 'Каждый квадрат — день: чем ярче, тем больше прирост подписчиков': 'Each square is a day: the brighter, the more followers gained', 'Нажмите на день': 'Tap a day', 'Индекс здоровья канала': 'Channel health index', 'рост': 'growth', 'охват': 'reach', 'регулярность': 'consistency', 'Слабее всего: ': 'Weakest: ', 'Просмотры → подписчики': 'Views → followers', 'Итоги года': 'Year in review', 'Смотреть итоги': 'Watch the recap', 'растёт быстрее всех': 'grows fastest', 'лучший месяц': 'best month', 'публикаций': 'posts', 'просмотров': 'views', 'Удержание зрителей': 'Audience retention', 'на середине видео': 'at video midpoint', 'Комментарии': 'Comments', 'свежих': 'recent', 'тон оценён по словарю, это грубая оценка': 'tone is estimated from a word list, roughly', 'Вопросы без ответа': 'Unanswered questions', 'Первые часы публикации': 'First hours of a post', 'нет сравнения': 'no comparison', 'Пока нет данных: отслеживаются публикации младше 48 часов, они появятся после ближайшего обновления.': 'No data yet: posts younger than 48 hours are tracked and will appear after the next update.', 'замеров': 'samples', 'для сравнения': 'for comparison', 'Первая строка появится, когда замеры дойдут до 1, 3, 6, 12 или 24 часов после выхода поста.': 'The first row appears once samples reach 1, 3, 6, 12 or 24 hours after the post.', 'к обычному': 'vs usual', 'Данные появятся через час после выхода новой публикации.': 'Data will appear an hour after a new post goes live.', 'Во весь экран': 'Full screen', 'Выйти из полного экрана': 'Exit full screen', 'Добавить на главный экран': 'Add to home screen', 'дата подключения неизвестна': 'connection date unknown', 'дней без публикаций: {n}': 'days without posts: {n}', 'дней истории': 'days of history',
 'до {a} симв.': 'up to {a} chars', 'доступ к аналитике активен': 'analytics access active', 'за 30 дней': 'over 30 days', 'за 7 дней': 'over 7 days', 'за {d} дней': 'over {d} days', 'за {n} дн.': 'over {n} d',
 'за всё время': 'all time', 'история копится': 'history is building up', 'лайки и комментарии к просмотрам': 'likes and comments per view', 'лайков': 'likes', 'мало данных: {n} публикаций': 'little data: {n} posts',
 'мало публикаций для вывода': 'too few posts for a conclusion', 'на всех платформах': 'across all platforms', 'нужно подключить заново': 'needs reconnecting', 'нужно хотя бы 2 дня данных': 'at least 2 days of data are needed',
@@ -996,7 +999,84 @@ function commentsCard(c) {
     return card;
   } catch (e) { return null; }
 }
-const BL = [['tiles', 'Плитки'], ['plats', 'Платформы'], ['share', 'Доли платформ'], ['best', 'Лучшие публикации'], ['reco', 'Рекомендации'], ['cal', 'Календарь публикаций'], ['trend', 'Динамика по неделям'], ['week', 'Когда публиковать'], ['titles', 'Анализ заголовков'], ['heat', 'Тепловая карта роста']];
+// показатели платформы за 30 дней: рост, охват, регулярность (каждый 0–100)
+function pm(d, id) {
+  const f = d.platforms[id].followers, sr = series(d.history || {}, [id]), a = sr.per[id], g = a && sr.dates.length > 1 ? growth(a, sr.dates, 30) : null;
+  const cutD = new Date(Date.now() - 30 * 864e5).toISOString().slice(0, 10), rec = collectPosts(d).filter(p => p.id === id && typeof p.val === 'number' && p.date && p.date >= cutD);
+  const med = rec.map(p => p.val).sort((x, y) => x - y)[rec.length >> 1] || 0, gain = g ? g.d : 0;
+  return { f, gain, views: rec.reduce((x, p) => x + p.val, 0), grow: Math.max(0, Math.min(100, gain / Math.max(f, 1) * 1000)), reach: Math.min(100, med / Math.max(f, 1) * 100), reg: Math.min(100, rec.length / 12 * 100) };
+}
+function healthCard(d, ids) {
+  try {
+    const ms = ids.map(id => Object.assign({ id }, pm(d, id))); if (!ms.length) return null;
+    const ax = [['grow', L('рост')], ['reach', L('охват')], ['reg', L('регулярность')]], avg = k => ms.reduce((x, m) => x + m[k], 0) / ms.length;
+    const score = Math.round(ax.reduce((x, a) => x + avg(a[0]), 0) / 3), weak = ax.slice().sort((a, b) => avg(a[0]) - avg(b[0]))[0][1];
+    const R = 62, pt = (i, v) => { const a = (-90 + i * 120) * Math.PI / 180; return [100 + Math.cos(a) * R * v / 100, 100 + Math.sin(a) * R * v / 100]; };
+    const poly = (vs, st) => sv('polygon', Object.assign({ points: vs.map((v, i) => pt(i, v).join(',')).join(' '), fill: 'none' }, st));
+    const radar = sv('svg', { viewBox: '0 0 200 200', width: 190, height: 190 });
+    [100, 50].forEach(v => radar.append(poly([v, v, v], { stroke: 'var(--line)', 'stroke-width': 1 })));
+    ms.forEach(m => radar.append(poly(ax.map(a => m[a[0]]), { stroke: P[m.id][1], 'stroke-width': 2, fill: P[m.id][1], 'fill-opacity': .12 })));
+    ax.forEach((a, i) => { const p = pt(i, 120), t = sv('text', { x: p[0], y: p[1] + 4, 'text-anchor': 'middle', 'font-size': 11, fill: 'var(--mute)' }); t.textContent = a[1]; radar.append(t); });
+    const ring = sv('svg', { viewBox: '0 0 100 100', width: 110, height: 110 }), cc = 2 * Math.PI * 42;
+    ring.append(sv('circle', { cx: 50, cy: 50, r: 42, fill: 'none', stroke: 'var(--chip)', 'stroke-width': 9 }), sv('circle', { cx: 50, cy: 50, r: 42, fill: 'none', stroke: 'var(--up)', 'stroke-width': 9, 'stroke-linecap': 'round', 'stroke-dasharray': (cc * score / 100) + ' ' + cc, transform: 'rotate(-90 50 50)' }));
+    const num = sv('text', { x: 50, y: 58, 'text-anchor': 'middle', 'font-size': 26, 'font-weight': 700, fill: 'var(--ink)' }); num.textContent = score; ring.append(num);
+    return h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, L('Индекс здоровья канала'))),
+      h('div', { style: 'display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:center' }, ring, radar),
+      h('div', { class: 'lbl' }, L('Слабее всего: ') + weak + ' · ' + L('считается по росту за 30 дней, охвату публикаций и частоте выхода')),
+      h('div', { class: 'leg' }, ms.map(m => h('span', {}, h('i', { class: 'dot', style: 'background:' + P[m.id][1] }), P[m.id][0]))));
+  } catch (e) { return null; }
+}
+function funnelCard(d, ids) {
+  try {
+    const rs = ids.map(id => ({ id, m: pm(d, id) })).filter(r => r.m.views >= 100).map(r => ({ id: r.id, v: r.m.gain / r.m.views * 1000 }));
+    if (!rs.length) return null;
+    const mx = Math.max(1e-9, ...rs.map(r => Math.abs(r.v)));
+    return h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, L('Просмотры → подписчики'))),
+      h('div', { class: 'lbl' }, L('Прирост подписчиков на 1000 просмотров публикаций за 30 дней (приблизительно)')),
+      rs.map(r => h('div', { style: 'display:flex;align-items:center;gap:8px;margin:7px 0' }, h('span', { style: 'width:84px;font-size:13px' }, P[r.id][0]),
+        h('div', { style: 'height:10px;border-radius:6px;background:' + P[r.id][1] + ';width:' + Math.max(3, Math.abs(r.v) / mx * 100) + '%;opacity:' + (r.v < 0 ? .4 : 1) }), h('b', { style: 'font-size:13px' }, (r.v >= 0 ? '+' : '−') + Math.abs(r.v).toFixed(1)))));
+  } catch (e) { return null; }
+}
+// «Итоги года» в виде историй: нажатие листает слайды
+function wrapSlides(d) {
+  const ids = vis(Object.keys(d.platforms)).filter(i => typeof d.platforms[i].followers === 'number'), y = String(new Date().getFullYear());
+  const sr = series(d.history || {}, ids), ix = sr.dates.map((x, i) => i).filter(i => sr.dates[i].startsWith(y));
+  if (ix.length < 7) return [];
+  const b = Math.max(0, ix[0] - 1), e = sr.dates.length - 1, base = a => { const v = a.slice(b).find(x => typeof x === 'number'); return v === undefined ? 0 : v; }, out = [];
+  out.push({ big: sgn(sr.total[e] - base(sr.total)), txt: L('подписчиков за ') + y + L(' год'), sub: nf.format(sr.total[e]) + ' ' + L('всего сейчас') });
+  const pg = ids.map(id => [id, (sr.per[id][e] || 0) - base(sr.per[id])]).sort((a, c) => c[1] - a[1])[0];
+  if (pg && pg[1] > 0) out.push({ big: P[pg[0]][0], txt: L('растёт быстрее всех'), sub: sgn(pg[1]) });
+  const mo = {}; ix.forEach(i => { if (i > 0) { const k = sr.dates[i].slice(5, 7); mo[k] = (mo[k] || 0) + sr.total[i] - sr.total[i - 1]; } });
+  const bm = Object.entries(mo).sort((a, c) => c[1] - a[1])[0];
+  if (bm && bm[1] > 0) out.push({ big: new Date(2000, +bm[0] - 1, 1).toLocaleDateString(LOC(), { month: 'long' }), txt: L('лучший месяц'), sub: sgn(bm[1]) });
+  const ps = collectPosts(d).filter(p => p.date && p.date.startsWith(y) && typeof p.val === 'number');
+  if (ps.length) {
+    const bp = ps.slice().sort((a, c) => c.val - a.val)[0];
+    out.push({ big: String(ps.length), txt: L('публикаций'), sub: nf.format(ps.reduce((x, p) => x + p.val, 0)) + ' ' + L('просмотров') });
+    out.push({ big: nf.format(bp.val), txt: L('просмотров у лучшей публикации'), sub: cut(bp.title || '', 70) });
+  }
+  return out;
+}
+function openWrapped(d) {
+  const sl = wrapSlides(d); if (!sl.length) return;
+  const ov = document.createElement('div'); let i = 0;
+  ov.style.cssText = 'position:fixed;inset:0;z-index:99;display:flex;flex-direction:column;justify-content:center;align-items:center;text-align:center;padding:32px;padding-top:calc(32px + var(--tg-safe-area-inset-top,0px));color:#fff;background:linear-gradient(160deg,#3a2fd0,#c2368c);cursor:pointer';
+  const show = () => ov.replaceChildren(
+    h('div', { style: 'position:absolute;top:calc(14px + var(--tg-safe-area-inset-top,0px));left:16px;right:16px;display:flex;gap:4px' }, sl.map((x, k) => h('i', { style: 'flex:1;height:3px;border-radius:2px;background:#fff;opacity:' + (k <= i ? 1 : .3) }))),
+    h('div', { style: 'font-size:clamp(40px,14vw,72px);font-weight:800;line-height:1.05;animation:pop .5s both' }, sl[i].big),
+    h('div', { style: 'font-size:20px;margin-top:10px;animation:pop .5s .1s both' }, sl[i].txt),
+    h('div', { style: 'font-size:15px;opacity:.8;margin-top:8px;animation:pop .5s .2s both' }, sl[i].sub || ''));
+  ov.onclick = () => { if (++i >= sl.length) ov.remove(); else show(); };
+  show(); document.body.append(ov);
+}
+function wrappedCard(d) {
+  try {
+    if (wrapSlides(d).length < 3) return null;
+    const b = document.createElement('button'); b.type = 'button'; b.className = 'tbtn'; b.textContent = '✨ ' + L('Смотреть итоги') + ' ' + new Date().getFullYear(); b.onclick = () => openWrapped(d);
+    return h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, L('Итоги года'))), h('div', { class: 'lbl' }, L('Короткая история канала: нажимайте, чтобы листать')), b);
+  } catch (e) { return null; }
+}
+const BL = [['tiles', 'Плитки'], ['plats', 'Платформы'], ['share', 'Доли платформ'], ['best', 'Лучшие публикации'], ['reco', 'Рекомендации'], ['cal', 'Календарь публикаций'], ['trend', 'Динамика по неделям'], ['week', 'Когда публиковать'], ['titles', 'Анализ заголовков'], ['heat', 'Тепловая карта роста'], ['health', 'Индекс здоровья канала'], ['funnel', 'Просмотры → подписчики'], ['wrapped', 'Итоги года']];
 const blockIds = () => { const ids = BL.map(b => b[0]); return ids.slice().sort((a, b) => { const x = CFG.blocks.indexOf(a), y = CFG.blocks.indexOf(b); return (x < 0 ? 99 + ids.indexOf(a) : x) - (y < 0 ? 99 + ids.indexOf(b) : y); }); };
 function tileEl(k, c) {
   const [lbl, gc] = TILES[k]; let val = '—', note = '';
@@ -1037,6 +1117,7 @@ function renderHome() {
   const good = ids.filter(id => !d.platforms[id].error && typeof d.platforms[id].followers === 'number');
   const total = curTotal(); ls('lastTotal', String(total));
   const sr = series(d.history || {}, good), i0 = startIdx(sr.dates, S.period), n = sr.dates.length;
+  { const g7 = n > 1 ? growth(sr.total, sr.dates, 7) : null; document.body.classList.toggle('up', !!g7 && g7.d > 0); document.body.classList.toggle('down', !!g7 && g7.d < 0); }
   const g = n > 1 ? growth(sr.total, sr.dates, S.period) : null, delta = g ? g.d : null;
   const bw = n > 7 ? bestWeek(sr.total, sr.dates) : null;
   const vals0 = sr.total.slice(i0), dts = sr.dates.slice(i0);
@@ -1107,7 +1188,10 @@ function renderHome() {
     trend: () => trendCard(base, acc()),
     week: () => weekCard(base, S.filter === 'all' && pids.length > 1 ? pids.map(k => [P[k][0], P[k][1], posts.filter(p => p.id === k)]) : null),
     titles: () => titleCard(base),
-    heat: () => heatCard(sr.dates, sr.total)
+    heat: () => heatCard(sr.dates, sr.total),
+    health: () => healthCard(d, good),
+    funnel: () => funnelCard(d, good),
+    wrapped: () => wrappedCard(d)
   };
   blockIds().filter(k => !CFG.hb.includes(k)).forEach(k => { const r = B[k](); if (r) app.append(...[].concat(r)); });
 
