@@ -499,7 +499,7 @@ def competitors():
         try:
             it = (call("GET", "https://www.googleapis.com/youtube/v3/channels", params=p).get("items") or [None])[0]
             if it and not it["statistics"].get("hiddenSubscriberCount"):
-                rows.append({"key": "yt:" + hdl, "pid": "yt", "name": it["snippet"]["title"], "followers": int(it["statistics"]["subscriberCount"])})
+                rows.append({"key": "yt:" + hdl, "pid": "yt", "id": it["id"], "name": it["snippet"]["title"], "followers": int(it["statistics"]["subscriberCount"])})
         except (RuntimeError, KeyError, ValueError):
             continue
     for name in (cfg.get("telegram") or [])[:10]:
@@ -635,6 +635,7 @@ def periodic(out, now):
         lines = ["📊 Итоги недели"] + _lines(out, _base(hist, ref)) + _top(out, lambda d: d >= ref)
         if notify("\n".join(lines)):
             alerts["digest"] = today
+            send_photo(chart_png(out), "Рост за 30 дней")
     elif env("NOTIFY_DAILY") == "1" and now.day != 1 and 5 <= now.hour < 12 and alerts.get("daily") != today:
         ref = (now.date() - dt.timedelta(days=1)).isoformat()
         if notify("\n".join(["☀️ Сводка за сутки"] + _lines(out, _base(hist, ref)))):
@@ -707,9 +708,92 @@ def comments():
     return {"n": n, "pos": pos, "neg": neg, "q": qs[:8], "w": [[w, k] for w, k in top if k >= 3]}
 
 
+def iso_sec(s):
+    m = re.match(r"PT(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?$", s or "")
+    return int(m[1] or 0) * 3600 + int(m[2] or 0) * 60 + int(m[3] or 0) if m else 0
+
+
+def weak_spot(p, dur):
+    """Участок, где зрители уходят быстрее всего (после первых 5%), и доля оставшихся к 30-й секунде."""
+    n = len(p)
+    if n < 20:
+        return None
+    i = max(range(5, n - 3), key=lambda k: p[k] - p[k + 3])
+    hook = p[min(n - 1, round(30 / dur * n))] if dur else p[min(10, n - 1)]
+    return {"at": round((i + 1) / n * dur) if dur else None, "pct": i + 1, "drop": p[i] - p[i + 3], "hook": hook}
+
+
+def vsubs(tok, today):
+    """Сколько подписчиков принесло каждое видео (за год)."""
+    try:
+        r = yt_report(tok, startDate=(today - dt.timedelta(days=365)).isoformat(), endDate=today.isoformat(),
+                      dimensions="video", metrics="subscribersGained", sort="-subscribersGained", maxResults=30)
+    except RuntimeError:
+        return {}
+    return {row[0]: int(row[1]) for row in r.get("rows", []) if row[1] > 0}
+
+
+def edit_check(edits, tok, today):
+    """Через 9 дней после смены заголовка сравнивает просмотры в день до и после."""
+    for e in edits:
+        d = dt.date.fromisoformat(e["d"])
+        if e.get("done") or (today - d).days < 9:
+            continue
+        if (today - d).days > 30:
+            e["done"] = True
+            continue
+        try:
+            r = yt_report(tok, startDate=(d - dt.timedelta(days=7)).isoformat(), endDate=(d + dt.timedelta(days=7)).isoformat(),
+                          dimensions="day", metrics="views", filters="video==" + e["vid"], sort="day")
+        except RuntimeError:
+            continue
+        b = [v for day, v in r.get("rows", []) if day < e["d"]]
+        a = [v for day, v in r.get("rows", []) if day > e["d"]]
+        if len(b) >= 3 and len(a) >= 3:
+            x, y = sum(b) / len(b), sum(a) / len(a)
+            if notify(f"✏️ Вы сменили заголовок видео:\n«{e['old']}» → «{e['new']}»\nПросмотров в день: {x:.0f} → {y:.0f} ({y / max(x, 1) - 1:+.0%}). Это ориентир: на просмотры влияют и другие причины."):
+                e["done"] = True
+
+
+def video_review(out, now):
+    """Через 7 дней после выхода видео присылает итоги одним сообщением."""
+    done = out["alerts"].setdefault("review", [])
+    yt = [p for p in out.get("archive", []) if p["pid"] == "yt" and p.get("id") and p.get("ts") and isinstance(p.get("views"), int)]
+    fmt = lambda n: f"{n:,.0f}".replace(",", " ")
+    mm = lambda x: f"{x // 60}:{x % 60:02d}"
+    for p in yt:
+        age = (now - dt.datetime.fromisoformat(p["ts"].replace("Z", "+00:00"))).total_seconds() / 3600
+        if not 168 <= age < 216 or p["id"] in done:
+            continue
+        base = [q["views"] for q in yt if q["id"] != p["id"] and q["ts"] < p["ts"]][:15]
+        lines = [f"🎬 Итоги видео за 7 дней: {p['title']}", "Просмотры: " + fmt(p["views"])]
+        if len(base) >= 3:
+            m = statistics.median(base)
+            lines[-1] += f" (обычно около {fmt(m)}, {p['views'] / max(m, 1) - 1:+.0%})"
+        s = (out.get("vsubs") or {}).get(p["id"])
+        if s is not None:
+            lines.append(f"Принесло подписчиков: {s}")
+        w = ((out.get("retention") or {}).get(p["id"]) or {}).get("w")
+        if w:
+            lines.append(f"Через 30 секунд остаётся {w['hook']}% зрителей")
+            lines.append(f"Сильнее всего зрители уходят {'около ' + mm(w['at']) if w['at'] is not None else 'на ' + str(w['pct']) + '% длины'} (−{w['drop']} п.п.)")
+        qn = sum(1 for q in (out.get("comments") or {}).get("q", []) if q.get("v") == p["id"])
+        if qn:
+            lines.append(f"Вопросов без ответа в комментариях: {qn}")
+        if notify("\n".join(lines)):
+            done.append(p["id"])
+    del done[:-50]
+
+
 def retention(tok, vids, today):
     """Удержание зрителей: сколько процентов аудитории смотрит видео на каждом отрезке (100 точек)."""
-    res = {}
+    res, durs, key = {}, {}, env("YT_API_KEY")
+    if key and vids:
+        try:
+            for it in call("GET", "https://www.googleapis.com/youtube/v3/videos", params={"part": "contentDetails", "id": ",".join(v["id"] for v in vids), "key": key}).get("items", []):
+                durs[it["id"]] = iso_sec(it["contentDetails"].get("duration"))
+        except RuntimeError:
+            pass
     for v in vids:
         try:
             r = yt_report(tok, metrics="audienceWatchRatio", dimensions="elapsedVideoTimeRatio", filters="video==" + v["id"],
@@ -718,8 +802,79 @@ def retention(tok, vids, today):
             continue
         pts = [round(x[1] * 100) for x in r.get("rows", [])]
         if len(pts) >= 20:
-            res[v["id"]] = {"t": v.get("title", ""), "p": pts}
+            res[v["id"]] = {"t": v.get("title", ""), "p": pts, "s": durs.get(v["id"], 0), "w": weak_spot(pts, durs.get(v["id"], 0))}
     return res
+
+
+def rival_alert(out, now):
+    """Видео соседнего YouTube-канала младше 3 суток набрало втрое больше просмотров, чем его обычные видео."""
+    key, sent = env("YT_API_KEY"), out["alerts"].setdefault("rival", [])
+    if not key:
+        return
+    B = "https://www.googleapis.com/youtube/v3/"
+    age = lambda ts: (now - dt.datetime.fromisoformat(ts.replace("Z", "+00:00"))).total_seconds() / 3600
+    for c in out.get("competitors", []):
+        if c.get("pid") != "yt" or not c.get("id"):
+            continue
+        try:
+            ids = [i["contentDetails"]["videoId"] for i in call("GET", B + "playlistItems", params={
+                "part": "contentDetails", "playlistId": "UU" + c["id"][2:], "maxResults": 15, "key": key}).get("items", [])]
+            vs = call("GET", B + "videos", params={"part": "snippet,statistics", "id": ",".join(ids), "key": key}).get("items", []) if ids else []
+            rows = [(v["id"], v["snippet"]["title"], age(v["snippet"]["publishedAt"]), int(v["statistics"].get("viewCount", 0))) for v in vs]
+        except (RuntimeError, KeyError, ValueError):
+            continue
+        base = [r[3] for r in rows if r[2] > 72]
+        if len(base) < 5:
+            continue
+        med = statistics.median(base)
+        for vid, title, a, views in rows:
+            if a <= 72 and views >= 1000 and views > 3 * med and vid not in sent:
+                txt = f"👀 У канала «{c['name']}» взлетело видео: {title}\nhttps://youtu.be/{vid}\n{views:,} просмотров за {a:.0f} ч., обычно около {med:,.0f}".replace(",", " ")
+                if notify(txt):
+                    sent.append(vid)
+    del sent[:-50]
+
+
+def chart_png(out):
+    """Картинка для недельного отчёта: подписчики за 30 дней и прирост по дням. Без matplotlib возвращает None."""
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+    except ImportError:
+        return None
+    hist = out["history"]
+    days = sorted(hist)[-31:]
+    if len(days) < 5:
+        return None
+    tot = [sum(v for k, v in hist[d].items() if not k.startswith("c:") and isinstance(v, (int, float))) for d in days]
+    dl = [tot[i] - tot[i - 1] for i in range(1, len(tot))]
+    fig, (a1, a2) = plt.subplots(2, 1, figsize=(8, 6), dpi=110, gridspec_kw={"height_ratios": [3, 2]})
+    a1.plot(days, tot, color="#2f9e6f", lw=2.5)
+    a1.fill_between(days, tot, min(tot), color="#2f9e6f", alpha=0.12)
+    a1.set_title("Подписчики за 30 дней")
+    a2.bar(days[1:], dl, color=["#2f9e6f" if x >= 0 else "#d1495b" for x in dl])
+    a2.set_title("Прирост по дням")
+    for a in (a1, a2):
+        a.set_xticks(days[::5])
+        a.tick_params(axis="x", labelrotation=30, labelsize=8)
+        a.spines[["top", "right"]].set_visible(False)
+    fig.tight_layout()
+    buf = io.BytesIO()
+    fig.savefig(buf, format="png")
+    plt.close(fig)
+    return buf.getvalue()
+
+
+def send_photo(png, caption=""):
+    tok, chat = env("NOTIFY_BOT_TOKEN") or env("TG_BOT_TOKEN"), env("NOTIFY_CHAT_ID") or env("TG_ALERT_CHAT")
+    if not (tok and chat and png):
+        return False
+    try:
+        return requests.post(f"https://api.telegram.org/bot{tok}/sendPhoto", data={"chat_id": chat, "caption": caption, "disable_notification": "true"},
+                             files={"photo": ("chart.png", png, "image/png")}, timeout=60).ok
+    except requests.RequestException:
+        return False
 
 
 def anomaly(out, now):
@@ -801,8 +956,11 @@ def main():
     hist, alerts = old.get("history", {}), old.get("alerts", {})
     ytx, vmap = old.get("ytx", {}), {}
     arch = {(p["pid"], p.get("id") or p["title"]): p for p in old.get("archive", [])}
+    edits = old.get("edits", [])  # смены заголовков видео
     now = dt.datetime.now(dt.timezone.utc)
     today = now.strftime("%Y-%m-%d")
+    last_an = old.get("an_at")  # когда в последний раз обновляли тяжёлую аналитику YouTube
+    fresh_an = not last_an or (now - dt.datetime.fromisoformat(last_an)).total_seconds() > 3 * 3600 - 300
     out = {"updated": now.isoformat(timespec="seconds"), "platforms": {}}
     for pid, fn in (("yt", youtube), ("tg", telegram), ("ig", instagram), ("tt", tiktok)):
         try:
@@ -811,7 +969,7 @@ def main():
             res = {"title": "", "error": str(e)[:200]}
         if pid == "yt" and res and not res.get("error"):
             try:
-                deep, vmap = yt_extra(ytx, now)
+                deep, vmap = yt_extra(ytx, now) if fresh_an else ((old.get("platforms", {}).get("yt") or {}).get("deep"), {})
                 if deep:
                     res["deep"] = deep
                     TOK["yt"] = {"ok": True}
@@ -827,6 +985,9 @@ def main():
             new = {k: v for k, v in p.items() if v is not None}
             if not new.get("url") and arch.get(key, {}).get("url"):
                 new["url"] = arch[key]["url"]  # не теряем ссылку, если сейчас её получить не удалось
+            prev_t = arch.get(key, {}).get("title")
+            if pid == "yt" and prev_t and new.get("title") and prev_t != new["title"] and new.get("id"):
+                edits.append({"vid": new["id"], "d": now.strftime("%Y-%m-%d"), "old": prev_t, "new": new["title"]})
             arch[key] = {**arch.get(key, {}), **new, "pid": pid}
         out["platforms"][pid] = res
         if res.get("followers") is not None:
@@ -882,13 +1043,21 @@ def main():
     except RuntimeError:
         out["comments"] = old.get("comments")
     try:
+        if not fresh_an:
+            raise RuntimeError("аналитика обновляется раз в 3 часа")
         tk = yt_token()
         vs = sorted((p for p in arch.values() if p["pid"] == "yt" and p.get("id") and p.get("ts")), key=lambda p: p["ts"], reverse=True)[:5]
         out["retention"] = (retention(tk, vs, now.date()) if tk and vs else {}) or old.get("retention", {})
+        out["vsubs"] = (vsubs(tk, now.date()) if tk else {}) or old.get("vsubs", {})
+        if tk:
+            edit_check(edits, tk, now.date())
     except RuntimeError:
         out["retention"] = old.get("retention", {})
+        out["vsubs"] = old.get("vsubs", {})
+    out["edits"] = edits[-30:]
+    out["an_at"] = now.isoformat(timespec="seconds") if fresh_an else last_an
     out["archive"] = sorted(arch.values(), key=lambda p: p.get("ts", ""), reverse=True)[:1000]
-    for fn in (periodic, viral, anomaly):
+    for fn in (periodic, viral, anomaly, rival_alert, video_review):
         try:
             fn(out, now)
         except Exception as e:  # уведомления не должны ломать сбор данных
