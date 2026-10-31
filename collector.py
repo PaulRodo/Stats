@@ -61,7 +61,9 @@ def iso_dur(s):
 
 def yt_fmt(v):
     d = iso_dur(v.get("contentDetails", {}).get("duration"))
-    return {"dur": d, "fmt": "short" if 0 < d <= 180 else "long"}
+    sn = v.get("snippet", {})
+    tag = "#shorts" in (sn.get("title", "") + " " + sn.get("description", "")).lower()  # шортсы определяются по хештегу #shorts
+    return {"dur": d, "fmt": "short" if tag else "long"}
 
 
 def youtube():
@@ -688,7 +690,7 @@ NEG = ("плох", "ужас", "фигн", "отстой", "бред", "скуч
 STOP = set("это как так что для или при если уже был была были будет еще только очень можно когда тоже все всё вот нет они его ему меня тебя вас нас мне себя этот этой этом чтобы потому какой есть даже просто ведь надо тут там сам".split())
 
 
-def comments():
+def comments(prev=None):
     """Свежие комментарии YouTube без ИИ: тон по словарю (грубо), вопросы без ответа, частые слова."""
     key, ch = env("YT_API_KEY"), env("YT_CHANNEL")
     if not (key and ch):
@@ -701,12 +703,18 @@ def comments():
                                                   "order": "time", "textFormat": "plainText", "key": key})
     pos = neg = n = 0
     words, qs = {}, []
+    prev = prev or {}
+    fans, seen = dict(prev.get("fans", {})), list(prev.get("seen", []))  # суперфаны: сколько комментариев у каждого автора
     for it in r.get("items", []):
         sn = it["snippet"]
         c = sn["topLevelComment"]["snippet"]
         t = c.get("textDisplay", "")
         low = t.lower()
         n += 1
+        au = c.get("authorDisplayName", "")
+        if au and it.get("id") and it["id"] not in seen:
+            fans[au] = fans.get(au, 0) + 1
+            seen.append(it["id"])
         pos += any(w in low for w in POS)
         neg += any(w in low for w in NEG)
         for w in re.findall(r"[а-яёa-z]{4,}", low):
@@ -715,7 +723,8 @@ def comments():
         if "?" in t and sn.get("totalReplyCount", 0) == 0:
             qs.append({"t": t[:200], "v": sn.get("videoId", ""), "d": c.get("publishedAt", "")[:10]})
     top = sorted(words.items(), key=lambda kv: -kv[1])[:8]
-    return {"n": n, "pos": pos, "neg": neg, "q": qs[:8], "w": [[w, k] for w, k in top if k >= 3]}
+    return {"n": n, "pos": pos, "neg": neg, "q": qs[:8], "w": [[w, k] for w, k in top if k >= 3],
+            "fans": dict(sorted(fans.items(), key=lambda kv: -kv[1])[:40]), "seen": seen[-400:]}
 
 
 def iso_sec(s):
@@ -887,6 +896,38 @@ def send_photo(png, caption=""):
         return False
 
 
+def video_guard(out, now):
+    """Видео из архива стало недоступным, приватным или получило региональное/возрастное ограничение."""
+    key, state = env("YT_API_KEY"), out["alerts"].setdefault("guard", {})
+    titles = {p["id"]: p["title"] for p in out.get("archive", []) if p["pid"] == "yt" and p.get("id")}
+    ids = list(titles)[:50]
+    if not (key and ids):
+        return
+    try:
+        got = {v["id"]: v for v in call("GET", "https://www.googleapis.com/youtube/v3/videos", params={"part": "status,contentDetails", "id": ",".join(ids), "key": key}).get("items", [])}
+    except RuntimeError:
+        return
+    msgs = {"gone": "больше недоступно (удалено или стало приватным)", "private": "стало не публичным", "region": "заблокировано в некоторых странах", "age": "получило возрастное ограничение"}
+    for vid in ids:
+        v = got.get(vid)
+        if v is None:
+            st = "gone"
+        elif v.get("status", {}).get("privacyStatus") != "public":
+            st = "private"
+        elif v.get("contentDetails", {}).get("regionRestriction", {}).get("blocked"):
+            st = "region"
+        elif v.get("contentDetails", {}).get("contentRating", {}).get("ytRating") == "ytAgeRestricted":
+            st = "age"
+        else:
+            state.pop(vid, None)
+            continue
+        if st == "gone" and state.get(vid) not in ("gone?", "gone"):
+            state[vid] = "gone?"  # один раз могло быть сбоем API: подтверждаем со второго запуска
+            continue
+        if state.get(vid) != st and notify(f"🛡 Видео «{titles[vid]}» {msgs[st]}\nhttps://youtu.be/{vid}"):
+            state[vid] = st
+
+
 def anomaly(out, now):
     """Резкий отток или всплеск подписчиков за прошлый день: сравнение с тем же днём недели в прошлые недели."""
     hist, alerts = out["history"], out["alerts"]
@@ -1053,7 +1094,7 @@ def main():
                 cv["pts"].append([round(age, 1), v])
     out["curves"] = dict(list(curves.items())[-60:])
     try:
-        out["comments"] = comments() or old.get("comments")
+        out["comments"] = comments(old.get("comments")) or old.get("comments")
     except RuntimeError:
         out["comments"] = old.get("comments")
     try:
@@ -1071,7 +1112,7 @@ def main():
     out["edits"] = edits[-30:]
     out["an_at"] = now.isoformat(timespec="seconds") if fresh_an else last_an
     out["archive"] = sorted(arch.values(), key=lambda p: p.get("ts", ""), reverse=True)[:1000]
-    for fn in (periodic, viral, anomaly, rival_alert, video_review):
+    for fn in (periodic, viral, anomaly, rival_alert, video_review, video_guard):
         try:
             fn(out, now)
         except Exception as e:  # уведомления не должны ломать сбор данных
