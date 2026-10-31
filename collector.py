@@ -400,6 +400,16 @@ def yt_deep(tok, today):
             deep["cn"] = rows
     except RuntimeError:
         pass
+    for k, kw in (("sub", {"dimensions": "subscribedStatus"}), ("dev", {"dimensions": "deviceType"}),
+                  ("q", {"dimensions": "insightTrafficSourceDetail", "filters": "insightTrafficSourceType==YT_SEARCH", "maxResults": 10}),
+                  ("ext", {"dimensions": "insightTrafficSourceDetail", "filters": "insightTrafficSourceType==EXT_URL", "maxResults": 10})):
+        try:  # подписчики и остальные, устройства, поисковые запросы, внешние источники
+            r = yt_report(tok, startDate=start, endDate=end, metrics="views", sort="-views", **kw)
+            rows = [[k2, int(v)] for k2, v in r.get("rows", [])]
+            if rows:
+                deep[k] = rows
+        except RuntimeError:
+            pass
     try:
         r = yt_report(tok, startDate=start90, endDate=end, dimensions="video",
                       metrics="views,averageViewDuration,averageViewPercentage", sort="-views", maxResults=50)
@@ -989,6 +999,10 @@ def main():
             if pid == "yt" and prev_t and new.get("title") and prev_t != new["title"] and new.get("id"):
                 edits.append({"vid": new["id"], "d": now.strftime("%Y-%m-%d"), "old": prev_t, "new": new["title"]})
             arch[key] = {**arch.get(key, {}), **new, "pid": pid}
+        old_p = old.get("platforms", {}).get(pid) or {}
+        pf, pv = res.get("followers"), old_p.get("followers")
+        if isinstance(pf, (int, float)) and isinstance(pv, (int, float)) and pv >= 20 and pf < pv * 0.5 and old_p.get("sus") != pf:
+            res["followers"], res["sus"] = pv, pf  # подозрительный провал: оставляем прежнее значение, пока оно не подтвердится вторым запуском
         out["platforms"][pid] = res
         if res.get("followers") is not None:
             hist.setdefault(today, {})[pid] = res["followers"]
@@ -1073,6 +1087,15 @@ def main():
     else:
         with open(DATA_FILE, "w", encoding="utf-8") as f:
             json.dump(out, f, ensure_ascii=False, indent=1)
+    try:  # раз в неделю копия зашифрованных данных (последние 8)
+        if pw and now.weekday() == 0 and os.path.exists(ENC_FILE) and not os.path.exists(f"backup/data-{today}.enc"):
+            import shutil
+            os.makedirs("backup", exist_ok=True)
+            shutil.copyfile(ENC_FILE, f"backup/data-{today}.enc")
+            for old_b in sorted(os.listdir("backup"))[:-8]:
+                os.remove(os.path.join("backup", old_b))
+    except OSError as e:
+        print("Копия не сохранена:", e)
     try:
         write_summary(out, now)
     except Exception as e:  # сводка для бота не должна ломать сбор данных
