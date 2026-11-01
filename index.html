@@ -136,6 +136,8 @@ body.down{background-image:radial-gradient(120% 55% at 50% -8%,color-mix(in srgb
 .vt-reveal::view-transition-old(root){z-index:1}.vt-reveal::view-transition-new(root){z-index:2}
 .toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--card);padding:10px 16px;border-radius:16px;font-weight:700;box-shadow:0 8px 30px #0003;z-index:60;max-width:90vw;text-align:center;animation:toastIn .45s both,toastOut .4s 3.1s forwards}
 @keyframes toastIn{from{opacity:0;transform:translate(-50%,14px)}to{opacity:1;transform:translate(-50%,0)}}@keyframes toastOut{to{opacity:0;transform:translate(-50%,10px)}}
+@keyframes flashUp{0%{background:color-mix(in srgb,var(--up) 50%,transparent)}100%{background:transparent}}@keyframes flashDown{0%{background:color-mix(in srgb,var(--down) 50%,transparent)}100%{background:transparent}}
+.flash-up{animation:flashUp 1.8s ease-out;border-radius:6px}.flash-down{animation:flashDown 1.8s ease-out;border-radius:6px}
 body::before{content:'';position:fixed;inset:0;z-index:-1;pointer-events:none;opacity:0;transition:opacity .7s;background:radial-gradient(120% 45% at 50% -8%,color-mix(in srgb,var(--aur,transparent) 26%,transparent),transparent)}body.aur::before{opacity:1}
 .heat{overflow-x:auto;padding:4px 0 8px;-webkit-overflow-scrolling:touch}.heat svg{display:block}
 #tools{padding:0 4px 14px}.tbtn{border:0;background:var(--chip);color:var(--ink);border-radius:14px;padding:9px 14px;font:inherit;font-size:13px;margin:4px 4px 0 0}
@@ -308,7 +310,7 @@ const EN = {
 'Чистое изменение за день: пришло минус отписалось': 'Net change per day: gained minus unsubscribed', 'Это закономерности в вашей статистике, а не гарантия результата.': 'These are patterns in your statistics, not a guarantee of results.',
 'Это связь, а не причина: слово может просто совпасть с удачной темой. Длина считается по сохранённому названию (до 70 символов).': 'This is correlation, not cause: a word may simply coincide with a successful topic. Length is measured on the stored title (up to 70 characters).',
 'Это устройство не поддерживает': 'This device does not support it', 'Язык интерфейса': 'Interface language', 'Ярлык на главном экране': 'Home screen shortcut', 'вовлечённость': 'engagement',
-'данные собираются раз в 30 минут': 'data is collected every 30 minutes', 'Тепловая карта роста': 'Growth heatmap', 'Каждый квадрат — день: чем ярче, тем больше прирост подписчиков': 'Each square is a day: the brighter, the more followers gained', 'Нажмите на день': 'Tap a day', 'Темп роста': 'Growth pace', 'в день': 'per day', 'за последние 7 дней': 'over the last 7 days', 'быстрее обычного': 'faster than usual', 'медленнее обычного': 'slower than usual', 'как обычно': 'as usual', 'Суперфаны': 'Top fans', 'лайков': 'likes', 'подписчиков с видео': 'subscribers per video', 'Прогноз роста': 'Growth forecast', 'Через 30 дней': 'In 30 days', 'по темпу последних 30 дней, это оценка': 'based on the last 30 days, an estimate', 'Свежие и старые публикации': 'New vs old posts', 'Таймлапс роста': 'Growth timelapse', 'Проиграть историю роста': 'Play growth history', 'Зал славы': 'Hall of fame', 'Лучший день': 'Best day', 'Лучшая неделя': 'Best week', 'Самая просматриваемая публикация': 'Most viewed post', 'Самая длинная серия публикаций': 'Longest posting streak', 'дн. подряд': 'days in a row', 'до': 'until', 'Сравнить все': 'Compare all', 'Подписчики и остальные': 'Subscribers vs others', 'Не подписаны': 'Not subscribed', 'Устройства': 'Devices', 'Поисковые запросы': 'Search queries', 'Внешние сайты и соцсети': 'External sites and social', 'слабое место': 'weak spot', 'п.п.': 'pp', 'Подписчики по видео': 'Subscribers by video', 'Сколько подписчиков принесло каждое видео за год': 'Subscribers gained per video over the last year', 'Индекс здоровья канала': 'Channel health index', 'рост': 'growth', 'охват': 'reach', 'регулярность': 'consistency', 'Слабее всего: ': 'Weakest: ', 'Просмотры → подписчики': 'Views → followers', 'Итоги года': 'Year in review', 'Смотреть итоги': 'Watch the recap', 'растёт быстрее всех': 'grows fastest', 'лучший месяц': 'best month', 'публикаций': 'posts', 'просмотров': 'views', 'Удержание зрителей': 'Audience retention', 'на середине видео': 'at video midpoint', 'Комментарии': 'Comments', 'свежих': 'recent', 'тон оценён по словарю, это грубая оценка': 'tone is estimated from a word list, roughly', 'Вопросы без ответа': 'Unanswered questions', 'Первые часы публикации': 'First hours of a post', 'нет сравнения': 'no comparison', 'Пока нет данных: отслеживаются публикации младше 48 часов, они появятся после ближайшего обновления.': 'No data yet: posts younger than 48 hours are tracked and will appear after the next update.', 'замеров': 'samples', 'для сравнения': 'for comparison', 'Первая строка появится, когда замеры дойдут до 1, 3, 6, 12 или 24 часов после выхода поста.': 'The first row appears once samples reach 1, 3, 6, 12 or 24 hours after the post.', 'к обычному': 'vs usual', 'Данные появятся через час после выхода новой публикации.': 'Data will appear an hour after a new post goes live.', 'Во весь экран': 'Full screen', 'Выйти из полного экрана': 'Exit full screen', 'Добавить на главный экран': 'Add to home screen', 'дата подключения неизвестна': 'connection date unknown', 'дней без публикаций: {n}': 'days without posts: {n}', 'дней истории': 'days of history',
+'данные собираются раз в 30 минут': 'data is collected every 30 minutes', 'Тепловая карта роста': 'Growth heatmap', 'Каждый квадрат — день: чем ярче, тем больше прирост подписчиков': 'Each square is a day: the brighter, the more followers gained', 'Нажмите на день': 'Tap a day', 'Темп роста': 'Growth pace', 'в день': 'per day', 'за последние 7 дней': 'over the last 7 days', 'быстрее обычного': 'faster than usual', 'медленнее обычного': 'slower than usual', 'как обычно': 'as usual', 'Суперфаны': 'Top fans', 'лайков': 'likes', 'подписчиков с видео': 'subscribers per video', 'Прогноз роста': 'Growth forecast', 'Через 30 дней': 'In 30 days', 'по темпу последних 30 дней': 'based on the last 30 days', 'с учётом дней недели': 'accounting for weekday patterns', 'это оценка': 'an estimate', 'Свежие и старые публикации': 'New vs old posts', 'Таймлапс роста': 'Growth timelapse', 'Проиграть историю роста': 'Play growth history', 'Зал славы': 'Hall of fame', 'Лучший день': 'Best day', 'Лучшая неделя': 'Best week', 'Самая просматриваемая публикация': 'Most viewed post', 'Самая длинная серия публикаций': 'Longest posting streak', 'дн. подряд': 'days in a row', 'до': 'until', 'Сравнить все': 'Compare all', 'Подписчики и остальные': 'Subscribers vs others', 'Не подписаны': 'Not subscribed', 'Устройства': 'Devices', 'Поисковые запросы': 'Search queries', 'Внешние сайты и соцсети': 'External sites and social', 'слабое место': 'weak spot', 'п.п.': 'pp', 'Подписчики по видео': 'Subscribers by video', 'Сколько подписчиков принесло каждое видео за год': 'Subscribers gained per video over the last year', 'Индекс здоровья канала': 'Channel health index', 'рост': 'growth', 'охват': 'reach', 'регулярность': 'consistency', 'Слабее всего: ': 'Weakest: ', 'Просмотры → подписчики': 'Views → followers', 'Итоги года': 'Year in review', 'Смотреть итоги': 'Watch the recap', 'растёт быстрее всех': 'grows fastest', 'лучший месяц': 'best month', 'публикаций': 'posts', 'просмотров': 'views', 'Удержание зрителей': 'Audience retention', 'на середине видео': 'at video midpoint', 'Комментарии': 'Comments', 'свежих': 'recent', 'тон оценён по словарю, это грубая оценка': 'tone is estimated from a word list, roughly', 'Вопросы без ответа': 'Unanswered questions', 'Первые часы публикации': 'First hours of a post', 'нет сравнения': 'no comparison', 'Пока нет данных: отслеживаются публикации младше 48 часов, они появятся после ближайшего обновления.': 'No data yet: posts younger than 48 hours are tracked and will appear after the next update.', 'замеров': 'samples', 'для сравнения': 'for comparison', 'Первая строка появится, когда замеры дойдут до 1, 3, 6, 12 или 24 часов после выхода поста.': 'The first row appears once samples reach 1, 3, 6, 12 or 24 hours after the post.', 'к обычному': 'vs usual', 'Данные появятся через час после выхода новой публикации.': 'Data will appear an hour after a new post goes live.', 'Во весь экран': 'Full screen', 'Выйти из полного экрана': 'Exit full screen', 'Добавить на главный экран': 'Add to home screen', 'дата подключения неизвестна': 'connection date unknown', 'дней без публикаций: {n}': 'days without posts: {n}', 'дней истории': 'days of history',
 'до {a} симв.': 'up to {a} chars', 'доступ к аналитике активен': 'analytics access active', 'за 30 дней': 'over 30 days', 'за 7 дней': 'over 7 days', 'за {d} дней': 'over {d} days', 'за {n} дн.': 'over {n} d',
 'за всё время': 'all time', 'история копится': 'history is building up', 'лайки и комментарии к просмотрам': 'likes and comments per view', 'лайков': 'likes', 'мало данных: {n} публикаций': 'little data: {n} posts',
 'мало публикаций для вывода': 'too few posts for a conclusion', 'на всех платформах': 'across all platforms', 'нужно подключить заново': 'needs reconnecting', 'нужно хотя бы 2 дня данных': 'at least 2 days of data are needed',
@@ -969,8 +971,25 @@ function curTotal() {
   const d = S.data; if (!d) return 0;
   return vis(Object.keys(d.platforms)).filter(id => !d.platforms[id].error && typeof d.platforms[id].followers === 'number').reduce((a, id) => a + d.platforms[id].followers, 0);
 }
+// вспышка чисел, которые изменились после обновления данных
+const NUM = /^[+−\-]?\d[\d\s\u00a0.,]*[%KkКкMмтыс.]*$/;
+const numEls = () => [...document.querySelectorAll('#app *')].filter(e => !e.children.length && NUM.test(e.textContent.trim()));
+const numSnap = () => { try { return numEls().map(e => e.textContent.trim()); } catch (e) { return null; } };
+function flashDiff(old) {
+  try {
+    if (!old || RM) return;
+    const els = numEls(); if (els.length !== old.length) return;
+    const val = t => parseFloat(t.replace(/[^\d.,\-−]/g, '').replace('−', '-').replace(',', '.'));
+    els.forEach((e, i) => {
+      const t = e.textContent.trim(); if (t === old[i]) return;
+      const a = val(old[i]), b = val(t), cls = b > a ? 'flash-up' : b < a ? 'flash-down' : null; if (!cls) return;
+      e.classList.add(cls); e.addEventListener('animationend', () => e.classList.remove(cls), { once: true });
+    });
+  } catch (e) {}
+}
 function render() {
-  if (S.data && S.data !== lastData) { if (lastData) notifyChange(lastData, S.data); lastData = S.data; }
+  let flashOld = null;
+  if (S.data && S.data !== lastData) { if (lastData) { notifyChange(lastData, S.data); flashOld = numSnap(); } lastData = S.data; }
   document.body.style.setProperty('--aur', P[S.view] ? P[S.view][1] : 'transparent'); document.body.classList.toggle('aur', !!P[S.view]);
   if (S.view === 'set') return renderSettings();
   if (S.view === 'prof') return renderProfile();
@@ -982,6 +1001,7 @@ function render() {
   S.view === 'home' ? renderHome() : renderPlatform(S.view);
   [...app.children].forEach((c, i) => c.style.setProperty('--i', Math.min(i, 9)));
   foot();
+  if (flashOld) setTimeout(() => flashDiff(flashOld), 1300); // ждём, пока числа доиграют анимацию счёта
 }
 function foot() {
   document.getElementById('foot').textContent = S.data ? L('Обновлено') + ' ' + new Date(S.data.updated).toLocaleString(LOC(), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' · ' + L('данные собираются раз в 30 минут') + (S.warn ? ' · ' + L(S.warn) : '') : '';
@@ -1189,6 +1209,14 @@ function fameCard(d, ids) {
     return h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, L('Зал славы'))), rows.map(r => h('div', { style: 'display:flex;justify-content:space-between;gap:10px;padding:8px 0;border-top:1px solid var(--line)' }, h('span', {}, r[0] + ' ' + r[1]), h('b', { style: 'text-align:right' }, r[2]))));
   } catch (e) { return null; }
 }
+function holtWinters(y, m = 7, H = 30) {
+  const n = y.length, A = .4, B = .1, G = .3; if (n < 2 * m) return null;
+  const avg = (a, b) => y.slice(a, b).reduce((x, v) => x + v, 0) / (b - a);
+  let l = avg(0, m), t = (avg(m, 2 * m) - avg(0, m)) / m; const s = Array.from({ length: m }, (_, i) => y[i] - l), err = [];
+  for (let i = m; i < n; i++) { const k = i % m; err.push(y[i] - (l + t + s[k])); const l2 = A * (y[i] - s[k]) + (1 - A) * (l + t); t = B * (l2 - l) + (1 - B) * t; s[k] = G * (y[i] - l2) + (1 - G) * s[k]; l = l2; }
+  const se = Math.max(Math.sqrt(err.reduce((x, v) => x + v * v, 0) / err.length), .5);
+  return Array.from({ length: H + 1 }, (_, h) => { const mid = h ? l + h * t + s[(n - 1 + h) % m] : y[n - 1], w = h ? 1.64 * se * Math.sqrt(h) : 0; return [mid, mid - w, mid + w]; });
+}
 // коридор прогноза: линейный тренд за последние 30 дней и 90%-й интервал на 30 дней вперёд
 function forecastCard(dates, total) {
   try {
@@ -1196,6 +1224,7 @@ function forecastCard(dates, total) {
     const xm = (n - 1) / 2, ym = y.reduce((a, v) => a + v, 0) / n, sxx = y.reduce((a, v, i) => a + (i - xm) ** 2, 0), b = y.reduce((a, v, i) => a + (i - xm) * (v - ym), 0) / sxx, a0 = ym - b * xm;
     const s = Math.sqrt(y.reduce((a, v, i) => a + (v - (a0 + b * i)) ** 2, 0) / Math.max(n - 2, 1)), P30 = [];
     for (let k = 0; k <= 30; k++) { const x = n - 1 + k, m = a0 + b * x, w = k ? 1.64 * Math.max(s, 0.5) * Math.sqrt(1 + 1 / n + (x - xm) ** 2 / sxx) : 0; P30.push([m, m - w, m + w]); }
+    const hw = holtWinters(total.slice(-56)); if (hw) { P30.length = 0; hw.forEach(p => P30.push(p)); }
     const lo = Math.min(...y, ...P30.map(p => p[1])), hi = Math.max(...y, ...P30.map(p => p[2])), W = 300, H = 120, T = n + 30, X = i => (i / (T - 1) * W).toFixed(1), Y = v => (H - 6 - (v - lo) / Math.max(hi - lo, 1) * (H - 12)).toFixed(1);
     const svg = sv('svg', { viewBox: `0 0 ${W} ${H}`, width: '100%', height: 150, preserveAspectRatio: 'none' });
     svg.append(sv('polygon', { points: P30.map((p, k) => X(n - 1 + k) + ',' + Y(p[2])).concat(P30.slice().reverse().map((p, k) => X(T - 1 - k) + ',' + Y(p[1]))).join(' '), fill: 'var(--up)', 'fill-opacity': .15 }),
@@ -1203,7 +1232,7 @@ function forecastCard(dates, total) {
       sv('polyline', { points: P30.map((p, k) => X(n - 1 + k) + ',' + Y(p[0])).join(' '), fill: 'none', stroke: 'var(--up)', 'stroke-width': 2, 'stroke-dasharray': '5 4', 'vector-effect': 'non-scaling-stroke' }));
     const e = P30[30];
     return h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, L('Прогноз роста'))), svg,
-      h('div', { class: 'lbl' }, L('Через 30 дней') + ': ~' + nf.format(Math.round(e[0])) + ' (' + nf.format(Math.round(e[1])) + '–' + nf.format(Math.round(e[2])) + ') · ' + L('по темпу последних 30 дней, это оценка')));
+      h('div', { class: 'lbl' }, L('Через 30 дней') + ': ~' + nf.format(Math.round(e[0])) + ' (' + nf.format(Math.round(e[1])) + '–' + nf.format(Math.round(e[2])) + ') · ' + (hw ? L('с учётом дней недели') : L('по темпу последних 30 дней')) + ', ' + L('это оценка')));
   } catch (e) { return null; }
 }
 // доля накопленных просмотров по возрасту публикаций
