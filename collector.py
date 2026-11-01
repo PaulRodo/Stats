@@ -647,7 +647,13 @@ def periodic(out, now):
         lines = ["📊 Итоги недели"] + _lines(out, _base(hist, ref)) + _top(out, lambda d: d >= ref)
         if notify("\n".join(lines)):
             alerts["digest"] = today
-            send_photo(chart_png(out), "Рост за 30 дней")
+            try:
+                sent_gif = send_animation(chart_gif(out), "Рост за 30 дней")
+            except Exception as e:  # анимация необязательна: при любой ошибке отправляем обычную картинку
+                print("Анимация не получилась:", e)
+                sent_gif = False
+            if not sent_gif:
+                send_photo(chart_png(out), "Рост за 30 дней")
     elif env("NOTIFY_DAILY") == "1" and now.day != 1 and 5 <= now.hour < 12 and alerts.get("daily") != today:
         ref = (now.date() - dt.timedelta(days=1)).isoformat()
         if notify("\n".join(["☀️ Сводка за сутки"] + _lines(out, _base(hist, ref)))):
@@ -883,6 +889,54 @@ def chart_png(out):
     fig.savefig(buf, format="png")
     plt.close(fig)
     return buf.getvalue()
+
+
+def chart_gif(out):
+    """Анимация недельного отчёта: линия подписчиков за 30 дней растёт, число накручивается. Без matplotlib возвращает None."""
+    try:
+        import matplotlib
+        matplotlib.use("Agg")
+        import matplotlib.pyplot as plt
+        from matplotlib.animation import FuncAnimation, PillowWriter
+        import tempfile
+    except ImportError:
+        return None
+    hist = out["history"]
+    days = sorted(hist)[-31:]
+    if len(days) < 5:
+        return None
+    tot = [sum(v for k, v in hist[d].items() if not k.startswith("c:") and isinstance(v, (int, float))) for d in days]
+    fig, ax = plt.subplots(figsize=(6, 3.4), dpi=80)
+    ax.set_xlim(0, len(tot) - 1)
+    ax.set_ylim(min(tot) - 1, max(tot) + (max(tot) - min(tot)) * 0.25 + 1)
+    ax.axis("off")
+    (line,) = ax.plot([], [], color="#2f9e6f", lw=3)
+    num = ax.text(0.02, 0.92, "", transform=ax.transAxes, fontsize=26, fontweight="bold", va="top")
+    sub = ax.text(0.02, 0.74, "", transform=ax.transAxes, fontsize=11, color="#777", va="top")
+
+    def upd(i):
+        k = min(i, len(tot) - 1)
+        line.set_data(range(k + 1), tot[: k + 1])
+        num.set_text(f"{tot[k]:,}".replace(",", " "))
+        sub.set_text(days[k])
+        return line, num, sub
+
+    ani = FuncAnimation(fig, upd, frames=len(tot) + 10, interval=70, blit=False)
+    with tempfile.NamedTemporaryFile(suffix=".gif") as f:
+        ani.save(f.name, writer=PillowWriter(fps=14))
+        plt.close(fig)
+        return open(f.name, "rb").read()
+
+
+def send_animation(gif, caption=""):
+    tok, chat = env("NOTIFY_BOT_TOKEN") or env("TG_BOT_TOKEN"), env("NOTIFY_CHAT_ID") or env("TG_ALERT_CHAT")
+    if not (tok and chat and gif):
+        return False
+    try:
+        return requests.post(f"https://api.telegram.org/bot{tok}/sendAnimation", data={"chat_id": chat, "caption": caption, "disable_notification": "true"},
+                             files={"animation": ("report.gif", gif, "image/gif")}, timeout=90).ok
+    except requests.RequestException:
+        return False
 
 
 def send_photo(png, caption=""):
