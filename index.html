@@ -222,6 +222,22 @@ header h1{font-size:20px}
 .acts .round{width:38px;height:38px}
 .chipline .chip{white-space:normal}
 
+
+.tilt .card{position:relative;transform:perspective(900px) rotateX(var(--rx,0deg)) rotateY(var(--ry,0deg));transition:transform .12s ease-out}
+.tilt .card::after{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;background:radial-gradient(circle at var(--mx,50%) var(--my,0%),rgba(255,255,255,.2),transparent 55%);opacity:var(--sh,0)}
+.calm.tilt .card{transform:none}.calm.tilt .card::after{display:none}
+.crowd{display:grid;grid-template-columns:repeat(10,1fr);gap:8px 4px;margin:14px auto 8px;max-width:330px}
+.crowd svg{width:100%;height:auto;display:block}
+.crowd .pp{animation:pop .45s both;animation-delay:calc(var(--k)*9ms)}
+.calm .crowd .pp{animation:none}
+.rad{display:block;margin:6px auto 0;max-width:340px;width:100%;height:auto}
+.rad text{font-size:11px;fill:var(--mute)}
+.cmpt{width:100%;border-collapse:collapse;margin-top:8px;font-size:13px}
+.cmpt td{padding:6px 0;border-top:1px solid var(--line)}.cmpt td+td{text-align:right}.cmpt .w{font-weight:700;color:var(--up)}
+#tmbar{position:fixed;left:12px;right:12px;bottom:calc(12px + env(safe-area-inset-bottom,0px));z-index:50;background:var(--card);border-radius:20px;padding:12px 14px;box-shadow:0 8px 30px #0003}
+#tmbar input[type=range]{width:100%;margin:8px 0 2px;accent-color:var(--acc)}
+body.tmach{padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))}
+body.tmach main{filter:sepia(.3) saturate(.92)}
 </style>
 </head>
 <body>
@@ -262,7 +278,7 @@ function beep(kind) {
     (kind === 'viral' ? [660, 880, 990] : [523, 784]).forEach((f, i) => { const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime + i * 0.13; o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.06, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + 0.3); });
   } catch (e) {}
 }
-const EN = {
+const EN = {'Если бы вас смотрело 100 человек': 'If 100 people were watching you', 'Сто зрителей по группам': 'One hundred viewers by group', '{n} из 100': '{n} of 100', 'Другие': 'Other', 'Пол': 'Gender', 'Одна фигурка это один зритель из ста, цвет показывает группу.': 'One figure is one viewer out of a hundred, the colour shows the group.', 'Радар: вы и конкурент': 'Radar: you vs a competitor', 'Радар появится, когда накопится хотя бы 8 дней истории по вам и по конкуренту.': 'The radar will appear once there are at least 8 days of history for you and the competitor.', 'Рост за 7 дн': '7-day growth', 'Рост за 30 дн': '30-day growth', 'Стабильность': 'Consistency', 'Ускорение': 'Acceleration', 'Масштаб': 'Scale', 'Вы': 'You', 'Вы впереди по {n} из {m} осей': 'You lead on {n} of {m} axes', 'По конкурентам собираются только публичные числа подписчиков, поэтому оси про рост и масштаб, а не про вовлечённость. Каждая ось сравнивается внутри пары.': 'Only public follower counts are collected for competitors, so the axes are about growth and scale, not engagement. Each axis is compared within the pair.', '3D-наклон карточек': '3D card tilt', 'Карточки наклоняются вслед за телефоном, по ним бегает блик': 'Cards tilt with your phone and a glint runs over them', 'Машина времени': 'Time machine', 'Дата': 'Date', 'Сегодня': 'Today', 'История ещё копится': 'History is still building up', 'Подписчики и публикации на выбранную дату. Просмотры постов показаны сегодняшние: прошлых значений нет.': 'Followers and posts as of the chosen date. Post views are today’s: there are no past values.', 
 ' · лучшее время: {h}': ' · best time: {h}', ' · сейчас': ' · now', '(вы)': '(you)', '(мало данных)': '(little data)', '30 дн': '30 d', '7 дн': '7 d',
 'CTR значков': 'Thumbnail CTR', 'CTR недоступен: ': 'CTR unavailable: ', 'CTR появится через 1–2 дня: YouTube готовит эти отчёты с задержкой.': 'CTR will appear in 1–2 days: YouTube prepares these reports with a delay.',
 'Reels набирают на {p}% больше лайков, чем обычные публикации': 'Reels get {p}% more likes than regular posts',
@@ -988,8 +1004,13 @@ function flashDiff(old) {
   } catch (e) {}
 }
 function render() {
+  const real = S.data;
+  if (S.tmDate && real) S.data = tmSlice(real, S.tmDate);
+  try { return renderMain(); } finally { S.data = real; }
+}
+function renderMain() {
   let flashOld = null;
-  if (S.data && S.data !== lastData) { if (lastData) { notifyChange(lastData, S.data); flashOld = numSnap(); } lastData = S.data; }
+  if (S.data && !S.tmDate && S.data !== lastData) { if (lastData) { notifyChange(lastData, S.data); flashOld = numSnap(); } lastData = S.data; }
   document.body.style.setProperty('--aur', P[S.view] ? P[S.view][1] : 'transparent'); document.body.classList.toggle('aur', !!P[S.view]);
   if (S.view === 'set') return renderSettings();
   if (S.view === 'prof') return renderProfile();
@@ -1416,7 +1437,7 @@ function renderHome() {
   if (!allIds.length) { app.append(h('p', { class: 'empty' }, L('Пока ни одна соцсеть не подключена.'))); return; }
   if (!ids.length) { app.append(h('p', { class: 'empty' }, L('Все платформы скрыты. Включить их можно в настройках (кнопка ⚙️).'))); return; }
   const good = ids.filter(id => !d.platforms[id].error && typeof d.platforms[id].followers === 'number');
-  const total = curTotal(); ls('lastTotal', String(total));
+  const total = curTotal(); if (!S.tmDate) ls('lastTotal', String(total));
   const sr = series(d.history || {}, good), i0 = startIdx(sr.dates, S.period), n = sr.dates.length;
   { const g7 = n > 1 ? growth(sr.total, sr.dates, 7) : null; document.body.classList.toggle('up', !!g7 && g7.d > 0); document.body.classList.toggle('down', !!g7 && g7.d < 0); }
   const g = n > 1 ? growth(sr.total, sr.dates, S.period) : null, delta = g ? g.d : null;
@@ -1520,8 +1541,126 @@ function renderHome() {
       el.append(chart(v, Math.max(el.clientWidth, 60), 38, P[id][1], 3).svg);
     });
   });
-  if (an && n > 1) events(vals0, sr, posts, ids);
+  if (an && n > 1 && !S.tmDate) events(vals0, sr, posts, ids);
 }
+
+// ---------- «Если бы вас смотрело 100 человек» ----------
+function crowdCard(r) {
+  const d = r && r.deep; if (!d || (!d.gender && !d.age && !d.cn)) return null;
+  const modes = []; if (d.gender) modes.push(['gender', L('Пол')]); if (d.age) modes.push(['age', L('Возраст')]); if (d.cn) modes.push(['cn', L('Страны')]);
+  if (!modes.some(m => m[0] === S.crowd)) S.crowd = modes[0][0];
+  const PAL = ['#6c5ce7', '#e63e7a', '#2aa5ee', '#f2a33a', '#12b3a8', '#e0584d', '#7bc043', '#8a6cf0'];
+  let cats = [];
+  if (S.crowd === 'gender') { const GL = { female: [L('Женщины'), '#e63e7a'], male: [L('Мужчины'), '#2aa5ee'], user_specified: [L('Другое'), '#9a9fbb'] }; cats = Object.keys(d.gender).filter(k => GL[k]).map(k => [GL[k][0], d.gender[k], GL[k][1]]); }
+  else if (S.crowd === 'age') cats = Object.keys(d.age).map((k, i) => [k.replace('age', '').replace('-', '–').replace(/–$/, '+'), d.age[k], PAL[i % PAL.length]]);
+  else {
+    const tot = Math.max(d.views || 0, d.cn.reduce((a, x) => a + x[1], 0), 1);
+    cats = d.cn.slice(0, 5).map(([c, v], i) => [flag(c) + ' ' + cname(c), v / tot * 100, PAL[i]]);
+    const rest = 100 - cats.reduce((a, x) => a + x[1], 0); if (rest > 0.5) cats.push([L('Другие'), rest, '#c4c8dc']);
+  }
+  if (!cats.length) return null;
+  const sum = cats.reduce((a, x) => a + x[1], 0) || 1, raw = cats.map(x => x[1] / sum * 100), fl = raw.map(Math.floor);
+  let left = 100 - fl.reduce((a, b) => a + b, 0);
+  raw.map((v, i) => [v - fl[i], i]).sort((a, b) => b[0] - a[0]).slice(0, left).forEach(([, i]) => fl[i]++);
+  const grid = h('div', { class: 'crowd', role: 'img', 'aria-label': L('Сто зрителей по группам') });
+  let k = 0;
+  cats.forEach((c, i) => { for (let j = 0; j < fl[i]; j++, k++) {
+    const s = sv('svg', { viewBox: '0 0 20 30', class: 'pp', style: '--k:' + k });
+    s.append(sv('circle', { cx: 10, cy: 7, r: 5.5, fill: c[2] }), sv('path', { d: 'M2.5 29v-8a7.5 7.5 0 0 1 15 0v8z', fill: c[2] }));
+    grid.append(s);
+  } });
+  return h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, L('Если бы вас смотрело 100 человек')), h('span', { class: 'chip' }, L('за {d} дней', { d: d.days }))),
+    chipRow(modes, S.crowd, 'crowd'), grid,
+    h('div', { class: 'leg' }, cats.map((c, i) => fl[i] ? h('span', {}, h('i', { class: 'dot', style: 'background:' + c[2] }), c[0] + ' · ' + L('{n} из 100', { n: fl[i] })) : null)),
+    h('div', { class: 'hint' }, L('Одна фигурка это один зритель из ста, цвет показывает группу.')));
+}
+
+// ---------- радар: вы и конкурент ----------
+function radarCard(d, id) {
+  const cs = (d.competitors || []).filter(c => c.pid === id); if (!cs.length) return null;
+  const hs = d.history || {}, col = (P[id] || [0, '#6c5ce7'])[1];
+  const metr = key => {
+    const sr = series(hs, [key]), a = sr.per[key], n = sr.dates.length; if (!a || n < 8) return null;
+    const g7 = growth(a, sr.dates, 7), g30 = growth(a, sr.dates, 30); if (!g7 || !g30) return null;
+    const sp = per => Math.max(1, Math.round((new Date(sr.dates[n - 1]) - new Date(sr.dates[startIdx(sr.dates, per)])) / 864e5));
+    let up = 0, tot = 0; for (let i = Math.max(1, n - 30); i < n; i++) { tot++; if (a[i] > a[i - 1]) up++; }
+    const p7 = (g7.pct || 0) / sp(7), p30 = (g30.pct || 0) / sp(30);
+    return { g7: g7.pct || 0, g30: g30.pct || 0, stab: up / Math.max(tot, 1) * 100, acc: Math.min(2, p30 > 0 ? p7 / p30 : (p7 > 0 ? 2 : 1)), size: a[n - 1] };
+  };
+  const cur = cs.find(c => c.key === S.rc) || cs[0], me = metr(id), them = metr('c:' + cur.key);
+  const card = h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, L('Радар: вы и конкурент'))),
+    cs.length > 1 ? chipRow(cs.map(c => [c.key, cut(c.name, 18)]), cur.key, 'rc') : null);
+  if (!me || !them) { card.append(h('div', { class: 'empty' }, L('Радар появится, когда накопится хотя бы 8 дней истории по вам и по конкуренту.'))); return card; }
+  const AX = [['g7', L('Рост за 7 дн')], ['g30', L('Рост за 30 дн')], ['stab', L('Стабильность')], ['acc', L('Ускорение')], ['size', L('Масштаб')]];
+  const norm = (k, v, o) => { const f = x => k === 'size' ? Math.log10(Math.max(x, 10)) : Math.max(0, x); return f(v) / (Math.max(f(v), f(o)) || 1) * 100; };
+  const W = 360, H = 270, cx = 180, cy = 135, R = 88, pt = (i, r) => { const a = -Math.PI / 2 + i * 2 * Math.PI / AX.length; return [cx + Math.cos(a) * r, cy + Math.sin(a) * r]; };
+  const svg = sv('svg', { viewBox: `0 0 ${W} ${H}`, class: 'rad', role: 'img', 'aria-label': L('Радар: вы и конкурент') });
+  [.33, .66, 1].forEach(f => svg.append(sv('polygon', { points: AX.map((_, i) => pt(i, R * f).join(',')).join(' '), fill: 'none', stroke: 'var(--line)' })));
+  AX.forEach((a, i) => { const p = pt(i, R); svg.append(sv('line', { x1: cx, y1: cy, x2: p[0], y2: p[1], stroke: 'var(--line)' })); const q = pt(i, R + 16), t = sv('text', { x: q[0], y: q[1] + 4, 'text-anchor': q[0] < cx - 4 ? 'end' : q[0] > cx + 4 ? 'start' : 'middle' }); t.textContent = a[1]; svg.append(t); });
+  const poly = (m, o, c, dash) => svg.append(sv('polygon', { points: AX.map(([k], i) => pt(i, R * Math.max(norm(k, m[k], o[k]), 4) / 100).join(',')).join(' '), fill: c, 'fill-opacity': dash ? .12 : .28, stroke: c, 'stroke-width': 2, 'stroke-dasharray': dash ? '5 4' : '' }));
+  poly(them, me, '#8a8fa8', true); poly(me, them, col, false);
+  card.append(svg);
+  const fmt = (k, v) => k === 'size' ? short(v) : k === 'acc' ? '×' + dec(v, 1) : k === 'stab' ? Math.round(v) + '%' : sgn(Math.round(v * 10) / 10 * 1) + '%';
+  const tb = h('table', { class: 'cmpt' }, h('tr', {}, h('td', {}, ''), h('td', {}, L('Вы')), h('td', {}, cut(cur.name, 16))));
+  let wins = 0;
+  AX.forEach(([k, lab]) => { const a = me[k], b = them[k], w = a >= b; if (w) wins++; tb.append(h('tr', {}, h('td', {}, lab), h('td', { class: w ? 'w' : '' }, fmt(k, a)), h('td', { class: w ? '' : 'w' }, fmt(k, b)))); });
+  card.append(tb, h('div', { class: 'lbl', style: 'margin-top:8px' }, L('Вы впереди по {n} из {m} осей', { n: wins, m: AX.length })),
+    h('div', { class: 'hint' }, L('По конкурентам собираются только публичные числа подписчиков, поэтому оси про рост и масштаб, а не про вовлечённость. Каждая ось сравнивается внутри пары.')));
+  return card;
+}
+
+// ---------- 3D-наклон карточек ----------
+let tiltOn = false, tRx = 0, tRy = 0, cRx = 0, cRy = 0, tiltRaf = 0;
+function tiltStep() {
+  cRx += (tRx - cRx) * .18; cRy += (tRy - cRy) * .18;
+  const s = document.documentElement.style;
+  s.setProperty('--rx', cRx.toFixed(2) + 'deg'); s.setProperty('--ry', cRy.toFixed(2) + 'deg');
+  s.setProperty('--mx', (50 + cRy * 8) + '%'); s.setProperty('--my', (50 - cRx * 8) + '%'); s.setProperty('--sh', Math.min(1, Math.hypot(cRx, cRy) / 4).toFixed(2));
+  tiltRaf = Math.abs(tRx - cRx) + Math.abs(tRy - cRy) > .02 ? requestAnimationFrame(tiltStep) : 0;
+}
+const tiltKick = () => { if (!tiltRaf) tiltRaf = requestAnimationFrame(tiltStep); };
+const tClamp = (v, m) => Math.max(-m, Math.min(m, v));
+const onTiltOri = e => { if (e.gamma == null) return; tRy = tClamp(e.gamma / 6, 5); tRx = tClamp(-((e.beta || 0) - 45) / 8, 5); tiltKick(); };
+const onTiltPtr = e => { if (e.pointerType === 'touch') return; tRy = (e.clientX / innerWidth - .5) * 8; tRx = -(e.clientY / innerHeight - .5) * 8; tiltKick(); };
+async function setTilt(on) {
+  tiltOn = !!on; document.body.classList.toggle('tilt', tiltOn);
+  removeEventListener('deviceorientation', onTiltOri); removeEventListener('pointermove', onTiltPtr);
+  if (!tiltOn) { tRx = tRy = 0; tiltKick(); return; }
+  try { if (window.DeviceOrientationEvent && DeviceOrientationEvent.requestPermission) await DeviceOrientationEvent.requestPermission(); } catch (e) {}
+  addEventListener('deviceorientation', onTiltOri); addEventListener('pointermove', onTiltPtr);
+}
+if (CFG.tilt) setTilt(true);
+
+// ---------- машина времени ----------
+function tmSlice(d, k) {
+  const hist = {}; Object.keys(d.history || {}).filter(x => x <= k).forEach(x => { hist[x] = d.history[x]; });
+  const ks = Object.keys(hist).sort(), last = hist[ks[ks.length - 1]] || {}, end = new Date(k + 'T23:59:59').getTime(), platforms = {};
+  Object.keys(d.platforms).forEach(id => {
+    const v = last[id]; if (typeof v !== 'number') return;
+    const r = Object.assign({}, d.platforms[id], { followers: v, metrics: [['Подписчики', v]] });
+    delete r.deep; delete r.deep_error; delete r.error; delete r.note; platforms[id] = r;
+  });
+  return { updated: d.updated, platforms, history: hist, archive: (d.archive || []).filter(p => p.ts && new Date(p.ts).getTime() <= end) };
+}
+function tmBar() {
+  let bar = document.getElementById('tmbar');
+  if (!S.tmDate) { if (bar) bar.remove(); document.body.classList.remove('tmach'); return; }
+  const dates = Object.keys((S.data || {}).history || {}).sort(), fm = x => new Date(x + 'T00:00:00').toLocaleDateString(LOC(), { day: 'numeric', month: 'long', year: 'numeric' });
+  if (!bar) { bar = document.createElement('div'); bar.id = 'tmbar'; document.body.append(bar); }
+  const rng = h('input', { type: 'range', min: 0, max: dates.length - 1, step: 1, value: dates.indexOf(S.tmDate), 'aria-label': L('Дата') }), lbl = h('b', {}, fm(S.tmDate)), x = h('button', { type: 'button', class: 'tgl' }, L('Сегодня'));
+  rng.oninput = () => { S.tmDate = dates[+rng.value]; lbl.textContent = fm(S.tmDate); tap(); render(); };
+  x.onclick = () => { S.tmDate = null; tmBar(); render(); };
+  bar.replaceChildren(h('div', { class: 'row', style: 'align-items:center' }, h('span', {}, '🕰 ' + L('Машина времени')), lbl, x), rng,
+    h('div', { class: 'hint', style: 'margin-top:2px' }, L('Подписчики и публикации на выбранную дату. Просмотры постов показаны сегодняшние: прошлых значений нет.')));
+  document.body.classList.add('tmach');
+}
+(() => {
+  const box = document.getElementById('tools'); if (!box) return;
+  const b = document.createElement('button'); b.type = 'button'; b.className = 'tbtn'; b.textContent = '🕰 ' + L('Машина времени');
+  b.onclick = () => { const ds = Object.keys((S.data || {}).history || {}).sort(); if (ds.length < 3) { toast(L('История ещё копится')); return; } S.tmDate = S.tmDate || ds[ds.length - 1]; tmBar(); render(); };
+  box.append(b);
+})();
+
 function renderPlatform(id) {
   const d = S.data, r = d.platforms[id], [name, col] = P[id], app = document.getElementById('app'), an = DRAW;
   app.replaceChildren();
@@ -1563,10 +1702,10 @@ function renderPlatform(id) {
       p.avd ? '⏱ ' + mmss(p.avd) : null, typeof p.ctr === 'number' ? 'CTR ' + dec(p.ctr, 1) + '%' : null,
       id === 'tg' && f > 0 && p.views ? L('охват') + ' ' + dec(p.views / f * 100, 1) + '%' : null].filter(Boolean).join(' · '))));
   app.append(nav, card);
-  if (id === 'yt') { [ytDeep(r), ytSrcCard(r)].forEach(c => { if (c) app.append(c); }); }
+  if (id === 'yt') { [ytDeep(r), ytSrcCard(r), crowdCard(r)].forEach(c => { if (c) app.append(c); }); }
   if (id === 'tg') { const c = flowCard(arr, sr.dates); if (c) app.append(c); }
   const vp = posts.filter(p => typeof p.val === 'number');
-  [curveCard(d.curves, id), id === 'yt' ? retentionCard(d.retention) : null, id === 'yt' ? commentsCard(d.comments) : null, id === 'yt' ? subsCard(d) : null, id === 'yt' ? fansCard(d.comments) : null, id === 'yt' ? globeCard((d.platforms.yt || {}).deep) : null, trendCard(posts, col), fmtCard(posts, id, col), recoCard(insights(vp, id).slice(0, 5).map(i => ({ ...i, id }))), weekCard(posts), heatCard(posts), calCard(posts), titleCard(vp), compCard(d, id), pc].forEach(c => { if (c) app.append(c); });
+  [curveCard(d.curves, id), id === 'yt' ? retentionCard(d.retention) : null, id === 'yt' ? commentsCard(d.comments) : null, id === 'yt' ? subsCard(d) : null, id === 'yt' ? fansCard(d.comments) : null, id === 'yt' ? globeCard((d.platforms.yt || {}).deep) : null, trendCard(posts, col), fmtCard(posts, id, col), recoCard(insights(vp, id).slice(0, 5).map(i => ({ ...i, id }))), weekCard(posts), heatCard(posts), calCard(posts), titleCard(vp), compCard(d, id), radarCard(d, id), pc].forEach(c => { if (c) app.append(c); });
   requestAnimationFrame(() => {
     if (!arr || n < 1) return;
     const vals = arr.slice(i0), { svg, pts } = chart(vals, Math.max(box.clientWidth, 120), 150, col, 8);
@@ -1626,7 +1765,8 @@ function renderSettingsOnly() {
     h('div', { class: 'sec' }, L('Акцентный цвет')), ac,
     setRow(L('Язык интерфейса'), null, lang),
     setRow(L('Компактный режим'), L('Меньше отступов, без мини-графиков'), tglBtn(CFG.compact, () => { CFG.compact = !CFG.compact; saveCfg(); applyTheme(); })),
-    setRow(L('Меньше анимации'), L('Без живого фона, подпрыгивающих стрелок и заставки'), tglBtn(CFG.calm, () => { CFG.calm = !CFG.calm; saveCfg(); applyTheme(); })));
+    setRow(L('Меньше анимации'), L('Без живого фона, подпрыгивающих стрелок и заставки'), tglBtn(CFG.calm, () => { CFG.calm = !CFG.calm; saveCfg(); applyTheme(); })),
+    setRow(L('3D-наклон карточек'), L('Карточки наклоняются вслед за телефоном, по ним бегает блик'), tglBtn(!!CFG.tilt, () => { CFG.tilt = !CFG.tilt; saveCfg(); setTilt(CFG.tilt); })));
 
   const bl = blockIds(), blRows = bl.map((id, i) => {
     const up = h('button', { type: 'button', class: 'mv', 'aria-label': L('Выше') }, '↑'), dn = h('button', { type: 'button', class: 'mv', 'aria-label': L('Ниже') }, '↓');
