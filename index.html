@@ -164,7 +164,7 @@ main{position:relative;z-index:1}
 .paused #bgfx i{animation-play-state:paused}
 #splash{position:fixed;inset:0;z-index:100;background:var(--bg);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;padding:24px;text-align:center;transition:opacity .55s ease,visibility .55s}
 #splash.off{opacity:0;visibility:hidden;pointer-events:none}
-#splash svg{width:84px;height:84px;overflow:visible}
+#splash>svg{width:84px;height:84px;overflow:visible}
 #splash .ring{fill:none;stroke:var(--acc);stroke-width:2.2;opacity:.28}
 #splash .ln{fill:none;stroke:var(--acc);stroke-width:3.6;stroke-linecap:round;stroke-linejoin:round;stroke-dasharray:120;stroke-dashoffset:120;animation:draw 1.1s .15s ease forwards}
 #splash .ln2{stroke-dasharray:30;stroke-dashoffset:30;animation-delay:1s;animation-duration:.4s}
@@ -238,6 +238,53 @@ header h1{font-size:20px}
 #tmbar input[type=range]{width:100%;margin:8px 0 2px;accent-color:var(--acc)}
 body.tmach{padding-bottom:calc(130px + env(safe-area-inset-bottom,0px))}
 body.tmach main{filter:sepia(.3) saturate(.92)}
+
+#spbg{position:absolute;inset:0;overflow:hidden;z-index:-1}
+#splash.nologo>svg{display:none}
+#splash.sdark #sp-hi,#splash.sdark #sp-num{color:#fff;text-shadow:0 2px 14px #0005}
+#splash.slight #sp-hi,#splash.slight #sp-num{color:#14172b}
+#splash.sdark #sp-dot{background:#fff}#splash.slight #sp-dot{background:#14172b}
+.sc{position:absolute;inset:0}.sc i{position:absolute;display:block}
+.sky.night{background:linear-gradient(#060a22,#182050 68%,#2b3567);--sk:#0a0f26}
+.sky.dawn{background:linear-gradient(#2b3a6e,#d9798a 66%,#ffd09a);--sk:#2b2145}
+.sky.day{background:linear-gradient(#3b8fe0,#8ec8f5 66%,#e2f3ff);--sk:#2a4c78}
+.sky.dusk{background:linear-gradient(#2a2358,#b94a7c 62%,#ffa05c);--sk:#1b1636}
+.star{width:var(--s);height:var(--s);border-radius:50%;background:#fff;opacity:.9;animation:tw 3s ease-in-out infinite;animation-delay:var(--d)}
+@keyframes tw{0%,100%{opacity:.25}50%{opacity:1}}
+.moon{right:14%;top:12%;width:54px;height:54px;border-radius:50%;box-shadow:inset -14px -4px 0 0 #f4f1d8;filter:drop-shadow(0 0 14px #fff6)}
+.shoot{top:8%;left:72%;width:90px;height:2px;background:linear-gradient(90deg,#fff,transparent);opacity:0;animation:shoot 7s ease-in 1.5s infinite}
+@keyframes shoot{0%{opacity:0;transform:translate(0,0) rotate(-30deg)}4%{opacity:1}12%{opacity:0;transform:translate(-170px,98px) rotate(-30deg)}100%{opacity:0}}
+.sun{width:76px;height:76px;border-radius:50%;background:radial-gradient(circle,#fff6cf,#ffd36a 60%,#ffb347);box-shadow:0 0 50px 18px #ffd36a77}
+.sun.day{right:12%;top:10%}
+.sun.dawn{left:50%;margin-left:-38px;bottom:100px;animation:sunrise 6s ease-out both}
+@keyframes sunrise{from{transform:translateY(70px)}to{transform:none}}
+.sun.dusk{left:22%;bottom:96px;background:radial-gradient(circle,#ffe0b0,#ff8a5c 65%);box-shadow:0 0 60px 22px #ff8a5c66;animation:sunset 8s ease-in both}
+@keyframes sunset{from{transform:translateY(-34px)}to{transform:translateY(24px)}}
+.cloud{left:-30%;width:var(--w);height:calc(var(--w)*.3);border-radius:99px;background:#fff;opacity:.88;animation:cdrift var(--t) linear infinite}
+.cloud::before,.cloud::after{content:"";position:absolute;background:#fff;border-radius:50%}
+.cloud::before{width:42%;height:140%;left:14%;top:-70%}.cloud::after{width:32%;height:110%;left:50%;top:-45%}
+@keyframes cdrift{to{transform:translateX(160vw)}}
+.city{position:absolute;left:0;right:0;bottom:0;width:100%;height:150px;fill:var(--sk)}
+.city .win{fill:#ffd36a;opacity:0}.night .city .win,.dusk .city .win{opacity:.85}
+.season.winter{background:linear-gradient(#1b2b5a,#5f86c0 70%,#cfe2f6)}
+.season.spring{background:linear-gradient(#cfeedd,#fbe0ea)}
+.season.summer{background:linear-gradient(#8fd3f7,#fff0b8)}
+.season.autumn{background:linear-gradient(#4d2616,#c76a2a 65%,#f0b25a)}
+.flake{top:-10px;left:var(--x);width:var(--sz);height:var(--sz);border-radius:50%;background:#fff;opacity:.9;animation:fall var(--t) linear infinite;animation-delay:var(--dl)}
+@keyframes fall{from{transform:translate3d(0,-20px,0)}to{transform:translate3d(var(--sw),110vh,0)}}
+.petal{top:-12px;left:var(--x);width:9px;height:6px;border-radius:80% 0 80% 0;background:#f6a9c4;animation:fallr var(--t) linear infinite;animation-delay:var(--dl)}
+.leaf{top:-14px;left:var(--x);width:12px;height:12px;border-radius:0 80% 0 80%;background:var(--c);animation:fallr var(--t) linear infinite;animation-delay:var(--dl)}
+@keyframes fallr{from{transform:translate3d(0,-20px,0) rotate(0)}to{transform:translate3d(var(--sw),110vh,0) rotate(540deg)}}
+.fluff{bottom:-10px;left:var(--x);width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 6px #fff;opacity:.85;animation:rise var(--t) linear infinite;animation-delay:var(--dl)}
+@keyframes rise{from{transform:translate3d(0,0,0)}to{transform:translate3d(var(--sw),-110vh,0)}}
+.sunb{right:12%;top:8%;width:70px;height:70px;border-radius:50%;background:radial-gradient(circle,#fff7d0,#ffd36a);box-shadow:0 0 60px 20px #ffe08a88}
+.ground{left:-10%;right:-10%;bottom:-50px;height:120px;border-radius:50%}
+.winter .ground{background:#eef5ff}.spring .ground{background:#b6e0b0}.summer .ground{background:#8fcf6a}.autumn .ground{background:#3a1c10}
+.sc svg.tree{position:absolute;bottom:22px;left:50%;margin-left:-40px;width:80px;height:106px}
+.tl{animation:tw 1.6s ease-in-out infinite}
+.calm #spbg *{animation:none!important}
+@media(prefers-reduced-motion:reduce){#spbg *{animation:none!important}}
+.sws.sp .sw{min-width:0}
 </style>
 </head>
 <body>
@@ -278,7 +325,7 @@ function beep(kind) {
     (kind === 'viral' ? [660, 880, 990] : [523, 784]).forEach((f, i) => { const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime + i * 0.13; o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.06, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + 0.3); });
   } catch (e) {}
 }
-const EN = {'Если бы вас смотрело 100 человек': 'If 100 people were watching you', 'Сто зрителей по группам': 'One hundred viewers by group', '{n} из 100': '{n} of 100', 'Другие': 'Other', 'Пол': 'Gender', 'Одна фигурка это один зритель из ста, цвет показывает группу.': 'One figure is one viewer out of a hundred, the colour shows the group.', 'Радар: вы и конкурент': 'Radar: you vs a competitor', 'Радар появится, когда накопится хотя бы 8 дней истории по вам и по конкуренту.': 'The radar will appear once there are at least 8 days of history for you and the competitor.', 'Рост за 7 дн': '7-day growth', 'Рост за 30 дн': '30-day growth', 'Стабильность': 'Consistency', 'Ускорение': 'Acceleration', 'Масштаб': 'Scale', 'Вы': 'You', 'Вы впереди по {n} из {m} осей': 'You lead on {n} of {m} axes', 'По конкурентам собираются только публичные числа подписчиков, поэтому оси про рост и масштаб, а не про вовлечённость. Каждая ось сравнивается внутри пары.': 'Only public follower counts are collected for competitors, so the axes are about growth and scale, not engagement. Each axis is compared within the pair.', '3D-наклон карточек': '3D card tilt', 'Карточки наклоняются вслед за телефоном, по ним бегает блик': 'Cards tilt with your phone and a glint runs over them', 'Машина времени': 'Time machine', 'Дата': 'Date', 'Сегодня': 'Today', 'История ещё копится': 'History is still building up', 'Подписчики и публикации на выбранную дату. Просмотры постов показаны сегодняшние: прошлых значений нет.': 'Followers and posts as of the chosen date. Post views are today’s: there are no past values.', 
+const EN = {'Логотип': 'Logo', 'Небо над Москвой': 'Sky over Moscow', 'Времена года': 'Seasons', 'Один цвет': 'Single colour', 'Без заставки': 'No splash screen', 'Заставка': 'Splash screen', 'Что показывать при запуске приложения': 'What to show when the app starts', 'Небо и силуэт Москвы меняются по времени суток (МСК)': 'The sky and the Moscow skyline change with the time of day (MSK)', 'Сезон определяется по дате (МСК), под Новый год появляется ёлка': 'The season follows the date (MSK), and a fir tree appears around New Year', 'Просто выбранный цвет, приветствие и число подписчиков': 'Just the chosen colour, a greeting and the subscriber count', 'Приложение открывается сразу': 'The app opens right away', 'Рисуется логотип, под ним приветствие': 'The logo is drawn with a greeting under it', 'Цвет фона': 'Background colour', 'Свой цвет': 'Custom colour', 'Предпросмотр заставки': 'Splash preview', 'Показать': 'Show', 'График': 'Chart', 'Здесь можно убрать лишнее': 'Here you can remove extras', 'Бегущая искра': 'Running spark', 'Светящаяся точка время от времени пробегает по линии роста': 'A glowing dot runs along the growth line from time to time', 'Отметки рекордов': 'Record marks', 'Кружки на рекордах роста и всплесках': 'Circles on growth records and spikes', 'Заливка под линией': 'Fill under the line', 'Мягкий градиент под графиком': 'A soft gradient under the chart', 'Если бы вас смотрело 100 человек': 'If 100 people were watching you', 'Сто зрителей по группам': 'One hundred viewers by group', '{n} из 100': '{n} of 100', 'Другие': 'Other', 'Пол': 'Gender', 'Одна фигурка это один зритель из ста, цвет показывает группу.': 'One figure is one viewer out of a hundred, the colour shows the group.', 'Радар: вы и конкурент': 'Radar: you vs a competitor', 'Радар появится, когда накопится хотя бы 8 дней истории по вам и по конкуренту.': 'The radar will appear once there are at least 8 days of history for you and the competitor.', 'Рост за 7 дн': '7-day growth', 'Рост за 30 дн': '30-day growth', 'Стабильность': 'Consistency', 'Ускорение': 'Acceleration', 'Масштаб': 'Scale', 'Вы': 'You', 'Вы впереди по {n} из {m} осей': 'You lead on {n} of {m} axes', 'По конкурентам собираются только публичные числа подписчиков, поэтому оси про рост и масштаб, а не про вовлечённость. Каждая ось сравнивается внутри пары.': 'Only public follower counts are collected for competitors, so the axes are about growth and scale, not engagement. Each axis is compared within the pair.', '3D-наклон карточек': '3D card tilt', 'Карточки наклоняются вслед за телефоном, по ним бегает блик': 'Cards tilt with your phone and a glint runs over them', 'Машина времени': 'Time machine', 'Дата': 'Date', 'Сегодня': 'Today', 'История ещё копится': 'History is still building up', 'Подписчики и публикации на выбранную дату. Просмотры постов показаны сегодняшние: прошлых значений нет.': 'Followers and posts as of the chosen date. Post views are today’s: there are no past values.', 
 ' · лучшее время: {h}': ' · best time: {h}', ' · сейчас': ' · now', '(вы)': '(you)', '(мало данных)': '(little data)', '30 дн': '30 d', '7 дн': '7 d',
 'CTR значков': 'Thumbnail CTR', 'CTR недоступен: ': 'CTR unavailable: ', 'CTR появится через 1–2 дня: YouTube готовит эти отчёты с задержкой.': 'CTR will appear in 1–2 days: YouTube prepares these reports with a delay.',
 'Reels набирают на {p}% больше лайков, чем обычные публикации': 'Reels get {p}% more likes than regular posts',
@@ -576,8 +623,15 @@ function chart(vals, w, hh, color, pad, ghost) {
     defs.append(lg); svg.append(defs);
     if (ghost) svg.append(sv('path', { d: curve(ghost.map((v, i) => [X(i), Y(v)])), fill: 'none', stroke: color, 'stroke-opacity': '.45', 'stroke-width': 2, 'stroke-dasharray': '5 5', 'stroke-linecap': 'round' }));
     const l = curve(pts);
-    svg.append(sv('path', { d: `${l} L${pts[pts.length - 1][0]},${hh} L${pts[0][0]},${hh} Z`, fill: `url(#${g})`, class: 'area' }),
-      sv('path', { d: l, fill: 'none', stroke: color, 'stroke-width': 2.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'data-l': '1' }));
+    if (CFG.cfill !== false) svg.append(sv('path', { d: `${l} L${pts[pts.length - 1][0]},${hh} L${pts[0][0]},${hh} Z`, fill: `url(#${g})`, class: 'area' }));
+    svg.append(sv('path', { d: l, fill: 'none', stroke: color, 'stroke-width': 2.5, 'stroke-linecap': 'round', 'stroke-linejoin': 'round', 'data-l': '1' }));
+    if (CFG.cspark !== false && !RM && hh >= 100 && pts.length > 2) {   // бегущая искра по линии
+      const sp = sv('g', { opacity: 0, 'pointer-events': 'none' });
+      sp.append(sv('circle', { r: 9, fill: color, 'fill-opacity': '.28' }), sv('circle', { r: 3.6, fill: '#fff', stroke: color, 'stroke-width': 2 }),
+        sv('animateMotion', { path: l, dur: '5.5s', begin: '1.1s', repeatCount: 'indefinite', calcMode: 'linear', keyPoints: '0;1;1', keyTimes: '0;.6;1' }),
+        sv('animate', { attributeName: 'opacity', dur: '5.5s', begin: '1.1s', repeatCount: 'indefinite', values: '0;1;1;0;0', keyTimes: '0;.06;.55;.62;1' }));
+      svg.append(sp);
+    }
   } else {
     svg.append(sv('line', { x1: pad, x2: w - pad, y1: pts[0][1], y2: pts[0][1], stroke: color, 'stroke-opacity': '.35', 'stroke-dasharray': '4 5', 'stroke-width': 2 }));
   }
@@ -589,7 +643,7 @@ function chart(vals, w, hh, color, pad, ghost) {
 function hover(svg, pts, vals, dts, col, ro, fmt, marks, extra) {
   fmt = fmt || (v => nf.format(v)); marks = marks || {};
   if (pts.length < 2) { ro.textContent = L('График появится, когда накопится история за несколько дней.'); return; }
-  Object.keys(marks).forEach(i => svg.append(sv('circle', { cx: pts[i][0], cy: pts[i][1], r: 6, fill: 'none', stroke: col, 'stroke-width': 2 })));
+  if (CFG.cmarks !== false) Object.keys(marks).forEach(i => svg.append(sv('circle', { cx: pts[i][0], cy: pts[i][1], r: 6, fill: 'none', stroke: col, 'stroke-width': 2 })));
   const dot = sv('circle', { r: 5, fill: col, stroke: '#fff', 'stroke-width': 2, visibility: 'hidden' });
   svg.append(dot);
   let held = false, ht = 0, hx = 0, lk = -1;
@@ -1768,6 +1822,23 @@ function renderSettingsOnly() {
     setRow(L('Меньше анимации'), L('Без живого фона, подпрыгивающих стрелок и заставки'), tglBtn(CFG.calm, () => { CFG.calm = !CFG.calm; saveCfg(); applyTheme(); })),
     setRow(L('3D-наклон карточек'), L('Карточки наклоняются вслед за телефоном, по ним бегает блик'), tglBtn(!!CFG.tilt, () => { CFG.tilt = !CFG.tilt; saveCfg(); setTilt(CFG.tilt); })));
 
+  const spModes = h('div', { class: 'chips' }, SPLASHES.map(([k, t]) => { const b = h('button', { type: 'button', 'aria-pressed': String((CFG.sp || 'logo') === k) }, L(t)); b.onclick = () => { CFG.sp = k; saveCfg(); tap(); renderSettings(); }; return b; }));
+  const spl = h('div', { class: 'card wide' }, h('h2', {}, L('Заставка')), h('div', { class: 'sub' }, L('Что показывать при запуске приложения')), spModes);
+  const spSub = { sky: 'Небо и силуэт Москвы меняются по времени суток (МСК)', season: 'Сезон определяется по дате (МСК), под Новый год появляется ёлка', solid: 'Просто выбранный цвет, приветствие и число подписчиков', off: 'Приложение открывается сразу', logo: 'Рисуется логотип, под ним приветствие' }[CFG.sp || 'logo'];
+  spl.append(h('div', { class: 'hint' }, L(spSub)));
+  if (CFG.sp === 'solid') {
+    const cur = /^#[0-9a-f]{6}$/i.test(CFG.spc || '') ? CFG.spc : '#6c5ce7';
+    const sws = h('div', { class: 'sws sp' }, SPC.map(c => { const b = h('button', { type: 'button', class: 'sw', 'aria-pressed': String(cur.toLowerCase() === c), 'aria-label': c }, h('span', { class: 'swc', style: 'background:' + c + ';border:1px solid var(--line)' })); b.onclick = () => { CFG.spc = c; saveCfg(); tap(); renderSettings(); }; return b; }));
+    const pick = h('input', { type: 'color', value: cur, 'aria-label': L('Свой цвет') }); pick.onchange = () => { CFG.spc = pick.value; saveCfg(); renderSettings(); };
+    spl.append(h('div', { class: 'sec' }, L('Цвет фона')), sws, setRow(L('Свой цвет'), null, pick));
+  }
+  const pv = h('button', { type: 'button', class: 'tgl' }, L('Показать')); pv.onclick = () => { tap(); splashPreview(); };
+  spl.append(setRow(L('Предпросмотр заставки'), null, pv));
+  const chc = h('div', { class: 'card wide' }, h('h2', {}, L('График')), h('div', { class: 'sub' }, L('Здесь можно убрать лишнее')),
+    setRow(L('Бегущая искра'), L('Светящаяся точка время от времени пробегает по линии роста'), tglBtn(CFG.cspark !== false, () => { CFG.cspark = CFG.cspark === false; saveCfg(); })),
+    setRow(L('Отметки рекордов'), L('Кружки на рекордах роста и всплесках'), tglBtn(CFG.cmarks !== false, () => { CFG.cmarks = CFG.cmarks === false; saveCfg(); })),
+    setRow(L('Заливка под линией'), L('Мягкий градиент под графиком'), tglBtn(CFG.cfill !== false, () => { CFG.cfill = CFG.cfill === false; saveCfg(); })));
+
   const bl = blockIds(), blRows = bl.map((id, i) => {
     const up = h('button', { type: 'button', class: 'mv', 'aria-label': L('Выше') }, '↑'), dn = h('button', { type: 'button', class: 'mv', 'aria-label': L('Ниже') }, '↓');
     const off = CFG.hb.includes(id);
@@ -1807,7 +1878,7 @@ function renderSettingsOnly() {
     } catch (e) {}
   } else hsBox.append(setRow(L('Ярлык на главном экране'), L('Нужна свежая версия Telegram'), null));
   const prof = h('button', { type: 'button', class: 'tgl' }, L('Открыть')); prof.onclick = () => go('prof');
-  app.append(back, look, home, plats, tgc);
+  app.append(back, look, spl, chc, home, plats, tgc);
 }
 // ---------- Telegram: полный экран, отступы ----------
 function fsApply(on) { try { on ? tg.requestFullscreen() : tg.exitFullscreen(); } catch (e) {} }
@@ -1901,12 +1972,87 @@ function applyLang() {
 }
 function setLang(l, silent) { LANG = l === 'en' ? 'en' : 'ru'; DN = DNL[LANG]; CFG.lang = LANG; applyLang(); if (!silent) saveCfg(); }
 const SP = document.getElementById('splash'), spT0 = Date.now(); let spOn = false, spFrom = 0;
-function splashInit() {
-  const seen = +(ls('seenAt') || 0);
-  if (seen && Date.now() - seen < 120000) { SP.style.display = 'none'; return; }
-  spOn = true; spFrom = +(ls('lastTotal') || 0);
+
+// ---------- заставки: небо над Москвой, времена года, один цвет ----------
+const SPLASHES = [['logo', 'Логотип'], ['sky', 'Небо над Москвой'], ['season', 'Времена года'], ['solid', 'Один цвет'], ['off', 'Без заставки']];
+const SPC = ['#ffffff', '#14172b', '#6c5ce7', '#12b3a8', '#e63e7a', '#f2a33a', '#2aa5ee', '#7bc043'];
+const rnd = (a, b) => a + Math.random() * (b - a);
+function mskParts() {
+  try { const f = new Intl.DateTimeFormat('en-GB', { hour: 'numeric', month: 'numeric', day: 'numeric', hourCycle: 'h23', timeZone: 'Europe/Moscow' }).formatToParts(new Date()), g = t => +f.find(x => x.type === t).value; return { h: g('hour'), m: g('month'), d: g('day') }; }
+  catch (e) { const n = new Date(Date.now() + 3 * 36e5); return { h: n.getUTCHours(), m: n.getUTCMonth() + 1, d: n.getUTCDate() }; }
+}
+const lum = c => { const v = parseInt(c.slice(1), 16); return (0.2126 * (v >> 16) + 0.7152 * ((v >> 8) & 255) + 0.0722 * (v & 255)) / 255; };
+const mk = (box, cls, st) => { const e = document.createElement('i'); e.className = cls; if (st) e.style.cssText = st; box.append(e); return e; };
+function skyline(night) {
+  const s = sv('svg', { viewBox: '0 0 400 120', class: 'city', preserveAspectRatio: 'xMidYMax slice' }), add = (t, a) => { const e = sv(t, a); s.append(e); return e; };
+  for (let x = 0, i = 0; x < 400; i++) { const w = 12 + (i * 7) % 13, hh = 16 + (i * 11) % 30; add('rect', { x, y: 120 - hh, width: w - 1, height: hh });
+    if (night) for (let k = 0; k < 3; k++) if ((i + k) % 2) add('rect', { class: 'win', x: x + 2 + k * 3.5, y: 120 - hh + 4 + k * 8, width: 1.6, height: 2.2 }); x += w; }
+  add('rect', { x: 128, y: 98, width: 116, height: 22 });                       // кремлёвская стена
+  for (let x = 128; x < 244; x += 8) add('rect', { x, y: 94, width: 4.5, height: 4.5 });
+  add('rect', { x: 160, y: 52, width: 20, height: 68 }); add('rect', { x: 163, y: 36, width: 14, height: 16 }); add('polygon', { points: '163,36 177,36 170,10' });   // Спасская башня
+  add('polygon', { points: [0, 1, 2, 3, 4].map(k => { const a = -Math.PI / 2 + k * 4 * Math.PI / 5; return (170 + Math.cos(a) * 4.5).toFixed(1) + ',' + (7 + Math.sin(a) * 4.5).toFixed(1); }).join(' ') });
+  add('rect', { x: 210, y: 70, width: 10, height: 50 }); add('polygon', { points: '210,70 220,70 215,44' });                        // Василий Блаженный
+  [[199, 86], [231, 88], [205, 96], [225, 98]].forEach(([cx, cy]) => { add('circle', { cx, cy, r: 6.5 }); add('polygon', { points: `${cx - 2},${cy - 5} ${cx + 2},${cy - 5} ${cx},${cy - 12}` }); add('rect', { x: cx - 5, y: cy, width: 10, height: 120 - cy }); });
+  add('polygon', { points: '326,120 336,120 332,62 330,62' }); add('ellipse', { cx: 331, cy: 70, rx: 6, ry: 3.4 }); add('rect', { x: 330.4, y: 16, width: 1.4, height: 48 });   // Останкинская башня
+  add('rect', { x: 50, y: 70, width: 30, height: 50 }); add('rect', { x: 56, y: 56, width: 18, height: 14 }); add('rect', { x: 60, y: 44, width: 10, height: 12 }); add('polygon', { points: '62,44 68,44 65,18' });   // МГУ
+  return s;
+}
+function skyScene(hr) {
+  const ph = hr < 5 ? 'night' : hr < 8 ? 'dawn' : hr < 17 ? 'day' : hr < 21 ? 'dusk' : 'night', box = document.createElement('div');
+  box.className = 'sc sky ' + ph;
+  if (ph === 'night' || ph === 'dusk') for (let i = 0; i < (ph === 'night' ? 48 : 16); i++) mk(box, 'star', `left:${rnd(0, 100)}%;top:${rnd(0, ph === 'night' ? 62 : 30)}%;--d:${rnd(0, 3)}s;--s:${rnd(1, 3)}px`);
+  if (ph === 'night') { mk(box, 'moon'); mk(box, 'shoot'); }
+  if (ph !== 'night') mk(box, 'sun ' + ph);
+  if (ph === 'day' || ph === 'dawn') for (let i = 0; i < (ph === 'day' ? 5 : 3); i++) mk(box, 'cloud', `top:${rnd(6, 38)}%;--w:${rnd(90, 170)}px;--t:${rnd(45, 90)}s;animation-delay:-${rnd(0, 60)}s;opacity:${ph === 'dawn' ? .55 : .88}`);
+  box.append(skyline(ph === 'night' || ph === 'dusk'));
+  return { box, dark: true };
+}
+function treeSvg() {
+  const s = sv('svg', { viewBox: '0 0 72 96', class: 'tree' }), a = (t, at) => { const e = sv(t, at); s.append(e); return e; };
+  a('rect', { x: 32, y: 84, width: 8, height: 12, fill: '#6b4226' });
+  [['36,6 58,40 14,40', '#1f7a4a'], ['36,26 64,62 8,62', '#25905a'], ['36,46 70,86 2,86', '#2da66a']].forEach(([p, f]) => a('polygon', { points: p, fill: f }));
+  [[36, 18, '#ffd36a'], [26, 38, '#ff6b70'], [46, 36, '#6bb6ff'], [36, 56, '#ffd36a'], [20, 70, '#6bb6ff'], [52, 68, '#ff6b70'], [34, 78, '#fff']].forEach(([x, y, f], i) => a('circle', { cx: x, cy: y, r: 2.6, fill: f, class: 'tl', style: `animation-delay:${i * .25}s` }));
+  a('polygon', { points: [0, 1, 2, 3, 4].map(k => { const t = -Math.PI / 2 + k * 4 * Math.PI / 5; return (36 + Math.cos(t) * 5).toFixed(1) + ',' + (5 + Math.sin(t) * 5).toFixed(1); }).join(' '), fill: '#ffd36a' });
+  return s;
+}
+function seasonScene() {
+  const p = mskParts(), m = p.m, ny = (m === 12 && p.d >= 15) || (m === 1 && p.d <= 10), se = m === 12 || m <= 2 ? 'winter' : m <= 5 ? 'spring' : m <= 8 ? 'summer' : 'autumn', box = document.createElement('div');
+  box.className = 'sc season ' + se; const pr = () => `--x:${rnd(0, 100)}%;--t:${rnd(6, 13)}s;--dl:-${rnd(0, 12)}s;--sw:${rnd(-40, 40)}px`;
+  if (se === 'summer') mk(box, 'sunb');
+  for (let i = 0; i < (se === 'winter' ? 64 : 30); i++) {
+    if (se === 'winter') mk(box, 'flake', pr() + `;--sz:${rnd(2, 7)}px`);
+    else if (se === 'spring') mk(box, 'petal', pr());
+    else if (se === 'summer') mk(box, 'fluff', pr() + `;--t:${rnd(9, 18)}s`);
+    else mk(box, 'leaf', pr() + `;--c:${['#e0583a', '#f2a33a', '#c2761f', '#a53d24'][i % 4]}`);
+  }
+  mk(box, 'ground'); if (ny) box.append(treeSvg());
+  return { box, dark: se === 'winter' || se === 'autumn' };
+}
+function splashBuild() {
+  const mode = CFG.sp || 'logo', old = document.getElementById('spbg'); if (old) old.remove();
+  SP.classList.remove('sdark', 'slight', 'nologo'); SP.style.background = '';
+  if (mode === 'logo' || mode === 'off') return;
+  const bg = document.createElement('div'); bg.id = 'spbg'; SP.prepend(bg); SP.classList.add('nologo');
+  if (mode === 'solid') { const c = /^#[0-9a-f]{6}$/i.test(CFG.spc || '') ? CFG.spc : '#6c5ce7'; SP.style.background = c; SP.classList.add(lum(c) < .55 ? 'sdark' : 'slight'); return; }
+  const sc = mode === 'sky' ? skyScene(mskParts().h) : seasonScene(); bg.append(sc.box); SP.classList.add(sc.dark ? 'sdark' : 'slight');
+}
+function splashFill() {
   const u = tgUser(); document.getElementById('sp-hi').textContent = hello() + (u && u.first_name ? ', ' + u.first_name : '');
   document.getElementById('sp-num').textContent = spFrom ? nf.format(spFrom) : '';
+}
+function splashPreview() {
+  SP.style.display = ''; SP.classList.remove('off');
+  ['sp-hi', 'sp-num', 'sp-dot'].forEach(i => { const e = document.getElementById(i); e.replaceWith(e.cloneNode(true)); });
+  const lg = SP.querySelector('svg'); if (lg) lg.replaceWith(lg.cloneNode(true));
+  splashBuild(); spOn = true; spFrom = +(ls('lastTotal') || 0); splashFill(); SP.onclick = () => splashDone(null);
+  setTimeout(() => splashDone(curTotal()), 2600);
+}
+
+function splashInit() {
+  const seen = +(ls('seenAt') || 0);
+  if ((seen && Date.now() - seen < 120000) || CFG.sp === 'off') { SP.style.display = 'none'; return; }
+  splashBuild(); spOn = true; spFrom = +(ls('lastTotal') || 0); SP.onclick = () => splashDone(null);
+  splashFill();
   setTimeout(() => splashDone(null), 7000);
 }
 function splashDone(total) {
