@@ -123,6 +123,30 @@ function dayInfo(s, arg) {
   if (i < d.length - 1) o.push(`С тех пор: ${sg(d[d.length - 1][1] - d[i][1])}`);
   return o.join('\n');
 }
+// реакции под постами канала: бот должен быть администратором канала
+async function saveReactions(env, u) {
+  if (!env.LINKS) return;
+  const r = u.message_reaction_count, ttl = 90 * 864e5 / 1000;
+  const list = (r.reactions || []).filter(x => x.total_count > 0), n = list.reduce((a, x) => a + x.total_count, 0);
+  const e = list.sort((a, b) => b.total_count - a.total_count).map(x => (x.type.emoji || '⭐') + x.total_count).join(' ');
+  await env.LINKS.put(`r:${r.chat.id}:${r.message_id}`, JSON.stringify({ u: r.chat.username || '', n, e }), { expirationTtl: ttl });
+}
+async function saveSnippet(env, p) {
+  if (env.LINKS) await env.LINKS.put(`c:${p.chat.id}:${p.message_id}`, String(p.text || p.caption || '').slice(0, 60), { expirationTtl: 90 * 864e5 / 1000 });
+}
+async function reactions(env) {
+  if (!env.LINKS) return 'Нужна привязка LINKS.';
+  const ks = (await env.LINKS.list({ prefix: 'r:', limit: 200 })).keys, rows = [];
+  for (const k of ks) { const v = JSON.parse(await env.LINKS.get(k.name)), [, chat, id] = k.name.split(':'); rows.push({ ...v, chat, id }); }
+  rows.sort((a, b) => b.n - a.n);
+  if (!rows.length) return 'Реакций пока нет. Нужно: бот администратор канала и вебхук с message_reaction_count (см. инструкцию).';
+  const out = ['❤️ Посты с самым большим числом реакций'];
+  for (const r of rows.slice(0, 5)) {
+    const sn = await env.LINKS.get(`c:${r.chat}:${r.id}`), link = r.u ? `https://t.me/${r.u}/${r.id}` : `https://t.me/c/${String(r.chat).replace('-100', '')}/${r.id}`;
+    out.push(`${r.e} (${r.n})${sn ? '\n«' + sn + '»' : ''}\n${link}`);
+  }
+  return out.join('\n\n');
+}
 async function click(env, slug) {
   try { const k = `c:${slug}:${dayKey(0)}`; await env.LINKS.put(k, String((+(await env.LINKS.get(k)) || 0) + 1), { expirationTtl: 40 * 864e5 }); } catch (e) {}
 }
@@ -139,6 +163,8 @@ export default {
     }
     if (req.method !== 'POST' || req.headers.get('X-Telegram-Bot-Api-Secret-Token') !== env.WEBHOOK_SECRET) return new Response('ok');
     let up; try { up = await req.json(); } catch (e) { return new Response('ok'); }
+    if (up.message_reaction_count) { ctx.waitUntil(saveReactions(env, up)); return new Response('ok'); }
+    if (up.channel_post) { ctx.waitUntil(saveSnippet(env, up.channel_post)); return new Response('ok'); }
     const m = up.message;
     if (!m || !m.text || String(m.from && m.from.id) !== String(env.OWNER_ID)) return new Response('ok');
     const c = m.text.match(/^\/(\w+)(?:@\w+)?(?:\s+([\s\S]*))?$/);
@@ -151,9 +177,10 @@ export default {
       else if (cmd === 'week' || cmd === 'digest') out = week(await summary(env));
       else if (cmd === 'forecast') out = forecast(await summary(env), parseInt(arg.replace(/\s/g, ''), 10) || 0);
       else if (cmd === 'test' || cmd === 'tests') out = await tests(env, cmd === 'tests' ? await summary(env) : null, cmd, arg);
+      else if (cmd === 'reactions') out = await reactions(env);
       else if (cmd === 'day') out = dayInfo(await summary(env), arg);
       else if (cmd === 'link' || cmd === 'links' || cmd === 'unlink') out = await links(env, u.origin, cmd, arg);
-      else if (cmd === 'help') out = 'Команды:\n/stats сводка сейчас\n/top лучшие публикации недели\n/week итоги и советы недели\n/forecast [цель] прогноз роста\n/day 12.10 как выглядел этот день\n/test что изменили · /tests журнал экспериментов\n/link метка адрес создать короткую ссылку\n/links клики по ссылкам\n/unlink метка удалить';
+      else if (cmd === 'help') out = 'Команды:\n/stats сводка сейчас\n/top лучшие публикации недели\n/week итоги и советы недели\n/forecast [цель] прогноз роста\n/day 12.10 как выглядел этот день\n/reactions посты с лучшими реакциями\n/test что изменили · /tests журнал экспериментов\n/link метка адрес создать короткую ссылку\n/links клики по ссылкам\n/unlink метка удалить';
       else return new Response('ok');
     } catch (e) { out = '⚠️ Не получилось: ' + e.message; }
     const reply = { method: 'sendMessage', chat_id: m.chat.id, text: out.slice(0, 4000), disable_notification: true, disable_web_page_preview: true };
