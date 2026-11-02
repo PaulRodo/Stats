@@ -79,6 +79,15 @@ jobs:
           TT_STATE_KEY: ${{ secrets.TT_STATE_KEY }}
           DATA_PASSWORD: ${{ secrets.DATA_PASSWORD }}
           SUMMARY_KEY: ${{ secrets.SUMMARY_KEY }}
+      - name: Extra analysis
+        # раз в сутки: анализ обложек, слабые места роликов, идеи из комментариев.
+        # Любой сбой здесь не должен ломать сбор статистики, поэтому в конце "|| true".
+        timeout-minutes: 15
+        run: |
+          python analyze.py --due && pip install numpy pillow opencv-python-headless scikit-learn youtube-transcript-api && python analyze.py || true
+        env:
+          DATA_PASSWORD: ${{ secrets.DATA_PASSWORD }}
+          YT_API_KEY: ${{ secrets.YT_API_KEY }}
       - name: Save results
         run: |
           git config user.name "stats-bot"
