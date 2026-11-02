@@ -347,7 +347,7 @@ function beep(kind) {
     (kind === 'viral' ? [660, 880, 990] : [523, 784]).forEach((f, i) => { const o = AC.createOscillator(), g = AC.createGain(), t = AC.currentTime + i * 0.13; o.type = 'sine'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.06, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.28); o.connect(g); g.connect(AC.destination); o.start(t); o.stop(t + 0.3); });
   } catch (e) {}
 }
-const EN = {'Следим за цифрами!': 'Keeping an eye on the numbers!', 'Всё под контролем 😎': 'Everything is under control 😎', 'Когда следующая публикация?': 'When is the next post?', 'Регулярность любят все': 'Everybody loves consistency', 'Ты молодец, так держать!': 'You are doing great, keep it up!', 'Эй, не щекотно!': 'Hey, that tickles!', 'Статистика не врёт': 'Statistics do not lie', 'Я бы сейчас что-нибудь опубликовал': 'I would publish something right now', 'Нажми на меня!': 'Tap me!', 'Тап: прыжок и фраза, следующий тап: танец. Дальше по очереди.': 'Tap: a jump and a phrase, the next tap: a dance. Then in turns.', 'Стикеры маскота': 'Mascot stickers', 'Нажмите на стикер, чтобы поделиться или скачать картинку 512×512': 'Tap a sticker to share or download a 512×512 image', 'Привет': 'Hello', 'Радость': 'Joy', 'Грусть': 'Sadness', 'Удивление': 'Surprise', 'Злость': 'Anger', 'Сон': 'Sleep', 'Круто': 'Cool', 'Маскот': 'Mascot', 'Маскот в приложении': 'Mascot in the app', 'Поздравления, пустые экраны, бег при обновлении': 'Congratulations, empty screens, running while refreshing', 'Наряды маскота': 'Mascot outfits', 'Шапка под Новый год, шарф зимой, зонт в дождь, очки в солнечный день. Погода берётся для Москвы': 'A hat around New Year, a scarf in winter, an umbrella in rain, sunglasses on a sunny day. Weather is taken for Moscow', '{n} с прошлого раза': '{n} since last time', 'Маскот на заставке': 'Mascot on the splash screen', 'Маскот приветствует, радуется росту и спит ночью': 'The mascot greets you, cheers when you grow and sleeps at night', 'Настроение маскота': 'Mascot mood', 'Обычное': 'Normal', 'Рост': 'Growth', 'Падение': 'Drop', 'Ночь': 'Night', 'Логотип': 'Logo', 'Небо над Москвой': 'Sky over Moscow', 'Времена года': 'Seasons', 'Один цвет': 'Single colour', 'Без заставки': 'No splash screen', 'Заставка': 'Splash screen', 'Что показывать при запуске приложения': 'What to show when the app starts', 'Небо и силуэт Москвы меняются по времени суток (МСК)': 'The sky and the Moscow skyline change with the time of day (MSK)', 'Сезон определяется по дате (МСК), под Новый год появляется ёлка': 'The season follows the date (MSK), and a fir tree appears around New Year', 'Просто выбранный цвет, приветствие и число подписчиков': 'Just the chosen colour, a greeting and the subscriber count', 'Приложение открывается сразу': 'The app opens right away', 'Рисуется логотип, под ним приветствие': 'The logo is drawn with a greeting under it', 'Цвет фона': 'Background colour', 'Свой цвет': 'Custom colour', 'Предпросмотр заставки': 'Splash preview', 'Показать': 'Show', 'График': 'Chart', 'Здесь можно убрать лишнее': 'Here you can remove extras', 'Бегущая искра': 'Running spark', 'Светящаяся точка время от времени пробегает по линии роста': 'A glowing dot runs along the growth line from time to time', 'Отметки рекордов': 'Record marks', 'Кружки на рекордах роста и всплесках': 'Circles on growth records and spikes', 'Заливка под линией': 'Fill under the line', 'Мягкий градиент под графиком': 'A soft gradient under the chart', 'Если бы вас смотрело 100 человек': 'If 100 people were watching you', 'Сто зрителей по группам': 'One hundred viewers by group', '{n} из 100': '{n} of 100', 'Другие': 'Other', 'Пол': 'Gender', 'Одна фигурка это один зритель из ста, цвет показывает группу.': 'One figure is one viewer out of a hundred, the colour shows the group.', 'Радар: вы и конкурент': 'Radar: you vs a competitor', 'Радар появится, когда накопится хотя бы 8 дней истории по вам и по конкуренту.': 'The radar will appear once there are at least 8 days of history for you and the competitor.', 'Рост за 7 дн': '7-day growth', 'Рост за 30 дн': '30-day growth', 'Стабильность': 'Consistency', 'Ускорение': 'Acceleration', 'Масштаб': 'Scale', 'Вы': 'You', 'Вы впереди по {n} из {m} осей': 'You lead on {n} of {m} axes', 'По конкурентам собираются только публичные числа подписчиков, поэтому оси про рост и масштаб, а не про вовлечённость. Каждая ось сравнивается внутри пары.': 'Only public follower counts are collected for competitors, so the axes are about growth and scale, not engagement. Each axis is compared within the pair.', '3D-наклон карточек': '3D card tilt', 'Карточки наклоняются вслед за телефоном, по ним бегает блик': 'Cards tilt with your phone and a glint runs over them', 'Машина времени': 'Time machine', 'Дата': 'Date', 'Сегодня': 'Today', 'История ещё копится': 'History is still building up', 'Подписчики и публикации на выбранную дату. Просмотры постов показаны сегодняшние: прошлых значений нет.': 'Followers and posts as of the chosen date. Post views are today’s: there are no past values.', 
+const EN = {'Разбор роликов по секундам': 'Videos second by second', 'После первых 10% ролика в среднем остаётся {p}% зрителей': 'After the first 10% of a video, {p}% of viewers remain on average', 'Лучшее начало: «{a}» ({x}%), слабее всего: «{b}» ({y}%)': 'Best start: “{a}” ({x}%), weakest: “{b}” ({y}%)', 'В этот момент говорили': 'What was said at that moment', 'Начало ролика': 'Start of the video', 'Нажмите на ролик, чтобы открыть его на слабом месте.': 'Tap a video to open it at the weak spot.', 'Текст из ролика появится, если сервер сможет получить субтитры.': 'Text from the video will appear if the server manages to get subtitles.', 'Анализ обложек': 'Cover analysis', '{n} видео': '{n} videos', 'Сравнение по CTR значка': 'Compared by thumbnail CTR', 'Сравнение по просмотрам относительно обычного видео': 'Compared by views relative to a typical video', 'Устойчивых различий пока нет: обложки работают примерно одинаково.': 'No stable differences yet: covers perform about the same.', '{a} против {b} видео': '{a} vs {b} videos', 'Лицо крупным планом': 'A large face', 'Без лица или мелко': 'No face or a small one', 'Светлые обложки': 'Light covers', 'Тёмные обложки': 'Dark covers', 'Контрастные обложки': 'High-contrast covers', 'Мягкие по контрасту': 'Soft contrast', 'Насыщенные цвета': 'Saturated colours', 'Приглушённые цвета': 'Muted colours', 'Пёстрые обложки': 'Colourful covers', 'Спокойные по цвету': 'Calm colours', 'Тёплые тона': 'Warm tones', 'Холодные тона': 'Cool tones', 'Много деталей и текста': 'Lots of detail and text', 'Минимализм': 'Minimalism', 'вероятная связь': 'likely link', 'возможная связь': 'possible link', 'слабая связь': 'weak link', 'Лучшие обложки': 'Best covers', 'Слабые обложки': 'Weak covers', 'Это связь, а не причина: на результат влияет и тема. Признаки считаются по картинкам автоматически, лица ищутся простым детектором.': 'This is correlation, not cause: the topic matters too. Features are computed from the images automatically, faces are found by a simple detector.', 'Идеи из комментариев': 'Ideas from comments', 'Разобрано {n} комментариев к последним видео': '{n} comments on the latest videos analysed', 'Просят снять или разобрать': 'Asked to film or break down', 'О чём пишут чаще всего': 'What people write about most', 'Темы находятся автоматически по словам: это подсказка для идей, а не точная классификация.': 'Topics are found automatically from words: a hint for ideas, not an exact classification.', 'Следим за цифрами!': 'Keeping an eye on the numbers!', 'Всё под контролем 😎': 'Everything is under control 😎', 'Когда следующая публикация?': 'When is the next post?', 'Регулярность любят все': 'Everybody loves consistency', 'Ты молодец, так держать!': 'You are doing great, keep it up!', 'Эй, не щекотно!': 'Hey, that tickles!', 'Статистика не врёт': 'Statistics do not lie', 'Я бы сейчас что-нибудь опубликовал': 'I would publish something right now', 'Нажми на меня!': 'Tap me!', 'Тап: прыжок и фраза, следующий тап: танец. Дальше по очереди.': 'Tap: a jump and a phrase, the next tap: a dance. Then in turns.', 'Стикеры маскота': 'Mascot stickers', 'Нажмите на стикер, чтобы поделиться или скачать картинку 512×512': 'Tap a sticker to share or download a 512×512 image', 'Привет': 'Hello', 'Радость': 'Joy', 'Грусть': 'Sadness', 'Удивление': 'Surprise', 'Злость': 'Anger', 'Сон': 'Sleep', 'Круто': 'Cool', 'Маскот': 'Mascot', 'Маскот в приложении': 'Mascot in the app', 'Поздравления, пустые экраны, бег при обновлении': 'Congratulations, empty screens, running while refreshing', 'Наряды маскота': 'Mascot outfits', 'Шапка под Новый год, шарф зимой, зонт в дождь, очки в солнечный день. Погода берётся для Москвы': 'A hat around New Year, a scarf in winter, an umbrella in rain, sunglasses on a sunny day. Weather is taken for Moscow', '{n} с прошлого раза': '{n} since last time', 'Маскот на заставке': 'Mascot on the splash screen', 'Маскот приветствует, радуется росту и спит ночью': 'The mascot greets you, cheers when you grow and sleeps at night', 'Настроение маскота': 'Mascot mood', 'Обычное': 'Normal', 'Рост': 'Growth', 'Падение': 'Drop', 'Ночь': 'Night', 'Логотип': 'Logo', 'Небо над Москвой': 'Sky over Moscow', 'Времена года': 'Seasons', 'Один цвет': 'Single colour', 'Без заставки': 'No splash screen', 'Заставка': 'Splash screen', 'Что показывать при запуске приложения': 'What to show when the app starts', 'Небо и силуэт Москвы меняются по времени суток (МСК)': 'The sky and the Moscow skyline change with the time of day (MSK)', 'Сезон определяется по дате (МСК), под Новый год появляется ёлка': 'The season follows the date (MSK), and a fir tree appears around New Year', 'Просто выбранный цвет, приветствие и число подписчиков': 'Just the chosen colour, a greeting and the subscriber count', 'Приложение открывается сразу': 'The app opens right away', 'Рисуется логотип, под ним приветствие': 'The logo is drawn with a greeting under it', 'Цвет фона': 'Background colour', 'Свой цвет': 'Custom colour', 'Предпросмотр заставки': 'Splash preview', 'Показать': 'Show', 'График': 'Chart', 'Здесь можно убрать лишнее': 'Here you can remove extras', 'Бегущая искра': 'Running spark', 'Светящаяся точка время от времени пробегает по линии роста': 'A glowing dot runs along the growth line from time to time', 'Отметки рекордов': 'Record marks', 'Кружки на рекордах роста и всплесках': 'Circles on growth records and spikes', 'Заливка под линией': 'Fill under the line', 'Мягкий градиент под графиком': 'A soft gradient under the chart', 'Если бы вас смотрело 100 человек': 'If 100 people were watching you', 'Сто зрителей по группам': 'One hundred viewers by group', '{n} из 100': '{n} of 100', 'Другие': 'Other', 'Пол': 'Gender', 'Одна фигурка это один зритель из ста, цвет показывает группу.': 'One figure is one viewer out of a hundred, the colour shows the group.', 'Радар: вы и конкурент': 'Radar: you vs a competitor', 'Радар появится, когда накопится хотя бы 8 дней истории по вам и по конкуренту.': 'The radar will appear once there are at least 8 days of history for you and the competitor.', 'Рост за 7 дн': '7-day growth', 'Рост за 30 дн': '30-day growth', 'Стабильность': 'Consistency', 'Ускорение': 'Acceleration', 'Масштаб': 'Scale', 'Вы': 'You', 'Вы впереди по {n} из {m} осей': 'You lead on {n} of {m} axes', 'По конкурентам собираются только публичные числа подписчиков, поэтому оси про рост и масштаб, а не про вовлечённость. Каждая ось сравнивается внутри пары.': 'Only public follower counts are collected for competitors, so the axes are about growth and scale, not engagement. Each axis is compared within the pair.', '3D-наклон карточек': '3D card tilt', 'Карточки наклоняются вслед за телефоном, по ним бегает блик': 'Cards tilt with your phone and a glint runs over them', 'Машина времени': 'Time machine', 'Дата': 'Date', 'Сегодня': 'Today', 'История ещё копится': 'History is still building up', 'Подписчики и публикации на выбранную дату. Просмотры постов показаны сегодняшние: прошлых значений нет.': 'Followers and posts as of the chosen date. Post views are today’s: there are no past values.', 
 ' · лучшее время: {h}': ' · best time: {h}', ' · сейчас': ' · now', '(вы)': '(you)', '(мало данных)': '(little data)', '30 дн': '30 d', '7 дн': '7 d',
 'CTR значков': 'Thumbnail CTR', 'CTR недоступен: ': 'CTR unavailable: ', 'CTR появится через 1–2 дня: YouTube готовит эти отчёты с задержкой.': 'CTR will appear in 1–2 days: YouTube prepares these reports with a delay.',
 'Reels набирают на {p}% больше лайков, чем обычные публикации': 'Reels get {p}% more likes than regular posts',
@@ -1737,6 +1737,77 @@ function tmBar() {
   box.append(b);
 })();
 
+
+// ---------- дополнительный анализ (insights.enc, его делает analyze.py) ----------
+async function loadIns() {
+  try {
+    const pw = ls('pw') || S.pw; if (!pw) return;
+    const r = await fetch('insights.enc?t=' + Date.now()); if (!r.ok) return;
+    const ins = await decrypt(await r.json(), pw);
+    if (JSON.stringify(ins) !== JSON.stringify(S.ins)) { S.ins = ins; if (S.view === 'yt' && !S.tmDate) { fresh = false; render(); } }
+  } catch (e) {}
+}
+const openYt = (id, t) => { const u = 'https://youtu.be/' + id + (t ? '?t=' + t : ''); try { tg.openLink(u); } catch (e) { window.open(u, '_blank'); } };
+function watchCard(d) {
+  try {
+    const rt = d.retention || {}, ks = Object.keys(rt).filter(k => rt[k] && rt[k].p && rt[k].p.length > 10); if (!ks.length) return null;
+    const at = (p, f) => p[Math.min(p.length - 1, Math.round(f * (p.length - 1)))], ins = (S.ins && S.ins.watch) || {};
+    const rows = ks.map(k => ({ k, t: rt[k].t || '', h: at(rt[k].p, .1), w: rt[k].w })).sort((a, b) => ((b.w && b.w.drop) || 0) - ((a.w && a.w.drop) || 0));
+    const avgH = rows.reduce((a, r) => a + r.h, 0) / rows.length, byH = rows.slice().sort((a, b) => b.h - a.h);
+    const card = h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, L('Разбор роликов по секундам'))),
+      h('div', { class: 'lbl' }, L('После первых 10% ролика в среднем остаётся {p}% зрителей', { p: dec(avgH, 0) })));
+    if (byH.length > 1) card.append(h('div', { class: 'hint', style: 'margin-top:4px' }, L('Лучшее начало: «{a}» ({x}%), слабее всего: «{b}» ({y}%)', { a: cut(byH[0].t, 28), x: Math.round(byH[0].h), b: cut(byH[byH.length - 1].t, 28), y: Math.round(byH[byH.length - 1].h) })));
+    rows.filter(r => r.w).slice(0, 6).forEach(r => {
+      const sec = r.w.at, tm = sec != null ? Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0') : r.w.pct + '%', x = ins[r.k] || {};
+      const row = h('div', { class: 'ins', style: 'flex-direction:column;gap:3px' },
+        h('div', { class: 'row', style: 'width:100%;align-items:center' }, h('b', {}, cut(r.t, 40)), h('span', { class: 'chip down' }, tm + ' · −' + r.w.drop + ' ' + L('п.п.'))),
+        x.near ? h('div', { class: 'small', style: 'color:var(--mute)' }, L('В этот момент говорили') + ': «' + x.near + '»') : null,
+        x.hook ? h('div', { class: 'small', style: 'color:var(--mute)' }, L('Начало ролика') + ': «' + cut(x.hook, 120) + '»') : null);
+      if (sec != null) { row.style.cursor = 'pointer'; row.onclick = () => openYt(r.k, sec); }
+      card.append(row);
+    });
+    card.append(h('div', { class: 'hint' }, L('Нажмите на ролик, чтобы открыть его на слабом месте.') + (Object.keys(ins).length ? '' : ' ' + L('Текст из ролика появится, если сервер сможет получить субтитры.'))));
+    return card;
+  } catch (e) { return null; }
+}
+const COVER_LBL = { face: ['Лицо крупным планом', 'Без лица или мелко'], brightness: ['Светлые обложки', 'Тёмные обложки'], contrast: ['Контрастные обложки', 'Мягкие по контрасту'], sat: ['Насыщенные цвета', 'Приглушённые цвета'], color: ['Пёстрые обложки', 'Спокойные по цвету'], warm: ['Тёплые тона', 'Холодные тона'], edges: ['Много деталей и текста', 'Минимализм'] };
+function coverCard(ins) {
+  try {
+    const c = ins && ins.cover; if (!c) return null;
+    const card = h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, L('Анализ обложек')), h('span', { class: 'chip' }, L('{n} видео', { n: c.n }))),
+      h('div', { class: 'lbl' }, L(c.metric === 'ctr' ? 'Сравнение по CTR значка' : 'Сравнение по просмотрам относительно обычного видео')));
+    if (!c.findings.length) card.append(h('div', { class: 'empty' }, L('Устойчивых различий пока нет: обложки работают примерно одинаково.')));
+    c.findings.forEach(f => {
+      const lab = (COVER_LBL[f.k] || [f.k, f.k])[f.side === 'hi' ? 0 : 1], rl = f.p < 0.1 ? ['вероятная связь', 'up'] : f.p < 0.25 ? ['возможная связь', ''] : ['слабая связь', 'down'];
+      card.append(h('div', { class: 'ins', style: 'align-items:center' }, h('div', { style: 'flex:1' }, L(lab), h('div', { class: 'small', style: 'color:var(--mute)' }, L('{a} против {b} видео', { a: f.n[0], b: f.n[1] }))), h('b', {}, '×' + dec(f.x, 1)), h('span', { class: 'chip ' + rl[1] }, L(rl[0]))));
+    });
+    const thumbs = (arr, title) => h('div', {}, h('div', { class: 'lbl', style: 'margin-top:14px' }, title), h('div', { style: 'display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:6px' }, arr.map(x => {
+      const b = h('div', { style: 'cursor:pointer' }, h('img', { src: 'https://i.ytimg.com/vi/' + x.id + '/mqdefault.jpg', loading: 'lazy', alt: '', style: 'width:100%;border-radius:10px;display:block;background:var(--chip);aspect-ratio:16/9;object-fit:cover' }),
+        h('div', { class: 'small', style: 'color:var(--mute);margin-top:2px' }, (c.metric === 'ctr' ? dec(x.v, 1) + '% · ' : short(x.v) + ' · ') + cut(x.t, 14)));
+      b.onclick = () => openYt(x.id); return b; })));
+    if ((c.best || []).length) card.append(thumbs(c.best, L('Лучшие обложки')));
+    if ((c.worst || []).length) card.append(thumbs(c.worst, L('Слабые обложки')));
+    card.append(h('div', { class: 'hint' }, L('Это связь, а не причина: на результат влияет и тема. Признаки считаются по картинкам автоматически, лица ищутся простым детектором.')));
+    return card;
+  } catch (e) { return null; }
+}
+function ideasCard(ins) {
+  try {
+    const c = ins && ins.comments; if (!c || (!(c.ideas || []).length && !(c.themes || []).length)) return null;
+    const card = h('div', { class: 'card wide' }, h('h2', {}, L('Идеи из комментариев')), h('div', { class: 'lbl' }, L('Разобрано {n} комментариев к последним видео', { n: c.n })));
+    const list = (arr, title) => {
+      if (!arr.length) return; card.append(h('div', { class: 'lbl', style: 'margin-top:12px' }, title));
+      arr.slice(0, 5).forEach(x => {
+        const row = h('div', { class: 'ins', style: 'flex-direction:column;gap:3px;cursor:pointer' }, h('div', { class: 'row', style: 'width:100%;align-items:center' }, h('b', {}, x.t), h('span', { class: 'chip' }, '×' + x.n)),
+          ...(x.ex || []).slice(0, 2).map(e => h('div', { class: 'small', style: 'color:var(--mute)' }, '«' + cut(e, 110) + '»')));
+        row.onclick = () => openYt((x.v || [])[0]); card.append(row);
+      });
+    };
+    list(c.ideas || [], L('Просят снять или разобрать')); list(c.themes || [], L('О чём пишут чаще всего'));
+    card.append(h('div', { class: 'hint' }, L('Темы находятся автоматически по словам: это подсказка для идей, а не точная классификация.')));
+    return card;
+  } catch (e) { return null; }
+}
 function renderPlatform(id) {
   const d = S.data, r = d.platforms[id], [name, col] = P[id], app = document.getElementById('app'), an = DRAW;
   app.replaceChildren();
@@ -1781,7 +1852,7 @@ function renderPlatform(id) {
   if (id === 'yt') { [ytDeep(r), ytSrcCard(r), crowdCard(r)].forEach(c => { if (c) app.append(c); }); }
   if (id === 'tg') { const c = flowCard(arr, sr.dates); if (c) app.append(c); }
   const vp = posts.filter(p => typeof p.val === 'number');
-  [curveCard(d.curves, id), id === 'yt' ? retentionCard(d.retention) : null, id === 'yt' ? commentsCard(d.comments) : null, id === 'yt' ? subsCard(d) : null, id === 'yt' ? fansCard(d.comments) : null, id === 'yt' ? globeCard((d.platforms.yt || {}).deep) : null, trendCard(posts, col), fmtCard(posts, id, col), recoCard(insights(vp, id).slice(0, 5).map(i => ({ ...i, id }))), weekCard(posts), heatCard(posts), calCard(posts), titleCard(vp), compCard(d, id), radarCard(d, id), pc].forEach(c => { if (c) app.append(c); });
+  [curveCard(d.curves, id), id === 'yt' ? retentionCard(d.retention) : null, id === 'yt' ? watchCard(d) : null, id === 'yt' ? commentsCard(d.comments) : null, id === 'yt' && !S.tmDate ? ideasCard(S.ins) : null, id === 'yt' && !S.tmDate ? coverCard(S.ins) : null, id === 'yt' ? subsCard(d) : null, id === 'yt' ? fansCard(d.comments) : null, id === 'yt' ? globeCard((d.platforms.yt || {}).deep) : null, trendCard(posts, col), fmtCard(posts, id, col), recoCard(insights(vp, id).slice(0, 5).map(i => ({ ...i, id }))), weekCard(posts), heatCard(posts), calCard(posts), titleCard(vp), compCard(d, id), radarCard(d, id), pc].forEach(c => { if (c) app.append(c); });
   requestAnimationFrame(() => {
     if (!arr || n < 1) return;
     const vals = arr.slice(i0), { svg, pts } = chart(vals, Math.max(box.clientWidth, 120), 150, col, 8);
@@ -1796,7 +1867,6 @@ function renderProfile() {
   const name = u ? [u.first_name, u.last_name].filter(Boolean).join(' ') : '';
   app.append(back, h('div', { class: 'card wide' }, h('div', { class: 'row', style: 'align-items:center;flex-wrap:nowrap' }, avatarEl(64),
     h('div', {}, h('h2', {}, name || L('Профиль')), u && u.username ? h('div', { class: 'sub' }, '@' + u.username) : h('div', { class: 'sub' }, L('Данные берутся из Telegram'))))));
-  app.append(mascotCard(), stickersCard());
   app.append(...setKids);
   const hist = d.history || {}, dates = Object.keys(hist).sort(), srcs = h('div', { class: 'card wide' }, h('h2', {}, L('Подключённые источники')));
   const ids = Object.keys(d.platforms);
@@ -1813,6 +1883,7 @@ function renderProfile() {
   });
   app.append(srcs, h('div', { class: 'card wide' }, h('h2', {}, L('Данные')),
     h('div', { class: 'tiles' }, h('div', { class: 'tile' }, h('b', {}, String(dates.length)), h('span', {}, L('дней истории'))), h('div', { class: 'tile' }, h('b', {}, String((d.archive || []).length)), h('span', {}, L('публикаций в архиве'))))));
+  app.append(stickersCard());
   foot();
 }
 
@@ -2237,7 +2308,7 @@ async function unlock(box) {
   const rem = h('input', { type: 'checkbox', checked: '' }), bad = h('div', { class: 'bad' }), ok = h('button', { class: 'go', type: 'button' }, L('Открыть'));
   const submit = async () => {
     bad.textContent = ''; ok.disabled = true;
-    try { S.data = await decrypt(box, pw.value); S.warn = ''; if (rem.checked) ls('pw', pw.value); render(); checkMilestones(); splashDone(curTotal()); }
+    try { S.data = await decrypt(box, pw.value); S.pw = pw.value; S.warn = ''; if (rem.checked) ls('pw', pw.value); render(); checkMilestones(); splashDone(curTotal()); }
     catch (e) { bad.textContent = L('Неверный пароль'); ok.disabled = false; }
   };
   ok.onclick = submit; pw.onkeydown = e => { if (e.key === 'Enter') submit(); };
@@ -2261,6 +2332,7 @@ async function load(manual) {
   }
   btn.classList.remove('spin');
   splashDone(S.data ? curTotal() : null);
+  if (S.data) loadIns();
 }
 btn.onclick = () => { tap(); load(true); };
 document.getElementById('share').onclick = () => { tap(); openSheet(L('Поделиться'), [[L('Отправить текстом'), share], [L('Картинка для сторис'), makeStory]]); };
