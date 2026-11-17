@@ -204,16 +204,112 @@ def ig_token():
     return st["token"]
 
 
+META_GRAPH = "https://graph.facebook.com/v25.0/"
+META_IG_STATE = "instagram_facebook_state.enc"
+
+
+def meta_system_user_token():
+    """Refreshes a 60-day Meta Business system-user token every 30 days.
+
+    The rotating token is stored only in an encrypted repository file. The
+    initial token is supplied once through META_SYSTEM_USER_TOKEN secret.
+    """
+    initial = env("META_SYSTEM_USER_TOKEN")
+    app_id, app_secret, pw = env("IG_APP_ID"), env("IG_APP_SECRET"), env("TT_STATE_KEY")
+    if not initial:
+        return ""
+    if not (app_id and app_secret and pw):
+        raise RuntimeError("для автообновления Meta нужны IG_APP_ID, IG_APP_SECRET и TT_STATE_KEY")
+
+    state = {}
+    if os.path.exists(META_IG_STATE):
+        try:
+            with open(META_IG_STATE, "rb") as f:
+                state = json.loads(_fernet(pw).decrypt(f.read()))
+        except Exception:
+            raise RuntimeError("не удалось расшифровать instagram_facebook_state.enc: проверьте TT_STATE_KEY")
+
+    origin = hashlib.sha256(initial.encode("utf-8")).hexdigest()
+    if state.get("origin") != origin or not state.get("token"):
+        state = {"origin": origin, "token": initial, "refreshed_at": 0, "expires_at": 0}
+
+    now = int(time.time())
+    last = int(state.get("refreshed_at") or 0)
+    if not last or now - last >= 30 * 86400:
+        try:
+            refreshed = call("GET", META_GRAPH + "oauth/access_token", params={
+                "grant_type": "fb_exchange_token",
+                "client_id": app_id,
+                "client_secret": app_secret,
+                "set_token_expires_in_60_days": "true",
+                "fb_exchange_token": state["token"],
+            })
+            new_token = refreshed.get("access_token")
+            if not new_token:
+                raise RuntimeError("Meta не вернула новый системный токен")
+            state.update(token=new_token, refreshed_at=now,
+                         expires_at=now + int(refreshed.get("expires_in") or 60 * 86400))
+            with open(META_IG_STATE, "wb") as f:
+                f.write(_fernet(pw).encrypt(json.dumps(state).encode("utf-8")))
+        except RuntimeError as e:
+            # Do not discard a still-valid token on a transient Meta/API failure.
+            expires_at = int(state.get("expires_at") or 0)
+            left = (expires_at - now) / 86400 if expires_at else None
+            WARN.append(("tok_ig", "Meta Business: автоматическое обновление системного токена не прошло. Проверьте доступы приложения и токен в Business Manager."))
+            if left is None or left <= 7:
+                raise RuntimeError(f"Meta не смогла обновить токен; проверьте System User token и разрешения приложения ({e})")
+
+    expires_at = int(state.get("expires_at") or 0)
+    if expires_at:
+        TOK["ig"] = {"expires": expires_at}
+        left = (expires_at - now) / 86400
+        if left < 10:
+            WARN.append(("tok_ig", f"Meta Business: срок системного токена истекает примерно через {max(int(left), 0)} дн."))
+    return state["token"]
+
+
+def meta_page_for_instagram(system_token):
+    """Get the Page token + linked Instagram professional account via /me/accounts."""
+    params = {
+        "fields": "id,name,access_token,instagram_business_account",
+        "limit": 100,
+        "access_token": system_token,
+    }
+    pages = call("GET", META_GRAPH + "me/accounts", params=params).get("data", [])
+    wanted_page = env("META_PAGE_ID")
+    wanted_ig = env("IG_USER_ID")  # optional selector for older deployments
+    candidates = []
+    for page in pages:
+        ig = page.get("instagram_business_account") or {}
+        if not (page.get("id") and page.get("access_token") and ig.get("id")):
+            continue
+        if wanted_page and str(page["id"]) != wanted_page:
+            continue
+        if wanted_ig and str(ig["id"]) != wanted_ig:
+            continue
+        candidates.append((str(ig["id"]), page["access_token"]))
+    if not candidates:
+        raise RuntimeError("Meta Business не нашла Page с привязанным Instagram. Назначьте System User доступ к Facebook Page и проверьте instagram_basic/pages_read_engagement/pages_show_list.")
+    if len(candidates) > 1:
+        raise RuntimeError("К System User привязано несколько Instagram-страниц. Добавьте GitHub Secret META_PAGE_ID с ID нужной Facebook Page.")
+    return candidates[0]
+
+
 def instagram():
-    """Работает с токеном «Instagram API with Instagram Login» (ID не нужен)
-    и со старым вариантом через Facebook (тогда нужен ещё IG_USER_ID)."""
-    tok, uid = ig_token(), env("IG_USER_ID")
-    if not tok:
-        return None
-    if uid:
-        B, node = "https://graph.facebook.com/v25.0/", uid
+    """Instagram через Meta Business/Facebook Login или старый Instagram Login."""
+    system_token = meta_system_user_token()
+    if system_token:
+        uid, tok = meta_page_for_instagram(system_token)
+        B, node = META_GRAPH, uid
     else:
-        B, node = "https://graph.instagram.com/v25.0/", "me"
+        tok, uid = ig_token(), env("IG_USER_ID")
+        if not tok:
+            return None
+        if uid:
+            B, node = META_GRAPH, uid
+        else:
+            B, node = "https://graph.instagram.com/v25.0/", "me"
+
     u = call("GET", B + node, params={"fields": "username,followers_count,follows_count,media_count", "access_token": tok})
     rows = []
     try:
@@ -286,32 +382,15 @@ def tt_token():
     st = state_load(pw)
     if not st:
         return None
-    # Не обновляем access token при каждом часовом запуске workflow: используем
-    # сохранённый зашифрованный токен до истечения (с запасом 5 минут).
-    if st.get("access_token") and int(st.get("access_expires", 0)) > int(time.time()) + 300:
-        if st.get("refresh_expires"):
-            TOK["tt"] = {"expires": int(st["refresh_expires"])}
-        return st["access_token"]
-
     d = call("POST", TT_TOKEN_URL, data={"client_key": ck, "client_secret": cs,
                                          "grant_type": "refresh_token", "refresh_token": st["refresh_token"]})
     if not d.get("access_token"):
         raise RuntimeError("не удалось обновить токен TikTok, подключите его заново")
-    now = int(time.time())
     rexp = d.get("refresh_expires_in")
-    aexp = d.get("expires_in")
-    new_state = {
-        "refresh_token": d.get("refresh_token") or st["refresh_token"],
-        "access_token": d["access_token"],
-        "access_expires": now + int(aexp or 86400),
-    }
+    state_save(pw, {"refresh_token": d.get("refresh_token") or st["refresh_token"],
+                    **({"refresh_expires": int(time.time()) + int(rexp)} if rexp else {})})
     if rexp:
-        new_state["refresh_expires"] = now + int(rexp)
-    elif st.get("refresh_expires"):
-        new_state["refresh_expires"] = st["refresh_expires"]
-    state_save(pw, new_state)
-    if new_state.get("refresh_expires"):
-        TOK["tt"] = {"expires": int(new_state["refresh_expires"])}
+        TOK["tt"] = {"expires": int(time.time()) + int(rexp)}
     if rexp and int(rexp) < 14 * 86400:
         WARN.append(("tok_tt", f"🔑 TikTok: доступ истекает через {int(rexp) // 86400} дн. Подключите заново (workflow, поле tiktok_code)."))
     return d["access_token"]
