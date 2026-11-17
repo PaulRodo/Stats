@@ -13,7 +13,7 @@
 :root[data-theme=dark]{--card:color-mix(in srgb,var(--bg) 86%,#fff);--chip:color-mix(in srgb,var(--bg) 76%,#fff);--line:color-mix(in srgb,var(--bg) 70%,#fff);--ink:#eef0fb;--mute:#9a9fbb;--up:#3ddc84;--down:#ff6b70;--sh:none;color-scheme:dark}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.4 Onest,system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
--webkit-font-smoothing:antialiased;padding:max(16px,var(--sat,env(safe-area-inset-top,0px))) 16px calc(28px + env(safe-area-inset-bottom))}
+-webkit-font-smoothing:antialiased;padding:max(16px,var(--sat,env(safe-area-inset-top,0px))) 16px calc(104px + env(safe-area-inset-bottom))}
 main{max-width:980px;margin:0 auto}
 button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;padding:0}
 button:focus-visible{outline:2px solid #2aa5ee;outline-offset:2px}
@@ -307,6 +307,55 @@ body.tmach main{filter:sepia(.3) saturate(.92)}
 .stkb .mcw{width:100%;aspect-ratio:1}
 .stkb .mcw svg{overflow:hidden}
 .mcw.mc-still .mc-zz{opacity:1}
+
+/* Новая навигация и аналитические разделы */
+#sync-status{display:none;margin:-6px 2px 12px;padding:9px 13px;border-radius:14px;background:var(--chip);color:var(--mute);font-size:12px}
+#sync-status.on{display:block}
+#sync-status.busy{background:color-mix(in srgb,var(--acc) 10%,var(--chip));color:var(--ink)}
+#sync-status.busy:after{content:'';display:block;height:2px;border-radius:3px;margin-top:7px;background:linear-gradient(90deg,var(--acc) 0 30%,transparent 30% 100%);background-size:200% 100%;animation:syncflow 1.2s linear infinite}
+@keyframes syncflow{to{background-position:-200% 0}}
+#bottom-nav{position:fixed;left:50%;bottom:max(8px,env(safe-area-inset-bottom));transform:translateX(-50%);z-index:55;width:min(640px,calc(100vw - 18px));display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;padding:7px;border:1px solid var(--line);border-radius:23px;background:color-mix(in srgb,var(--card) 92%,transparent);box-shadow:0 8px 32px rgba(15,18,40,.17);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px)}
+#bottom-nav.hidden{display:none}
+.nav-tab{display:flex;min-width:0;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:6px 2px;border-radius:16px;color:var(--mute);font-size:10px;font-weight:600;line-height:1.15}
+.nav-tab .ni{font-size:19px;line-height:1.15}
+.nav-tab[aria-current=page]{background:var(--chip);color:var(--ink)}
+.nav-tab:active{transform:scale(.97)}
+.section-head{grid-column:1/-1;padding:2px 2px 0}
+.section-head h2{font-size:20px;letter-spacing:-.025em;margin:0}
+.section-head p{font-size:13px;color:var(--mute);margin:3px 0 0}
+.metric-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;grid-column:1/-1}
+.metric-box{background:var(--chip);border-radius:16px;padding:12px;min-width:0}
+.metric-box b{display:block;font-size:20px;letter-spacing:-.03em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.metric-box span{display:block;color:var(--mute);font-size:11px;line-height:1.25;margin-top:3px}
+.compare-row{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px;align-items:center;padding:10px 0;border-top:1px solid var(--line)}
+.compare-row:first-of-type{border-top:0}
+.compare-row b{font-variant-numeric:tabular-nums}
+.mini-progress{height:8px;background:var(--chip);border-radius:99px;overflow:hidden;margin-top:6px}
+.mini-progress i{display:block;height:100%;border-radius:99px;background:var(--acc)}
+.hdet{padding:10px 0;border-top:1px solid var(--line)}
+.hdet:first-child{border-top:0}
+.hdet .row{align-items:baseline}
+.ptabs{margin:4px 0 10px;grid-column:1/-1}
+.ptabs button{font-weight:700}
+.search{grid-column:1/-1;display:block;width:100%;padding:12px 14px;border:1px solid var(--line);border-radius:14px;background:var(--card);color:var(--ink);font:inherit;margin:10px 0}
+.report-dates{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}.report-dates label{display:flex;gap:5px;align-items:center;color:var(--mute);font-size:12px}.report-dates input{max-width:145px;padding:8px;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--ink);font:inherit;font-size:12px}
+.report-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.report-actions button{padding:9px 13px;border-radius:13px;background:var(--chip);font-size:13px;font-weight:600}
+.insight-item{padding:12px 0;border-top:1px solid var(--line)}
+.insight-item:first-of-type{border-top:0}
+.insight-item .txt{font-weight:600}
+.insight-item .why{color:var(--mute);font-size:12px;margin-top:5px}
+.more-link{display:flex;justify-content:space-between;align-items:center;gap:12px;width:100%;padding:13px 0;border-top:1px solid var(--line);text-align:left}
+.more-link:first-of-type{border-top:0}
+.more-link span:last-child{color:var(--mute)}
+.plat .pmeta{align-items:flex-start}
+.plat .pmeta .chip{font-size:11px}
+.chart-legend{display:flex;gap:14px;flex-wrap:wrap;color:var(--mute);font-size:12px;margin:8px 0 0}
+.chart-legend i{display:inline-block;width:18px;border-top:2px solid var(--acc);vertical-align:middle;margin-right:5px}
+.chart-legend i.prev{border-top-style:dashed;opacity:.55}
+@media(max-width:380px){.metric-grid{gap:6px}.metric-box{padding:9px}.metric-box b{font-size:17px}#bottom-nav{padding:5px}.nav-tab{font-size:9px}}
+@media print{#bottom-nav,#tools,#refresh,#share,#prof,#sync-status{display:none!important}body{padding:0;background:#fff;color:#111}.card{box-shadow:none;border:1px solid #ddd;break-inside:avoid}}
+
 </style>
 </head>
 <body>
@@ -320,10 +369,12 @@ body.tmach main{filter:sepia(.3) saturate(.92)}
 <button class="round" id="prof" aria-label="Профиль">👤</button>
 </div>
 </header>
+<div id="sync-status" role="status" aria-live="polite"></div>
 <div class="grid" id="app"><div class="sk wide" style="height:230px"></div><div class="sk" style="height:132px"></div><div class="sk" style="height:132px"></div></div>
 <footer id="foot"></footer>
 <div id="tools"></div>
 </main>
+<nav id="bottom-nav" class="hidden" aria-label="Основная навигация"></nav>
 <div id="ptr" aria-hidden="true">↻</div>
 <div id="toast" role="status"></div>
 <canvas id="cf" aria-hidden="true"></canvas>
@@ -423,6 +474,32 @@ function L(s, v) {
   return v && typeof s === 'string' ? s.replace(/\{(\w+)\}/g, (m, k) => v[k] !== undefined ? v[k] : m) : s;
 }
 
+
+Object.assign(EN, {
+  'Обзор каналов':'Channel overview','Аналитика':'Analytics','Контент':'Content','Канал':'Channel','Аналитика канала':'Channel analytics','Инсайты':'Insights','Ещё':'More',
+  'Аналитика канала: что изменилось и что попробовать дальше':'Channel analytics: what changed and what to try next',
+  'Сравнение платформ':'Platform comparison','Сравнение внутри каждой платформы':'Comparison within each platform',
+  'Абсолютные просмотры разных соцсетей напрямую не сравниваются':'Absolute views from different platforms are not directly comparable',
+  'Обычно для своей платформы = ×1,0':'Typical for its own platform = ×1.0',
+  'Индекс здоровья: из чего складывается':'Channel health score: breakdown','Компоненты имеют равный вес — по одной трети':'Each component has equal weight — one third each','Рост: положительный прирост подписчиков за 30 дней относительно размера аудитории; отрицательный прирост даёт 0 баллов. Охват: медианные просмотры публикаций за 30 дней относительно подписчиков. Регулярность: число публикаций за 30 дней относительно ориентира 12 публикаций. Каждый компонент ограничен диапазоном 0–100.':'Growth: positive 30-day follower growth relative to audience size; negative growth scores zero. Reach: median post views over 30 days relative to followers. Consistency: posts over 30 days relative to a target of 12 posts. Each component is capped at 0–100.',
+  'Рост':'Growth','Охват':'Reach','Регулярность':'Consistency','Первые часы публикации':'First hours after publishing',
+  'Обзор':'Overview','Последние публикации':'Latest posts','Внутри платформы':'Platform detail','Последние публикации и скорость набора':'Latest posts and growth over time',
+  'Поиск публикаций':'Search posts','Все платформы':'All platforms','Сравнить с прошлым периодом':'Compare with previous period',
+  'Текущий период':'Current period','Предыдущий период':'Previous period','Скачать CSV':'Download CSV','Печать / PDF':'Print / PDF',
+  'Отчёт по статистике':'Analytics report','Период отчёта':'Report period','7 дней':'7 days','30 дней':'30 days','90 дней':'90 days','365 дней':'365 days','Всё время':'All time','Применить период':'Apply range','С':'From','По':'To',
+  'Подготовить отчёт':'Prepare report','На основе':'Based on','наблюдений':'observations','Предварительный сигнал':'Early signal','Устойчивая выборка':'Larger sample',
+  'Пока мало данных для устойчивых выводов':'There is not enough data for reliable conclusions yet','Это закономерность в имеющихся данных, а не доказательство причины':'This is a pattern in the available data, not proof of causation',
+  'Уведомления':'Notifications','Уведомления на этом устройстве':'Notifications on this device','Включить':'Enable','Выключить':'Disable',
+  'Разрешите уведомления в браузере':'Allow notifications in your browser','Этот браузер не поддерживает уведомления':'This browser does not support notifications',
+  'Telegram-бот':'Telegram bot','Для уведомлений, когда приложение закрыто, подключите бесплатный шаг GitHub Actions':'For alerts while the app is closed, add the free GitHub Actions step',
+  'Токен бота не нужно вставлять в HTML или хранить на устройстве':'Do not put the bot token in HTML or store it on the device',
+  'Обновляем данные — старые значения остаются на экране':'Updating data — current values stay on screen','Не удалось обновить: показаны предыдущие данные':'Could not refresh: showing previous data',
+  'Данные обновлены':'Data updated','Обычный уровень':'Typical level','Публикаций в выборке':'Posts in sample','Перейти к платформе':'Open platform',
+  'В отчёт попали публикации, дата которых находится внутри выбранного периода':'The report includes posts dated within the selected period',
+  'Открыть настройки':'Open settings','Профиль и источники':'Profile and sources','Перейти к разделу':'Go to section',
+  'Уведомления браузера работают, пока страница открыта или может выполняться в фоне':'Browser notifications work while the page is open or can run in the background'
+});
+
 const P = { yt: ['YouTube', '#ff3b30'], tg: ['Telegram', '#2aa5ee'], ig: ['Instagram', '#d62976'], tt: ['TikTok', '#12b3a8'] };
 const ICON = {
   yt: '<svg viewBox="0 0 24 24"><path fill="#fff" d="M9.5 7.2v9.6l8-4.8z"/></svg>',
@@ -481,7 +558,7 @@ function cloudPull() {
 const sortIds = ids => ids.slice().sort((a, b) => { const x = CFG.order.indexOf(a), y = CFG.order.indexOf(b); return (x < 0 ? 99 : x) - (y < 0 ? 99 : y); });
 const vis = ids => sortIds(ids).filter(i => !CFG.hide.includes(i));
 const acc = () => ACC[CFG.acc] || ACC[0];
-const S = { data: null, period: 7, filter: 'all', view: 'home', pp: 0, sort: 'views', tm: 'views', bg: CFG.bg !== undefined ? +CFG.bg : +(ls('bg') ?? 1), warn: '', cm: 0, cmp: false };
+const S = { data: null, period: 7, filter: 'all', view: 'home', pp: 0, sort: 'views', tm: 'views', bg: CFG.bg !== undefined ? +CFG.bg : +(ls('bg') ?? 1), warn: '', cm: 0, cmp: false, ptab: 'overview', cmpPlatform: false, reportDays: 30, contentFilter: 'all', contentQuery: '' };
 let fresh = true, casc = false, DRAW = false, VT = false;
 
 // ---------- тема ----------
@@ -603,6 +680,9 @@ function confetti() {
 // круглые цифры: 100, 250, 500, 1 000, 2 500, ...
 const MS = []; for (let k = 100; k <= 1e8; k *= 10) MS.push(k, k * 2.5, k * 5);
 const msOf = n => MS.filter(m => m <= n).pop() || 0;
+function notifyLocal(title, body) {
+  try { if (CFG.localAlerts && 'Notification' in window && Notification.permission === 'granted') new Notification(title,{body,tag:'channel-stats'}); } catch(e) {}
+}
 function checkMilestones() {
   const d = S.data, ids = vis(Object.keys(d.platforms)).filter(i => typeof d.platforms[i].followers === 'number');
   const now = { all: ids.reduce((a, i) => a + d.platforms[i].followers, 0) }; ids.forEach(i => { now[i] = d.platforms[i].followers; });
@@ -610,7 +690,7 @@ function checkMilestones() {
   let msg = null;
   if (seen) for (const k of Object.keys(now)) if (seen[k] !== undefined && msOf(now[k]) > msOf(seen[k])) msg = L('🎉 {n}: {c} подписчиков!', { n: k === 'all' ? L('Всего') : P[k][0], c: nf.format(msOf(now[k])) });
   ls('seen', JSON.stringify(now));
-  if (msg) { mcCelebrate(msg, 'laugh'); confetti(); okh(); beep('rec'); }
+  if (msg) { mcCelebrate(msg, 'laugh'); notifyLocal(L('Новый рубеж подписчиков'),msg); confetti(); okh(); beep('rec'); }
 }
 
 // ---------- графики ----------
@@ -697,8 +777,9 @@ function netBars(vals, labels) {
 // ---------- общие блоки ----------
 function go(v) {
   const run = () => {
+    if (P[v] && v !== S.view) S.ptab = 'overview';
     S.view = v; fresh = true; VT = !!(document.startViewTransition && !RM); window.scrollTo(0, 0);
-    try { if (tg) { v === 'home' ? tg.BackButton.hide() : tg.BackButton.show(); } } catch (e) {}
+    try { if (tg) { ['home','analytics','content','insights','more'].includes(v) ? tg.BackButton.hide() : tg.BackButton.show(); } } catch (e) {}
     render();
   };
   if (document.startViewTransition && !RM) document.startViewTransition(run); else run();
@@ -750,7 +831,7 @@ const segCtl = () => {
 };
 const chipRow = (items, cur, key) => {
   const c = h('div', { class: 'chips' }, items.map(([k, t]) => h('button', { type: 'button', 'aria-pressed': String(cur === k), 'data-k': String(k) }, t)));
-  c.onclick = e => { const b = e.target.closest('button'); if (b) { const v = b.dataset.k; S[key] = key === 'pp' ? +v : v; tap(); render(); } };
+  c.onclick = e => { const b = e.target.closest('button'); if (b) { const v = b.dataset.k; S[key] = ['pp','reportDays'].includes(key) ? +v : v; if(key==='reportDays')S.reportCustom=false; tap(); render(); } };
   return c;
 };
 function postRow(p, col, big, unit, meta) {
@@ -1088,20 +1169,149 @@ function renderMain() {
   let flashOld = null;
   if (S.data && !S.tmDate && S.data !== lastData) { if (lastData) { notifyChange(lastData, S.data); flashOld = numSnap(); } lastData = S.data; }
   document.body.style.setProperty('--aur', P[S.view] ? P[S.view][1] : 'transparent'); document.body.classList.toggle('aur', !!P[S.view]);
-  if (S.view === 'set') return renderSettings();
-  if (S.view === 'prof') return renderProfile();
+  if (S.view === 'set') { renderSettings(); renderBottomNav(); return; }
+  if (S.view === 'prof') { renderProfile(); renderBottomNav(); return; }
   if (!S.data) return;
+  if (S.view === 'more') { renderMore(); renderBottomNav(); foot(); return; }
+  if (['analytics','content','insights'].includes(S.view)) { DRAW = false; casc = false; VT = false; renderWorkspace(S.view); renderBottomNav(); foot(); return; }
   if (S.view !== 'home' && !S.data.platforms[S.view]) S.view = 'home';
   DRAW = fresh; casc = fresh && !VT; fresh = false; VT = false;
   const app = document.getElementById('app');
   app.classList.toggle('anim', casc); app.classList.toggle('draw', DRAW);
   S.view === 'home' ? renderHome() : renderPlatform(S.view);
+  renderBottomNav();
   [...app.children].forEach((c, i) => c.style.setProperty('--i', Math.min(i, 9)));
   foot();
   if (flashOld) setTimeout(() => flashDiff(flashOld), 1300); // ждём, пока числа доиграют анимацию счёта
 }
 function foot() {
   document.getElementById('foot').textContent = S.data ? L('Обновлено') + ' ' + new Date(S.data.updated).toLocaleString(LOC(), { day: 'numeric', month: 'long', hour: '2-digit', minute: '2-digit' }) + ' · ' + L('данные собираются раз в 30 минут') + (S.warn ? ' · ' + L(S.warn) : '') : '';
+}
+
+const ROOT_TABS = [
+  ['home','⌂','Главная'],['analytics','▥','Аналитика'],['content','▤','Контент'],['insights','✦','Канал'],['more','•••','Ещё']
+];
+function renderBottomNav() {
+  const nav = document.getElementById('bottom-nav'); if (!nav) return;
+  if (!S.data) { nav.classList.add('hidden'); return; }
+  nav.classList.remove('hidden');
+  const active = P[S.view] ? 'analytics' : (['prof','set'].includes(S.view) ? 'more' : S.view);
+  nav.replaceChildren(...ROOT_TABS.map(([key, ico, label]) => {
+    const b = h('button',{type:'button',class:'nav-tab','aria-current':String(active===key?'page':'false')},h('span',{class:'ni','aria-hidden':'true'},ico),h('span',{},L(label)));
+    b.onclick=()=>{tap();go(key);}; return b;
+  }));
+}
+function safeText(s) { return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function reportPosts(days) {
+  const rows=collectPosts(S.data||{}).filter(p=>typeof p.val==='number' && p.date);
+  if(S.reportCustom&&S.reportStart&&S.reportEnd){const from=new Date(S.reportStart+'T00:00:00').getTime(),to=new Date(S.reportEnd+'T23:59:59').getTime();return rows.filter(p=>dt(p.date).getTime()>=from&&dt(p.date).getTime()<=to).sort((a,b)=>(b.date||'').localeCompare(a.date||''));}
+  const lim=days>0?Date.now()-days*864e5:0;
+  return rows.filter(p=>!lim || dt(p.date).getTime()>=lim).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+}
+function crossPlatformCard(d) {
+  const rows=collectPosts(d), ids=vis(Object.keys(d.platforms||{}));
+  const stats=ids.map(id=>{
+    const a=rows.filter(p=>p.id===id && typeof p.rel==='number').sort((x,y)=>(y.date||'').localeCompare(x.date||'')).slice(0,20);
+    if(!a.length)return null;
+    const med=medianOf(a.map(p=>p.rel));
+    return {id,n:a.length,med,top:Math.max(...a.map(p=>p.rel))};
+  }).filter(Boolean);
+  if(stats.length<2)return null;
+  const card=h('div',{class:'card wide'},h('div',{class:'ptitle'},h('h2',{},L('Сравнение платформ')),h('span',{class:'chip'},L('Сравнение внутри каждой платформы'))));
+  stats.forEach(x=>{
+    const row=h('div',{class:'compare-row'},h('div',{},h('div',{class:'pname'},badge(x.id),(P[x.id]||[x.id])[0]),h('div',{class:'lbl'},L('Публикаций в выборке')+': '+x.n),h('div',{class:'mini-progress'},h('i',{style:'width:'+Math.min(100,Math.max(4,x.med/2*100))+'%;background:'+(P[x.id]||[0,'var(--acc)'])[1]}))),h('b',{},'×'+dec(x.med,2)));
+    card.append(row);
+  });
+  const same={};
+  rows.filter(p=>p.title&&typeof p.rel==='number').forEach(p=>{const key=String(p.title).toLocaleLowerCase().replace(/[^\p{L}\p{N}]+/gu,' ').trim();if(!key)return;(same[key]=same[key]||{title:p.title,items:{}}).items[p.id]=p;});
+  const matches=Object.values(same).filter(g=>Object.keys(g.items).length>=2).slice(0,4);
+  if(matches.length){card.append(h('div',{class:'sec'},L('Одинаковые заголовки на разных платформах')));matches.forEach(g=>card.append(h('div',{class:'compare-row'},h('div',{},h('b',{},cut(g.title,58)),h('div',{class:'lbl'},Object.keys(g.items).map(id=>(P[id]||[id])[0]+' ×'+dec(g.items[id].rel,1)).join(' · '))),h('span',{class:'chip'},L('совпадение')))));}
+  card.append(h('div',{class:'hint'},L('Обычный уровень')+': ×1,0. Сначала сравниваем медианный результат публикаций с обычным уровнем своей платформы, а не абсолютные просмотры разных соцсетей. Одинаковые заголовки показываются как возможный повтор контента; если названия отличаются, они не объединяются. Метрики платформ считаются по-разному.'));
+  return card;
+}
+function reportBuilder(d) {
+  const days=S.reportDays===undefined?30:S.reportDays, card=h('div',{class:'card wide'},h('h2',{},L('Отчёт по статистике')),h('div',{class:'lbl'},L('Период отчёта')));
+  if(!S.reportStart)S.reportStart=ymd(new Date(Date.now()-30*864e5)); if(!S.reportEnd)S.reportEnd=ymd(new Date());
+  card.append(chipRow([[7,L('7 дней')],[30,L('30 дней')],[90,L('90 дней')],[365,L('365 дней')],[0,L('Всё время')]],S.reportCustom?'custom':days,'reportDays'));
+  const from=h('input',{type:'date',value:S.reportStart}),to=h('input',{type:'date',value:S.reportEnd}),apply=h('button',{type:'button',class:'tgl'},L('Применить период'));
+  from.onchange=()=>{S.reportStart=from.value;}; to.onchange=()=>{S.reportEnd=to.value;}; apply.onclick=()=>{if(!S.reportStart||!S.reportEnd||S.reportStart>S.reportEnd){toast(L('Проверьте даты периода'));return;}S.reportCustom=true;tap();render();};
+  card.append(h('div',{class:'report-dates'},h('label',{},L('С'),from),h('label',{},L('По'),to),apply));
+  const rows=reportPosts(days), views=rows.filter(p=>typeof p.views==='number'), sum=views.reduce((a,p)=>a+p.views,0), likes=rows.reduce((a,p)=>a+(p.likes||0),0), comm=rows.reduce((a,p)=>a+(p.comm||0),0);
+  card.append(h('div',{class:'metric-grid'},h('div',{class:'metric-box'},h('b',{},String(rows.length)),h('span',{},L('Публикаций'))),h('div',{class:'metric-box'},h('b',{},short(sum)),h('span',{},L('Просмотров'))),h('div',{class:'metric-box'},h('b',{},short(likes+comm)),h('span',{},L('Лайки + комментарии')))));
+  card.append(h('div',{class:'hint'},L('В отчёт попали публикации, дата которых находится внутри выбранного периода')));
+  const actions=h('div',{class:'report-actions'}), csv=h('button',{type:'button'},L('Скачать CSV')), pdf=h('button',{type:'button'},L('Печать / PDF'));
+  csv.onclick=()=>exportReport(days); pdf.onclick=()=>printReport(days); actions.append(csv,pdf); card.append(actions);
+  return card;
+}
+function exportReport(days) {
+  const rows=reportPosts(days), heads=['Платформа','Дата','Заголовок','Просмотры','Лайки','Комментарии','Репосты','Вовлечённость, %','Относительно обычного'];
+  const cell=v=>'"'+String(v==null?'':v).replace(/"/g,'""')+'"';
+  const lines=[heads,...rows.map(p=>[(P[p.id]||[p.id])[0],p.date,p.title,p.views,p.likes,p.comm,p.shares,p.er==null?'':p.er.toFixed(2),p.rel==null?'':p.rel.toFixed(2)])].map(a=>a.map(cell).join(';'));
+  const blob=new Blob(['\ufeff'+lines.join('\r\n')],{type:'text/csv;charset=utf-8'}), url=URL.createObjectURL(blob), a=h('a',{href:url,download:'channel-report-'+(S.reportCustom?(S.reportStart+'_'+S.reportEnd):(days||'all'))+'-'+ymd(new Date())+'.csv'});
+  document.body.append(a); a.click(); a.remove(); setTimeout(()=>URL.revokeObjectURL(url),1500); toast(L('Отчёт готов'));
+}
+function printReport(days) {
+  const d=S.data||{}, rows=reportPosts(days), ids=vis(Object.keys(d.platforms||{}));
+  const platformRows=ids.map(id=>{const a=rows.filter(p=>p.id===id), views=a.reduce((v,p)=>v+(p.views||0),0), followers=(d.platforms[id]||{}).followers;return `<tr><td>${safeText((P[id]||[id])[0])}</td><td>${followers==null?'—':nf.format(followers)}</td><td>${a.length}</td><td>${nf.format(views)}</td></tr>`;}).join('');
+  const postRows=rows.slice(0,30).map(p=>`<tr><td>${safeText((P[p.id]||[p.id])[0])}</td><td>${safeText(p.date||'')}</td><td>${safeText(p.title||'Без названия')}</td><td>${p.views==null?'—':nf.format(p.views)}</td><td>${p.likes==null?'—':nf.format(p.likes)}</td></tr>`).join('');
+  const w=window.open('','_blank'); if(!w){toast(L('Разрешите открыть окно печати'));return;}
+  w.document.write(`<!doctype html><html lang="ru"><meta charset="utf-8"><title>Отчёт по статистике</title><style>body{font:14px Arial,sans-serif;color:#172033;max-width:900px;margin:32px auto;padding:0 20px}h1{font-size:24px}h2{font-size:17px;margin:26px 0 10px}p{color:#657087}table{border-collapse:collapse;width:100%;font-size:12px}td,th{padding:8px;border-bottom:1px solid #ddd;text-align:left}th{background:#f1f3f8}@media print{body{margin:0}}</style><h1>Отчёт по статистике каналов</h1><p>Период: ${S.reportCustom?safeText(S.reportStart+' — '+S.reportEnd):(days?days+' дней':'всё время')} · Сформирован: ${safeText(new Date().toLocaleString('ru-RU'))}</p><h2>Сводка по платформам</h2><table><tr><th>Платформа</th><th>Подписчиков</th><th>Публикаций</th><th>Просмотров</th></tr>${platformRows}</table><h2>Последние публикации</h2><table><tr><th>Платформа</th><th>Дата</th><th>Заголовок</th><th>Просмотры</th><th>Лайки</th></tr>${postRows}</table><p>Отчёт сформирован локально из уже загруженных данных приложения. При необходимости выберите «Сохранить как PDF» в диалоге печати.</p></html>`);
+  w.document.close(); w.focus(); setTimeout(()=>w.print(),350);
+}
+function renderAnalytics(d) {
+  const app=document.getElementById('app'), ids=vis(Object.keys(d.platforms||{})), good=ids.filter(id=>!d.platforms[id].error&&typeof d.platforms[id].followers==='number');
+  const sr=series(d.history||{},good), g7=sr.dates.length>1?growth(sr.total,sr.dates,7):null, g30=sr.dates.length>1?growth(sr.total,sr.dates,30):null, posts=collectPosts(d).filter(p=>ids.includes(p.id));
+  app.replaceChildren(h('div',{class:'section-head'},h('h2',{},L('Аналитика')),h('p',{},L('Общая картина по подключённым платформам'))));
+  app.append(h('div',{class:'metric-grid'},h('div',{class:'metric-box'},h('b',{},short(good.reduce((a,id)=>a+d.platforms[id].followers,0))),h('span',{},L('Подписчики'))),h('div',{class:'metric-box'},h('b',{},g7?sgn(g7.d):'—'),h('span',{},L('Прирост за 7 дней'))),h('div',{class:'metric-box'},h('b',{},g30?sgn(g30.d):'—'),h('span',{},L('Прирост за 30 дней')))));
+  const cp=crossPlatformCard(d), hc=healthCard(d,good); if(cp)app.append(cp); if(hc)app.append(hc);
+  const tc=trendCard(posts,acc()), wc=weekCard(posts), tit=titleCard(posts), cal=calCard(posts), fc=forecastCard(sr.dates,sr.total);
+  [tc,wc,tit,cal,fc].forEach(x=>{if(x)app.append(x);});
+  app.append(reportBuilder(d));
+  app.append(h('div',{class:'card wide'},h('h2',{},L('Платформы')),ids.map(id=>{const b=h('button',{type:'button',class:'more-link'},h('span',{class:'pname'},badge(id),(P[id]||[id])[0]),h('span',{},L('Перейти к платформе')+' →'));b.onclick=()=>go(id);return b;})));
+}
+function renderInsights(d) {
+  const app=document.getElementById('app'), ids=vis(Object.keys(d.platforms||{})), all=collectPosts(d).filter(p=>ids.includes(p.id));
+  app.replaceChildren(h('div',{class:'section-head'},h('h2',{},L('Аналитика канала')),h('p',{},L('Что изменилось, на каких данных основан вывод и что проверить дальше'))));
+  let total=0;
+  ids.forEach(id=>{
+    const rows=all.filter(p=>p.id===id&&typeof p.val==='number'), found=insights(rows,id);
+    if(!found.length)return; total+=found.length;
+    const c=h('div',{class:'card wide'},h('div',{class:'ptitle'},h('h2',{},h('span',{class:'pname'},badge(id),(P[id]||[id])[0])),h('span',{class:'chip'},rows.length>=20?L('Устойчивая выборка'):L('Предварительный сигнал'))));
+    found.slice(0,6).forEach(x=>c.append(h('div',{class:'insight-item'},h('div',{class:'txt'},x.txt),h('div',{class:'why'},L('На основе')+' '+rows.length+' '+L('наблюдений')+'. '+L('Это закономерность в имеющихся данных, а не доказательство причины')+'.'))));
+    c.append(h('div',{class:'hint'},L('Следующий шаг: проверьте похожие темы и формат на нескольких следующих публикациях. Не делайте вывод по одному посту.'))); app.append(c);
+  });
+  const cp=crossPlatformCard(d); if(cp)app.append(cp);
+  if(!total)app.append(h('div',{class:'card wide'},h('h2',{},L('Пока мало данных для устойчивых выводов')),h('div',{class:'empty'},L('Для первичных наблюдений нужно около 8 публикаций на платформе. Сигналы основаны на сравнении дней, времени выхода и форматов.'))));
+  app.append(h('div',{class:'card wide'},h('h2',{},L('Как читать выводы')),h('div',{class:'hint'},L('Выводы строятся на локально загруженной истории и архиве публикаций. Они показывают совпадения и тенденции, но не доказывают причинно-следственную связь. Чем больше публикаций в выборке, тем полезнее сигнал.'))));
+}
+function renderContent(d) {
+  const app=document.getElementById('app'), ids=vis(Object.keys(d.platforms||{})), all=collectPosts(d).filter(p=>ids.includes(p.id)).sort((a,b)=>(b.date||'').localeCompare(a.date||''));
+  app.replaceChildren(h('div',{class:'section-head'},h('h2',{},L('Контент')),h('p',{},L('Архив публикаций со всех платформ'))));
+  const inp=h('input',{type:'search',class:'search',placeholder:L('Поиск публикаций'),value:S.contentQuery||''});
+  const filt=chipRow([['all',L('Все платформы')],...ids.map(id=>[id,(P[id]||[id])[0]])],S.contentFilter,'contentFilter');
+  const list=h('div',{class:'card wide'}), count=h('div',{class:'lbl'}), items=h('div',{});
+  const update=()=>{const q=(S.contentQuery||'').toLowerCase().trim(), a=all.filter(p=>(S.contentFilter==='all'||p.id===S.contentFilter)&&(!q||String(p.title||'').toLowerCase().includes(q)));count.textContent=L('Публикаций')+': '+a.length;items.replaceChildren();if(!a.length)items.append(h('div',{class:'empty'},L('Ничего не найдено')));a.slice(0,100).forEach(p=>items.append(postRow(p,(P[p.id]||[0,'#888'])[1],typeof p.val==='number'?short(p.val):'—',typeof p.views==='number'?L('просмотров'):L('лайков'),(P[p.id]||[p.id])[0]+' · '+(p.date?day(p.date):''))));};
+  inp.oninput=()=>{S.contentQuery=inp.value;update();};
+  list.append(count,items); app.append(inp,filt,list); update();
+}
+function renderWorkspace(v) { const d=S.data; if(v==='analytics')renderAnalytics(d); else if(v==='content')renderContent(d); else renderInsights(d); }
+function renderMore() {
+  const app=document.getElementById('app'); app.replaceChildren(h('div',{class:'section-head'},h('h2',{},L('Ещё')),h('p',{},L('Профиль, оформление и уведомления'))));
+  const links=h('div',{class:'card wide'}), profile=h('button',{type:'button',class:'more-link'},h('span',{},L('Профиль и источники')),h('span',{},'→')), settings=h('button',{type:'button',class:'more-link'},h('span',{},L('Открыть настройки')),h('span',{},'→'));
+  profile.onclick=()=>go('prof');settings.onclick=()=>go('set');links.append(profile,settings);app.append(links);
+  const c=h('div',{class:'card wide'},h('h2',{},L('Уведомления')),
+    h('div',{class:'lbl'},L('Уведомления браузера работают, пока страница открыта или может выполняться в фоне')));
+  const on=!!CFG.localAlerts, b=h('button',{type:'button',class:'tgl'},on?L('Выключить'):L('Включить'));
+  b.onclick=async()=>{
+    if(!('Notification' in window)){toast(L('Этот браузер не поддерживает уведомления'));return;}
+    let perm=Notification.permission; if(perm!=='granted'&&!on)try{perm=await Notification.requestPermission();}catch(e){}
+    CFG.localAlerts=!on&&perm==='granted';saveCfg();toast(CFG.localAlerts?L('Уведомления включены'):L('Разрешите уведомления в браузере'));renderMore();
+  };
+  c.append(setRow(L('Уведомления на этом устройстве'),null,b),h('div',{class:'hint'},L('Локальные уведомления показываются при важных событиях, когда браузер разрешает их отправку. Для уведомлений при закрытом приложении используйте Telegram-бота через GitHub Actions.')));
+  app.append(c);
+  app.append(h('div',{class:'card wide'},h('h2',{},L('Telegram-бот')),
+    h('div',{class:'lbl'},L('Для уведомлений, когда приложение закрыто, подключите бесплатный шаг GitHub Actions')),
+    h('div',{class:'hint'},L('Токен бота не нужно вставлять в HTML или хранить на устройстве')+'. '+L('В архиве есть скрипт уведомлений и инструкция: добавьте TELEGRAM_BOT_TOKEN и TELEGRAM_CHAT_ID в Secrets репозитория и один шаг в существующий workflow update-stats.'))));
 }
 const TILES = { growth: ['Прирост', 'grow'], er: ['Вовлечённость', 'er'], avgv: ['Просмотров на публикацию', 't3'], posts: ['Публикаций за 30 дней', 't4'], bestp: ['Лучшая публикация', 't5'] };
 // тепловая карта прироста подписчиков по дням (до 53 недель)
@@ -1233,9 +1443,11 @@ function healthCard(d, ids) {
     const ring = sv('svg', { viewBox: '0 0 100 100', width: 110, height: 110 }), cc = 2 * Math.PI * 42;
     ring.append(sv('circle', { cx: 50, cy: 50, r: 42, fill: 'none', stroke: 'var(--chip)', 'stroke-width': 9 }), sv('circle', { cx: 50, cy: 50, r: 42, fill: 'none', stroke: 'var(--up)', 'stroke-width': 9, 'stroke-linecap': 'round', 'stroke-dasharray': (cc * score / 100) + ' ' + cc, transform: 'rotate(-90 50 50)' }));
     const num = sv('text', { x: 50, y: 58, 'text-anchor': 'middle', 'font-size': 26, 'font-weight': 700, fill: 'var(--ink)' }); num.textContent = score; ring.append(num);
-    return h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, L('Индекс здоровья канала'))),
+    const details=ax.map(([key,label])=>{const v=avg(key);return h('div',{class:'hdet'},h('div',{class:'row'},h('span',{},label),h('b',{},Math.round(v)+'/100')),h('div',{class:'mini-progress'},h('i',{style:'width:'+Math.max(0,Math.min(100,v))+'%;background:var(--acc)'})));});
+    return h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, L('Индекс здоровья канала: из чего складывается'))),
       h('div', { style: 'display:flex;gap:14px;flex-wrap:wrap;align-items:center;justify-content:center' }, ring, radar),
       h('div', { class: 'lbl' }, L('Слабее всего: ') + weak + ' · ' + L('считается по росту за 30 дней, охвату публикаций и частоте выхода')),
+      h('div',{},...details),h('div',{class:'hint'},L('Компоненты имеют равный вес — по одной трети')+'. '+L('Рост: положительный прирост подписчиков за 30 дней относительно размера аудитории; отрицательный прирост даёт 0 баллов. Охват: медианные просмотры публикаций за 30 дней относительно подписчиков. Регулярность: число публикаций за 30 дней относительно ориентира 12 публикаций. Каждый компонент ограничен диапазоном 0–100.')),
       h('div', { class: 'leg' }, ms.map(m => h('span', {}, h('i', { class: 'dot', style: 'background:' + P[m.id][1] }), P[m.id][0]))));
   } catch (e) { return null; }
 }
@@ -1489,7 +1701,7 @@ function events(vals, sr, posts, ids) {
   let seen = {}; try { seen = JSON.parse(ls('evt') || '{}') || {}; } catch (e) {}
   const rec = records(vals), li = vals.length - 1, last = sr.dates[sr.dates.length - 1];
   let done = false;
-  if (rec[li] && rec[li].startsWith('🏆') && seen.rec !== last) { seen.rec = last; done = true; okh(); beep('rec'); mcCelebrate(L('🏆 Рекорд роста за день!'), 'happy'); }
+  if (rec[li] && rec[li].startsWith('🏆') && seen.rec !== last) { seen.rec = last; done = true; okh(); beep('rec'); mcCelebrate(L('🏆 Рекорд роста за день!'), 'happy'); notifyLocal(L('Рекорд роста'),L('Зафиксирован новый дневной рекорд прироста подписчиков')); }
   const sent = seen.v || [], now = Date.now();
   ids.forEach(pid => {
     if (done) return;
@@ -1501,7 +1713,7 @@ function events(vals, sr, posts, ids) {
       const key = pid + ':' + (p.date || p.title);
       if (done || sent.includes(key) || p.views < Math.max(3 * med, 100)) return;
       sent.push(key); done = true; hap('heavy'); okh(); beep('viral');
-      mcCelebrate(L('🚀 «{t}» набирает в {x} раза больше обычного', { t: cut(p.title || '', 36), x: dec(p.views / med, 1) }), 'surp');
+      const alertText=L('🚀 «{t}» набирает в {x} раза больше обычного', { t: cut(p.title || '', 36), x: dec(p.views / med, 1) }); mcCelebrate(alertText, 'surp'); notifyLocal(L('Публикация растёт быстрее обычного'),alertText);
     });
   });
   seen.v = sent.slice(-100); ls('evt', JSON.stringify(seen));
@@ -1527,10 +1739,11 @@ function renderHome() {
   const cmpBtn = prev ? h('button', { type: 'button', class: 'tgl', 'aria-pressed': String(S.cmp) }, L('Сравнить с прошлым периодом')) : null;
   if (cmpBtn) cmpBtn.onclick = () => { S.cmp = !S.cmp; tap(); render(); };
   const lines = [bw && bw.g > 0 ? h('span', { class: 'chip' }, L('🏆 лучшая неделя {g} ({a}–{b})', { g: sgn(bw.g), a: day(bw.from), b: day(bw.to) }) + (bw.i === n - 1 ? L(' · сейчас') : '')) : null, cmpBtn].filter(Boolean);
+  app.append(h('div',{class:'section-head'},h('h2',{},L('Обзор каналов')),h('p',{},L('Аудитория, динамика и состояние подключённых платформ'))));
   app.append(h('div', { class: 'card hero' + (hotT ? ' hot' : '') },
     h('div', { class: 'row' }, h('div', {}, h('div', { class: 'lbl' }, L('Подписчики')), h('div', { class: 'prow' }, big, hotT ? h('span', { class: 'arr', title: L('Сегодня прирост выше обычного') }, '▲') : null), gchips(g)), segCtl()),
     lines.length ? h('div', { class: 'chipline', style: 'margin-top:6px;align-items:center' }, lines) : null,
-    readout, box,
+    readout, box, S.cmp&&prev?h('div',{class:'chart-legend'},h('span',{},h('i',{}),L('Текущий период')),h('span',{},h('i',{class:'prev'}),L('Предыдущий период'))):null,
     h('div', { class: 'axis' }, h('span', {}, n > 1 ? day(sr.dates[i0]) : ''), h('span', {}, n ? day(sr.dates[n - 1]) : ''))));
 
   const all = collectPosts(d).filter(p => ids.includes(p.id));
@@ -1555,9 +1768,11 @@ function renderHome() {
           [L('Поделиться'), () => shareText(platText(id))],
           [L('Скрыть платформу'), () => { if (!CFG.hide.includes(id)) CFG.hide.push(id); saveCfg(); toast(L('Платформа скрыта. Вернуть можно в настройках ⚙️')); render(); }]]));
         if (r.error) { c.append(h('div', { class: 'perr', title: r.error }, L('Ошибка: ') + r.error)); platsEl.append(c); return; }
-        const pg = arr && n > 1 ? growth(arr, sr.dates, S.period) : null, pn = h('div', { class: 'pnum' }, typeof f === 'number' ? short(f) : '—');
+        const pg = arr && n > 1 ? growth(arr, sr.dates, 7) : null, pg30 = arr && n > 1 ? growth(arr, sr.dates, 30) : null, pn = h('div', { class: 'pnum' }, typeof f === 'number' ? short(f) : '—');
         if (typeof f === 'number') countUp(pn, 'p' + id, f, short);
-        c.append(h('div', { class: 'prow' }, pn, hotP ? h('span', { class: 'arr' }, '▲') : null), h('div', { class: 'pmeta' }, pg === null ? h('span', {}, L('подписчики')) : h('span', { class: 'chip ' + cls(pg.d) }, sgn(pg.d) + (pg.pct !== null ? ' · ' + pct(pg.pct) : '')),
+        c.append(h('div', { class: 'prow' }, pn, hotP ? h('span', { class: 'arr' }, '▲') : null), h('div', { class: 'pmeta' },
+          h('span', { class: 'chip ' + (pg ? cls(pg.d) : '') }, pg ? '7д '+sgn(pg.d) : L('история копится')),
+          pg30 ? h('span', { class: 'chip ' + cls(pg30.d) }, '30д '+sgn(pg30.d)) : null,
           m2 ? h('span', { title: L(String(m2[0])) }, cut(L(String(m2[0])), 16).toLowerCase() + ' ', h('b', {}, typeof m2[1] === 'number' ? short(m2[1]) : L(String(m2[1])))) : null));
         if (arr && n > 1) c.append(h('div', { class: 'spark', 'data-id': id }));
         platsEl.append(c);
@@ -1814,16 +2029,18 @@ function renderPlatform(id) {
   const order = vis(Object.keys(d.platforms)), cur = order.indexOf(id);
   const back = h('button', { class: 'back', type: 'button' }, L('← Назад')); back.onclick = () => go('home');
   const nav = h('div', { class: 'nav' }, back, order.length > 1 ? h('div', { class: 'dots', title: L('Листайте влево и вправо') }, order.map((k, i) => h('i', { class: i === cur ? 'on' : '' }))) : null);
+  const ptab=h('div',{class:'chips ptabs'},[['overview',L('Обзор')],['posts',L('Последние публикации')]].map(([k,t])=>{const b=h('button',{type:'button','aria-pressed':String(S.ptab===k)},t);b.onclick=()=>{S.ptab=k;tap();render();};return b;}));
   const posts = collectPosts(d).filter(p => p.id === id).sort((a, b) => (b.date || '').localeCompare(a.date || ''));
   const f = r.followers, sr = series(d.history || {}, [id]), arr = sr.per[id], n = sr.dates.length, i0 = startIdx(sr.dates, S.period);
   const g = arr && n > 1 ? growth(arr, sr.dates, S.period) : null;
   const box = h('div', { class: 'chart' }), ro = h('div', { class: 'readout' }), big = h('div', { class: 'big' }, typeof f === 'number' ? nf.format(f) : '—');
+  const prevP=arr&&n>1&&S.period>0?prevSeries(sr.dates.slice(i0),sr.dates,arr,S.period):null, cmpP=prevP? h('button',{type:'button',class:'tgl','aria-pressed':String(S.cmpPlatform)},L('Сравнить с прошлым периодом')):null; if(cmpP)cmpP.onclick=()=>{S.cmpPlatform=!S.cmpPlatform;tap();render();};
   if (typeof f === 'number') countUp(big, 'p' + id, f, nf.format);
   const hotT = arr && hot(arr);
   const card = h('div', { class: 'card wide' + (hotT ? ' hot' : ''), style: `--g:${col};view-transition-name:pc-${id}` },
     h('div', { class: 'row' }, h('div', {}, h('div', { class: 'pname' }, badge(id), name + (r.title ? ' · ' + r.title : '')), h('div', { class: 'prow' }, big, hotT ? h('span', { class: 'arr' }, '▲') : null), gchips(g)), segCtl()));
   if (r.error) card.append(h('div', { class: 'perr' }, L('Ошибка: ') + r.error));
-  card.append(ro, box);
+  card.append(ro, box, cmpP || null, S.cmpPlatform&&prevP?h('div',{class:'chart-legend'},h('span',{},h('i',{}),L('Текущий период')),h('span',{},h('i',{class:'prev'}),L('Предыдущий период'))):null);
 
   const rec = posts.slice(0, 20), vv = rec.filter(p => typeof p.views === 'number'), sum = (a, k) => a.reduce((t, p) => t + (p[k] || 0), 0);
   const t = (r.metrics || []).map(m => [L(String(m[0])), typeof m[1] === 'number' ? short(m[1]) : L(String(m[1]))]);
@@ -1844,19 +2061,26 @@ function renderPlatform(id) {
 
   const pc = h('div', { class: 'card wide' }, h('div', { class: 'ptitle' }, h('h2', {}, L('Последние публикации'))));
   if (!posts.length) pc.append(h('div', { class: 'empty' }, L('Публикации появятся после первого обновления данных.')));
-  posts.slice(0, 10).forEach(p => pc.append(postRow(p, col, typeof p.val === 'number' ? short(p.val) : '—', typeof p.views === 'number' ? L('просмотров') : L('лайков'),
+  posts.slice(0, 40).forEach(p => pc.append(postRow(p, col, typeof p.val === 'number' ? short(p.val) : '—', typeof p.views === 'number' ? L('просмотров') : L('лайков'),
     [p.date ? day(p.date) : null, typeof p.likes === 'number' ? '♥ ' + short(p.likes) : null, typeof p.comm === 'number' ? '💬 ' + short(p.comm) : null,
       p.avd ? '⏱ ' + mmss(p.avd) : null, typeof p.ctr === 'number' ? 'CTR ' + dec(p.ctr, 1) + '%' : null,
       id === 'tg' && f > 0 && p.views ? L('охват') + ' ' + dec(p.views / f * 100, 1) + '%' : null].filter(Boolean).join(' · '))));
-  app.append(nav, card);
+  if(S.ptab==='posts') {
+    app.append(nav,ptab,h('div',{class:'card wide'},h('div',{class:'pname'},badge(id),name),h('div',{class:'big'},typeof f==='number'?short(f):'—'),h('div',{class:'lbl'},L('Последние публикации и скорость набора'))),pc);
+    const cv=curveCard(d.curves,id); if(cv)app.append(cv); else app.append(h('div',{class:'card wide'},h('h2',{},L('Первые часы публикации')),h('div',{class:'empty'},L('Замеры появятся после того, как накопится история публикаций.'))));
+    app.append(h('div',{class:'hint',style:'grid-column:1/-1'},L('Для публикаций с замерами можно сравнить динамику примерно через 1, 3, 6, 12 и 24 часа после выхода.')));
+    return;
+  }
+  app.append(nav,ptab, card);
   if (id === 'yt') { [ytDeep(r), ytSrcCard(r), crowdCard(r)].forEach(c => { if (c) app.append(c); }); }
   if (id === 'tg') { const c = flowCard(arr, sr.dates); if (c) app.append(c); }
   const vp = posts.filter(p => typeof p.val === 'number');
-  [curveCard(d.curves, id), id === 'yt' ? retentionCard(d.retention) : null, id === 'yt' ? watchCard(d) : null, id === 'yt' ? commentsCard(d.comments) : null, id === 'yt' && !S.tmDate ? ideasCard(S.ins) : null, id === 'yt' && !S.tmDate ? coverCard(S.ins) : null, id === 'yt' ? subsCard(d) : null, id === 'yt' ? fansCard(d.comments) : null, id === 'yt' ? globeCard((d.platforms.yt || {}).deep) : null, trendCard(posts, col), fmtCard(posts, id, col), recoCard(insights(vp, id).slice(0, 5).map(i => ({ ...i, id }))), weekCard(posts), heatCard(posts), calCard(posts), titleCard(vp), compCard(d, id), radarCard(d, id), pc].forEach(c => { if (c) app.append(c); });
+  [curveCard(d.curves, id), id === 'yt' ? retentionCard(d.retention) : null, id === 'yt' ? watchCard(d) : null, id === 'yt' ? commentsCard(d.comments) : null, id === 'yt' && !S.tmDate ? ideasCard(S.ins) : null, id === 'yt' && !S.tmDate ? coverCard(S.ins) : null, id === 'yt' ? subsCard(d) : null, id === 'yt' ? fansCard(d.comments) : null, id === 'yt' ? globeCard((d.platforms.yt || {}).deep) : null, trendCard(posts, col), fmtCard(posts, id, col), recoCard(insights(vp, id).slice(0, 5).map(i => ({ ...i, id }))), weekCard(posts), heatCard(posts), calCard(posts), titleCard(vp), compCard(d, id), radarCard(d, id)].forEach(c => { if (c) app.append(c); });
   requestAnimationFrame(() => {
     if (!arr || n < 1) return;
-    const vals = arr.slice(i0), { svg, pts } = chart(vals, Math.max(box.clientWidth, 120), 150, col, 8);
-    box.append(svg); if (an) drawIn(svg); hover(svg, pts, vals, sr.dates.slice(i0), col, ro, null, records(vals));
+    const vals = arr.slice(i0);
+    if(S.cmpPlatform&&prevP){const curVals=vals.map(v=>v-vals[0]), prevVals=prevP.map(v=>v-prevP[0]),{svg,pts}=chart(curVals,Math.max(box.clientWidth,120),150,col,8,prevVals);box.append(svg);if(an)drawIn(svg);hover(svg,pts,curVals,sr.dates.slice(i0),col,ro,sgn,{},k=>' · '+L('предыдущий период')+' '+sgn(prevVals[k]));}
+    else {const { svg, pts } = chart(vals, Math.max(box.clientWidth, 120), 150, col, 8);box.append(svg); if (an) drawIn(svg); hover(svg, pts, vals, sr.dates.slice(i0), col, ro, null, records(vals));}
   });
 }
 function renderProfile() {
@@ -2320,14 +2544,15 @@ let lastLoad = Date.now();
 async function load(manual) {
   lastLoad = Date.now();
   btn.classList.add('spin');
+  const ss=document.getElementById('sync-status'); if(ss&&S.data){ss.textContent=L('Обновляем данные — старые значения остаются на экране');ss.className='on busy';}
   const get = u => fetch(u + '?t=' + Date.now()).then(r => { if (!r.ok) throw 0; return r.json(); });
   try {
     const box = await get('data.enc').catch(() => null);
     if (box) { ls('box', JSON.stringify(box)); await unlock(box); }
     else { S.data = await get('data.json'); S.warn = ''; render(); }
-    if (S.data) { checkMilestones(); if (manual) okh(); }
+    if (S.data) { checkMilestones(); if (manual) okh(); if(ss){ss.textContent=L('Данные обновлены');ss.className='on';setTimeout(()=>{ss.className='';},2600);} }
   } catch (e) {
-    if (S.data) { S.warn = 'не удалось обновить, показаны прошлые данные'; foot(); }
+    if (S.data) { S.warn = 'не удалось обновить, показаны прошлые данные'; foot(); if(ss){ss.textContent=L('Не удалось обновить: показаны предыдущие данные');ss.className='on';} }
     else document.getElementById('app').replaceChildren(emptyState(L('Данных пока нет. Запустите обновление на GitHub: вкладка Actions, «update-stats», «Run workflow».'), 'mc-conf'));
   }
   btn.classList.remove('spin');
