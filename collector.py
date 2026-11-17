@@ -286,15 +286,32 @@ def tt_token():
     st = state_load(pw)
     if not st:
         return None
+    # Не обновляем access token при каждом часовом запуске workflow: используем
+    # сохранённый зашифрованный токен до истечения (с запасом 5 минут).
+    if st.get("access_token") and int(st.get("access_expires", 0)) > int(time.time()) + 300:
+        if st.get("refresh_expires"):
+            TOK["tt"] = {"expires": int(st["refresh_expires"])}
+        return st["access_token"]
+
     d = call("POST", TT_TOKEN_URL, data={"client_key": ck, "client_secret": cs,
                                          "grant_type": "refresh_token", "refresh_token": st["refresh_token"]})
     if not d.get("access_token"):
         raise RuntimeError("не удалось обновить токен TikTok, подключите его заново")
+    now = int(time.time())
     rexp = d.get("refresh_expires_in")
-    state_save(pw, {"refresh_token": d.get("refresh_token") or st["refresh_token"],
-                    **({"refresh_expires": int(time.time()) + int(rexp)} if rexp else {})})
+    aexp = d.get("expires_in")
+    new_state = {
+        "refresh_token": d.get("refresh_token") or st["refresh_token"],
+        "access_token": d["access_token"],
+        "access_expires": now + int(aexp or 86400),
+    }
     if rexp:
-        TOK["tt"] = {"expires": int(time.time()) + int(rexp)}
+        new_state["refresh_expires"] = now + int(rexp)
+    elif st.get("refresh_expires"):
+        new_state["refresh_expires"] = st["refresh_expires"]
+    state_save(pw, new_state)
+    if new_state.get("refresh_expires"):
+        TOK["tt"] = {"expires": int(new_state["refresh_expires"])}
     if rexp and int(rexp) < 14 * 86400:
         WARN.append(("tok_tt", f"🔑 TikTok: доступ истекает через {int(rexp) // 86400} дн. Подключите заново (workflow, поле tiktok_code)."))
     return d["access_token"]
