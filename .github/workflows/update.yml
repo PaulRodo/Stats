@@ -21,6 +21,12 @@ on:
 permissions:
   contents: write
 
+# Не допускаем параллельных запусков: TikTok может выдавать новый refresh token
+# при обновлении, поэтому два одновременных запуска могут перезаписать состояние.
+concurrency:
+  group: stats-update
+  cancel-in-progress: false
+
 jobs:
   update:
     runs-on: ubuntu-latest
@@ -79,6 +85,16 @@ jobs:
           TT_STATE_KEY: ${{ secrets.TT_STATE_KEY }}
           DATA_PASSWORD: ${{ secrets.DATA_PASSWORD }}
           SUMMARY_KEY: ${{ secrets.SUMMARY_KEY }}
+      - name: Persist refreshed OAuth state
+        # Сразу сохраняем новые зашифрованные токены, до необязательной тяжёлой аналитики.
+        run: |
+          git config user.name "stats-bot"
+          git config user.email "stats-bot@users.noreply.github.com"
+          git add -- tiktok_state.enc instagram_state.enc youtube_state.enc
+          if ! git diff --cached --quiet; then
+            git commit -m "Persist refreshed OAuth state"
+          fi
+          git push
       - name: Extra analysis
         # раз в сутки: анализ обложек, слабые места роликов, идеи из комментариев.
         # Любой сбой здесь не должен ломать сбор статистики, поэтому в конце "|| true".
