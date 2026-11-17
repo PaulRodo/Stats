@@ -161,47 +161,78 @@ IG_STATE = "instagram_state.enc"
 
 
 def _ig_state(pw):
+    """Читает сохранённый зашифрованный Instagram Login token."""
     if not os.path.exists(IG_STATE):
         return {}
     try:
         with open(IG_STATE, "rb") as f:
             return json.loads(_fernet(pw).decrypt(f.read()))
-    except Exception:
-        return {}
+    except Exception as e:
+        raise RuntimeError(
+            "Не удалось расшифровать instagram_state.enc. "
+            "Проверьте, что секрет TT_STATE_KEY не менялся."
+        ) from e
 
 
 def ig_token():
-    """Токен Instagram. Раз в неделю продлевает его ещё на 60 дней и хранит новый в зашифрованном виде.
-    Токен можно задать секретом IG_TOKEN или получить один раз через ig_auth.py (по коду авторизации)."""
+    """Берёт токен из IG_TOKEN или instagram_state.enc и продлевает его раз в неделю.
+
+    IG_USER_ID сам по себе не означает Facebook Login: старый секрет может
+    оставаться в GitHub, хотя токен уже хранится в instagram_state.enc.
+    """
     tok, pw = env("IG_TOKEN"), env("TT_STATE_KEY")
-    if env("IG_USER_ID") or not pw:
-        return tok  # старый вариант через Facebook или нет ключа шифрования: берём токен как есть
+    if not pw:
+        return tok
+
     st = _ig_state(pw)
     if tok:
         origin = hashlib.sha256(tok.encode("utf-8")).hexdigest()
-        if st.get("origin") != origin:  # в секрет вставили новый токен
+        if st.get("origin") != origin:
             st = {"origin": origin, "token": tok, "refreshed": ""}
     elif not st.get("token"):
         return ""
+
     today = dt.datetime.now(dt.timezone.utc).date()
     last = st.get("refreshed")
     if not (last and (today - dt.date.fromisoformat(last)).days < 7):
         try:
-            d = call("GET", "https://graph.instagram.com/refresh_access_token",
-                     params={"grant_type": "ig_refresh_token", "access_token": st["token"]})
-            if d.get("access_token"):
-                st.update(token=d["access_token"], refreshed=today.isoformat(),
-                          expires=int(time.time()) + int(d.get("expires_in") or 0))
-                with open(IG_STATE, "wb") as f:
-                    f.write(_fernet(pw).encrypt(json.dumps(st).encode("utf-8")))
-        except RuntimeError:
-            pass  # например, токену меньше суток: попробуем при следующем запуске
-    left = (st.get("expires", 0) - time.time()) / 86400 if st.get("expires") else None
-    if st.get("expires"):
-        TOK["ig"] = {"expires": int(st["expires"])}
-    if left is not None and left < 10:
-        WARN.append(("tok_ig", f"🔑 Instagram: токен истекает через {max(int(left), 0)} дн. Если он не продлится сам, получите новый код (workflow, поле instagram_code)."))
+            d = call(
+                "GET",
+                "https://graph.instagram.com/refresh_access_token",
+                params={"grant_type": "ig_refresh_token", "access_token": st["token"]},
+            )
+            new_token = d.get("access_token")
+            if not new_token:
+                raise RuntimeError("Instagram не вернул новый токен")
+            st.update(
+                token=new_token,
+                refreshed=today.isoformat(),
+                expires=int(time.time()) + int(d.get("expires_in") or 0),
+            )
+            with open(IG_STATE, "wb") as f:
+                f.write(_fernet(pw).encrypt(json.dumps(st).encode("utf-8")))
+        except RuntimeError as e:
+            expires = int(st.get("expires") or 0)
+            days_left = (expires - time.time()) / 86400 if expires else None
+            WARN.append((
+                "tok_ig",
+                "Instagram: не удалось обновить токен; проверьте журнал GitHub Actions."
+            ))
+            # Если срок неизвестен или токен скоро истечёт, не скрываем ошибку.
+            if days_left is None or days_left <= 10:
+                raise RuntimeError(f"Не удалось продлить Instagram-токен: {e}") from e
+
+    expires = int(st.get("expires") or 0)
+    if expires:
+        TOK["ig"] = {"expires": expires}
+        days_left = (expires - time.time()) / 86400
+        if days_left < 10:
+            WARN.append((
+                "tok_ig",
+                f"Instagram: токен истекает примерно через {max(int(days_left), 0)} дн."
+            ))
     return st["token"]
+
 
 
 META_GRAPH = "https://graph.facebook.com/v25.0/"
@@ -296,33 +327,78 @@ def meta_page_for_instagram(system_token):
 
 
 def instagram():
-    """Instagram через Meta Business/Facebook Login или старый Instagram Login."""
+    """Instagram через Meta Business/Facebook Login или Instagram Login."""
     system_token = meta_system_user_token()
     if system_token:
         uid, tok = meta_page_for_instagram(system_token)
         B, node = META_GRAPH, uid
+        facebook_login = True
+    elif env("IG_USER_ID") and env("IG_TOKEN"):
+        # Старый Facebook Login: используется только когда есть оба значения.
+        tok, uid = env("IG_TOKEN"), env("IG_USER_ID")
+        B, node = META_GRAPH, uid
+        facebook_login = True
     else:
-        tok, uid = ig_token(), env("IG_USER_ID")
+        # Instagram Login: берём токен из instagram_state.enc.
+        # IG_USER_ID может оставаться в Secrets, но не переключает API на Facebook.
+        tok = ig_token()
         if not tok:
+            if env("IG_USER_ID") and not env("IG_TOKEN"):
+                raise RuntimeError(
+                    "Не найден токен в instagram_state.enc. "
+                    "Проверьте файл и секрет TT_STATE_KEY."
+                )
             return None
-        if uid:
-            B, node = META_GRAPH, uid
-        else:
-            B, node = "https://graph.instagram.com/v25.0/", "me"
+        B, node = "https://graph.instagram.com/v25.0/", "me"
+        facebook_login = False
 
-    u = call("GET", B + node, params={"fields": "username,followers_count,follows_count,media_count", "access_token": tok})
+    u = call("GET", B + node, params={
+        "fields": "username,followers_count,follows_count,media_count",
+        "access_token": tok,
+    })
+
     rows = []
+    # media_product_type доступен для Facebook Login; для Instagram Login используем media_type.
+    media_fields = (
+        "id,caption,like_count,comments_count,timestamp,permalink,media_product_type"
+        if facebook_login else
+        "id,caption,like_count,comments_count,timestamp,permalink,media_type"
+    )
     try:
-        m = call("GET", B + node + "/media", params={"fields": "id,caption,like_count,comments_count,timestamp,permalink,media_product_type", "limit": 20, "access_token": tok})
-        rows = [{"id": x["id"], "title": cut(x.get("caption")), "ts": iso(x.get("timestamp", "")), "url": x.get("permalink"), "fmt": "reel" if x.get("media_product_type") == "REELS" else "post",
-                 "likes": x.get("like_count", 0), "comments": x.get("comments_count", 0)} for x in m["data"]]
+        m = call("GET", B + node + "/media", params={
+            "fields": media_fields,
+            "limit": 20,
+            "access_token": tok,
+        })
+        rows = []
+        for x in m.get("data", []):
+            if facebook_login:
+                fmt = "reel" if x.get("media_product_type") == "REELS" else "post"
+            else:
+                fmt = "video" if x.get("media_type") == "VIDEO" else "post"
+            rows.append({
+                "id": x["id"],
+                "title": cut(x.get("caption")),
+                "ts": iso(x.get("timestamp", "")),
+                "url": x.get("permalink"),
+                "fmt": fmt,
+                "likes": x.get("like_count", 0),
+                "comments": x.get("comments_count", 0),
+            })
     except (RuntimeError, KeyError):
         pass
+
     return {
-        "title": "@" + u["username"], "followers": u["followers_count"],
-        "metrics": [["Подписчики", u["followers_count"]], ["Подписки", u.get("follows_count", 0)], ["Публикации", u.get("media_count", 0)]],
+        "title": "@" + u["username"],
+        "followers": u["followers_count"],
+        "metrics": [
+            ["Подписчики", u["followers_count"]],
+            ["Подписки", u.get("follows_count", 0)],
+            ["Публикации", u.get("media_count", 0)],
+        ],
         "posts": rows,
     }
+
 
 
 def tiktok_manual():
