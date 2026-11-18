@@ -161,244 +161,72 @@ IG_STATE = "instagram_state.enc"
 
 
 def _ig_state(pw):
-    """Читает сохранённый зашифрованный Instagram Login token."""
     if not os.path.exists(IG_STATE):
         return {}
     try:
         with open(IG_STATE, "rb") as f:
             return json.loads(_fernet(pw).decrypt(f.read()))
-    except Exception as e:
-        raise RuntimeError(
-            "Не удалось расшифровать instagram_state.enc. "
-            "Проверьте, что секрет TT_STATE_KEY не менялся."
-        ) from e
+    except Exception:
+        return {}
 
 
 def ig_token():
-    """Берёт токен из IG_TOKEN или instagram_state.enc и продлевает его раз в неделю.
-
-    IG_USER_ID сам по себе не означает Facebook Login: старый секрет может
-    оставаться в GitHub, хотя токен уже хранится в instagram_state.enc.
-    """
+    """Токен Instagram. Раз в неделю продлевает его ещё на 60 дней и хранит новый в зашифрованном виде.
+    Токен можно задать секретом IG_TOKEN или получить один раз через ig_auth.py (по коду авторизации)."""
     tok, pw = env("IG_TOKEN"), env("TT_STATE_KEY")
-    if not pw:
-        return tok
-
+    if env("IG_USER_ID") or not pw:
+        return tok  # старый вариант через Facebook или нет ключа шифрования: берём токен как есть
     st = _ig_state(pw)
     if tok:
         origin = hashlib.sha256(tok.encode("utf-8")).hexdigest()
-        if st.get("origin") != origin:
+        if st.get("origin") != origin:  # в секрет вставили новый токен
             st = {"origin": origin, "token": tok, "refreshed": ""}
     elif not st.get("token"):
         return ""
-
     today = dt.datetime.now(dt.timezone.utc).date()
     last = st.get("refreshed")
     if not (last and (today - dt.date.fromisoformat(last)).days < 7):
         try:
-            d = call(
-                "GET",
-                "https://graph.instagram.com/refresh_access_token",
-                params={"grant_type": "ig_refresh_token", "access_token": st["token"]},
-            )
-            new_token = d.get("access_token")
-            if not new_token:
-                raise RuntimeError("Instagram не вернул новый токен")
-            st.update(
-                token=new_token,
-                refreshed=today.isoformat(),
-                expires=int(time.time()) + int(d.get("expires_in") or 0),
-            )
-            with open(IG_STATE, "wb") as f:
-                f.write(_fernet(pw).encrypt(json.dumps(st).encode("utf-8")))
-        except RuntimeError as e:
-            expires = int(st.get("expires") or 0)
-            days_left = (expires - time.time()) / 86400 if expires else None
-            WARN.append((
-                "tok_ig",
-                "Instagram: не удалось обновить токен; проверьте журнал GitHub Actions."
-            ))
-            # Если срок неизвестен или токен скоро истечёт, не скрываем ошибку.
-            if days_left is None or days_left <= 10:
-                raise RuntimeError(f"Не удалось продлить Instagram-токен: {e}") from e
-
-    expires = int(st.get("expires") or 0)
-    if expires:
-        TOK["ig"] = {"expires": expires}
-        days_left = (expires - time.time()) / 86400
-        if days_left < 10:
-            WARN.append((
-                "tok_ig",
-                f"Instagram: токен истекает примерно через {max(int(days_left), 0)} дн."
-            ))
+            d = call("GET", "https://graph.instagram.com/refresh_access_token",
+                     params={"grant_type": "ig_refresh_token", "access_token": st["token"]})
+            if d.get("access_token"):
+                st.update(token=d["access_token"], refreshed=today.isoformat(),
+                          expires=int(time.time()) + int(d.get("expires_in") or 0))
+                with open(IG_STATE, "wb") as f:
+                    f.write(_fernet(pw).encrypt(json.dumps(st).encode("utf-8")))
+        except RuntimeError:
+            pass  # например, токену меньше суток: попробуем при следующем запуске
+    left = (st.get("expires", 0) - time.time()) / 86400 if st.get("expires") else None
+    if st.get("expires"):
+        TOK["ig"] = {"expires": int(st["expires"])}
+    if left is not None and left < 10:
+        WARN.append(("tok_ig", f"🔑 Instagram: токен истекает через {max(int(left), 0)} дн. Если он не продлится сам, получите новый код (workflow, поле instagram_code)."))
     return st["token"]
 
 
-
-META_GRAPH = "https://graph.facebook.com/v25.0/"
-META_IG_STATE = "instagram_facebook_state.enc"
-
-
-def meta_system_user_token():
-    """Refreshes a 60-day Meta Business system-user token every 30 days.
-
-    The rotating token is stored only in an encrypted repository file. The
-    initial token is supplied once through META_SYSTEM_USER_TOKEN secret.
-    """
-    initial = env("META_SYSTEM_USER_TOKEN")
-    app_id, app_secret, pw = env("IG_APP_ID"), env("IG_APP_SECRET"), env("TT_STATE_KEY")
-    if not initial:
-        return ""
-    if not (app_id and app_secret and pw):
-        raise RuntimeError("для автообновления Meta нужны IG_APP_ID, IG_APP_SECRET и TT_STATE_KEY")
-
-    state = {}
-    if os.path.exists(META_IG_STATE):
-        try:
-            with open(META_IG_STATE, "rb") as f:
-                state = json.loads(_fernet(pw).decrypt(f.read()))
-        except Exception:
-            raise RuntimeError("не удалось расшифровать instagram_facebook_state.enc: проверьте TT_STATE_KEY")
-
-    origin = hashlib.sha256(initial.encode("utf-8")).hexdigest()
-    if state.get("origin") != origin or not state.get("token"):
-        state = {"origin": origin, "token": initial, "refreshed_at": 0, "expires_at": 0}
-
-    now = int(time.time())
-    last = int(state.get("refreshed_at") or 0)
-    if not last or now - last >= 30 * 86400:
-        try:
-            refreshed = call("GET", META_GRAPH + "oauth/access_token", params={
-                "grant_type": "fb_exchange_token",
-                "client_id": app_id,
-                "client_secret": app_secret,
-                "set_token_expires_in_60_days": "true",
-                "fb_exchange_token": state["token"],
-            })
-            new_token = refreshed.get("access_token")
-            if not new_token:
-                raise RuntimeError("Meta не вернула новый системный токен")
-            state.update(token=new_token, refreshed_at=now,
-                         expires_at=now + int(refreshed.get("expires_in") or 60 * 86400))
-            with open(META_IG_STATE, "wb") as f:
-                f.write(_fernet(pw).encrypt(json.dumps(state).encode("utf-8")))
-        except RuntimeError as e:
-            # Do not discard a still-valid token on a transient Meta/API failure.
-            expires_at = int(state.get("expires_at") or 0)
-            left = (expires_at - now) / 86400 if expires_at else None
-            WARN.append(("tok_ig", "Meta Business: автоматическое обновление системного токена не прошло. Проверьте доступы приложения и токен в Business Manager."))
-            if left is None or left <= 7:
-                raise RuntimeError(f"Meta не смогла обновить токен; проверьте System User token и разрешения приложения ({e})")
-
-    expires_at = int(state.get("expires_at") or 0)
-    if expires_at:
-        TOK["ig"] = {"expires": expires_at}
-        left = (expires_at - now) / 86400
-        if left < 10:
-            WARN.append(("tok_ig", f"Meta Business: срок системного токена истекает примерно через {max(int(left), 0)} дн."))
-    return state["token"]
-
-
-def meta_page_for_instagram(system_token):
-    """Get the Page token + linked Instagram professional account via /me/accounts."""
-    params = {
-        "fields": "id,name,access_token,instagram_business_account",
-        "limit": 100,
-        "access_token": system_token,
-    }
-    pages = call("GET", META_GRAPH + "me/accounts", params=params).get("data", [])
-    wanted_page = env("META_PAGE_ID")
-    wanted_ig = env("IG_USER_ID")  # optional selector for older deployments
-    candidates = []
-    for page in pages:
-        ig = page.get("instagram_business_account") or {}
-        if not (page.get("id") and page.get("access_token") and ig.get("id")):
-            continue
-        if wanted_page and str(page["id"]) != wanted_page:
-            continue
-        if wanted_ig and str(ig["id"]) != wanted_ig:
-            continue
-        candidates.append((str(ig["id"]), page["access_token"]))
-    if not candidates:
-        raise RuntimeError("Meta Business не нашла Page с привязанным Instagram. Назначьте System User доступ к Facebook Page и проверьте instagram_basic/pages_read_engagement/pages_show_list.")
-    if len(candidates) > 1:
-        raise RuntimeError("К System User привязано несколько Instagram-страниц. Добавьте GitHub Secret META_PAGE_ID с ID нужной Facebook Page.")
-    return candidates[0]
-
-
 def instagram():
-    """Instagram через Meta Business/Facebook Login или Instagram Login."""
-    system_token = meta_system_user_token()
-    if system_token:
-        uid, tok = meta_page_for_instagram(system_token)
-        B, node = META_GRAPH, uid
-        facebook_login = True
-    elif env("IG_USER_ID") and env("IG_TOKEN"):
-        # Старый Facebook Login: используется только когда есть оба значения.
-        tok, uid = env("IG_TOKEN"), env("IG_USER_ID")
-        B, node = META_GRAPH, uid
-        facebook_login = True
+    """Работает с токеном «Instagram API with Instagram Login» (ID не нужен)
+    и со старым вариантом через Facebook (тогда нужен ещё IG_USER_ID)."""
+    tok, uid = ig_token(), env("IG_USER_ID")
+    if not tok:
+        return None
+    if uid:
+        B, node = "https://graph.facebook.com/v25.0/", uid
     else:
-        # Instagram Login: берём токен из instagram_state.enc.
-        # IG_USER_ID может оставаться в Secrets, но не переключает API на Facebook.
-        tok = ig_token()
-        if not tok:
-            if env("IG_USER_ID") and not env("IG_TOKEN"):
-                raise RuntimeError(
-                    "Не найден токен в instagram_state.enc. "
-                    "Проверьте файл и секрет TT_STATE_KEY."
-                )
-            return None
         B, node = "https://graph.instagram.com/v25.0/", "me"
-        facebook_login = False
-
-    u = call("GET", B + node, params={
-        "fields": "username,followers_count,follows_count,media_count",
-        "access_token": tok,
-    })
-
+    u = call("GET", B + node, params={"fields": "username,followers_count,follows_count,media_count", "access_token": tok})
     rows = []
-    # media_product_type доступен для Facebook Login; для Instagram Login используем media_type.
-    media_fields = (
-        "id,caption,like_count,comments_count,timestamp,permalink,media_product_type"
-        if facebook_login else
-        "id,caption,like_count,comments_count,timestamp,permalink,media_type"
-    )
     try:
-        m = call("GET", B + node + "/media", params={
-            "fields": media_fields,
-            "limit": 20,
-            "access_token": tok,
-        })
-        rows = []
-        for x in m.get("data", []):
-            if facebook_login:
-                fmt = "reel" if x.get("media_product_type") == "REELS" else "post"
-            else:
-                fmt = "video" if x.get("media_type") == "VIDEO" else "post"
-            rows.append({
-                "id": x["id"],
-                "title": cut(x.get("caption")),
-                "ts": iso(x.get("timestamp", "")),
-                "url": x.get("permalink"),
-                "fmt": fmt,
-                "likes": x.get("like_count", 0),
-                "comments": x.get("comments_count", 0),
-            })
+        m = call("GET", B + node + "/media", params={"fields": "id,caption,like_count,comments_count,timestamp,permalink,media_product_type", "limit": 20, "access_token": tok})
+        rows = [{"id": x["id"], "title": cut(x.get("caption")), "ts": iso(x.get("timestamp", "")), "url": x.get("permalink"), "fmt": "reel" if x.get("media_product_type") == "REELS" else "post",
+                 "likes": x.get("like_count", 0), "comments": x.get("comments_count", 0)} for x in m["data"]]
     except (RuntimeError, KeyError):
         pass
-
     return {
-        "title": "@" + u["username"],
-        "followers": u["followers_count"],
-        "metrics": [
-            ["Подписчики", u["followers_count"]],
-            ["Подписки", u.get("follows_count", 0)],
-            ["Публикации", u.get("media_count", 0)],
-        ],
+        "title": "@" + u["username"], "followers": u["followers_count"],
+        "metrics": [["Подписчики", u["followers_count"]], ["Подписки", u.get("follows_count", 0)], ["Публикации", u.get("media_count", 0)]],
         "posts": rows,
     }
-
 
 
 def tiktok_manual():
@@ -458,15 +286,32 @@ def tt_token():
     st = state_load(pw)
     if not st:
         return None
+    # Не обновляем access token при каждом часовом запуске workflow: используем
+    # сохранённый зашифрованный токен до истечения (с запасом 5 минут).
+    if st.get("access_token") and int(st.get("access_expires", 0)) > int(time.time()) + 300:
+        if st.get("refresh_expires"):
+            TOK["tt"] = {"expires": int(st["refresh_expires"])}
+        return st["access_token"]
+
     d = call("POST", TT_TOKEN_URL, data={"client_key": ck, "client_secret": cs,
                                          "grant_type": "refresh_token", "refresh_token": st["refresh_token"]})
     if not d.get("access_token"):
         raise RuntimeError("не удалось обновить токен TikTok, подключите его заново")
+    now = int(time.time())
     rexp = d.get("refresh_expires_in")
-    state_save(pw, {"refresh_token": d.get("refresh_token") or st["refresh_token"],
-                    **({"refresh_expires": int(time.time()) + int(rexp)} if rexp else {})})
+    aexp = d.get("expires_in")
+    new_state = {
+        "refresh_token": d.get("refresh_token") or st["refresh_token"],
+        "access_token": d["access_token"],
+        "access_expires": now + int(aexp or 86400),
+    }
     if rexp:
-        TOK["tt"] = {"expires": int(time.time()) + int(rexp)}
+        new_state["refresh_expires"] = now + int(rexp)
+    elif st.get("refresh_expires"):
+        new_state["refresh_expires"] = st["refresh_expires"]
+    state_save(pw, new_state)
+    if new_state.get("refresh_expires"):
+        TOK["tt"] = {"expires": int(new_state["refresh_expires"])}
     if rexp and int(rexp) < 14 * 86400:
         WARN.append(("tok_tt", f"🔑 TikTok: доступ истекает через {int(rexp) // 86400} дн. Подключите заново (workflow, поле tiktok_code)."))
     return d["access_token"]
